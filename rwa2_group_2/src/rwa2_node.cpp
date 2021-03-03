@@ -14,6 +14,9 @@
 
 #include <algorithm>
 #include <vector>
+#include <string>
+#include <array>
+#include <unordered_map>
 
 #include <ros/ros.h>
 
@@ -24,10 +27,12 @@
 #include <sensor_msgs/Range.h>
 #include <std_msgs/Float32.h>
 #include <std_msgs/String.h>
+#include <geometry_msgs/Pose.h>
 #include <std_srvs/Trigger.h>
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h> //--needed for tf2::Matrix3x3
+
 
 /**
  * @brief Start the competition
@@ -58,6 +63,20 @@ void start_competition(ros::NodeHandle &node)
     ROS_INFO("Competition started!");
   }
 }
+
+struct ModelInfo
+{
+
+  int cam_index;
+  geometry_msgs::Pose camera_pose;
+
+  std::string color;
+  geometry_msgs::Pose model_pose;
+  geometry_msgs::Pose world_pose;
+  std::string type;
+  std::string id;
+};
+
 
 /**
  * @brief A simple competition class.
@@ -123,13 +142,51 @@ public:
    * 
    * @param msg Message containing information on objects detected by the camera.
    */
+  // void logical_camera_callback(const nist_gear::LogicalCameraImage::ConstPtr & image_msg, int cam_idx){
+  //   ROS_INFO_STREAM(cam_idx);
+  // }
+
   void logical_camera_callback(
-      const nist_gear::LogicalCameraImage::Ptr &msg)
+      const nist_gear::LogicalCameraImage::ConstPtr &msg, int cam_idx)
   {
-    ROS_INFO_STREAM("Logical camera: '" << msg->models.size());
+    // ROS_INFO_STREAM("================== Logical camera " << cam_idx << " ==================");
+    // ROS_INFO_STREAM("Logical camera: '" << msg->models.size());
+
+    std::unordered_map<std::string, int> part_count;
+    camera_parts_list_[cam_idx].clear();
+
     for (int i = 0; i < msg->models.size(); i++) {
-      ROS_INFO_STREAM("Model = " << msg->models[i].type << "\nPose = "
-          << msg->models[i].pose << "\n");
+
+      // ROS_INFO_STREAM("Model = " << msg->models[i].type << "\nPose = "
+      //     << msg->models[i].pose << "\n");
+
+      ModelInfo temp_model;
+      temp_model.cam_index = cam_idx;
+      temp_model.camera_pose = msg->pose;
+      temp_model.model_pose = msg->models[i].pose;
+
+      std::string color = msg->models[i].type;
+      std::string delimiter = "_";
+
+      temp_model.type = color.substr(0, color.find(delimiter));
+
+      if(part_count.find(msg->models[i].type) == part_count.end()) {
+        part_count[msg->models[i].type] = 1;
+      } else {
+        part_count[msg->models[i].type]++;
+      }
+      int frame_number_to_append{part_count[msg->models[i].type]};
+
+      int pos{};
+    
+      while ((pos = color.find(delimiter)) != std::string::npos) {
+         color.erase(0,pos+delimiter.length());
+      }
+      temp_model.color = color;
+            
+      temp_model.id = "logical_camera_" + std::to_string(cam_idx) + "_" + msg->models[i].type + "_" + std::to_string(frame_number_to_append) + "_frame";
+      camera_parts_list_[cam_idx].push_back(temp_model); // add copy of our struct to array of vectors 
+      // ROS_INFO_STREAM(temp_model.id);
     }
   }
 
@@ -164,10 +221,40 @@ public:
     }
   }
 
+  void sort_camera_parts_list() {
+
+    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<ModelInfo>>> ordered_color_type;
+    for(auto row: camera_parts_list_) {
+      for(auto model: row) {
+        ordered_color_type[model.color][model.type].push_back(model);
+      }
+    }
+
+    std::array<std::string, 3> colors{"red", "blue", "green"};
+    std::array<std::string, 4> types{"disk", "pulley", "gasket", "piston"};
+
+    for(auto color: colors) {
+      for(auto type: types) {
+        ROS_INFO_STREAM("\n====================== " << color << " " << type << " ======================");
+        for (auto model : ordered_color_type[color][type]) {
+          ROS_INFO_STREAM(model.id);
+          ROS_INFO_STREAM(model.world_pose); // THIS MUST BE POPULATED BEFORE IT CAN RUN!
+        }
+      }
+    }
+  }
+
 private:
   std::string competition_state_;
   double current_score_;
   std::vector<nist_gear::Order> received_orders_;
+  std::array<std::vector<ModelInfo>, 7> camera_parts_list_; // ADD NUM CAMS
+
+  // const nist_gear::LogicalCameraImage camera_msg_;
+  // std::vector<nist_gear::Model_<std::allocator<void>>, std::allocator<nist_gear::Model_<std::allocator<void>>>> = camera_msg_;
+  // const nist_gear::LogicalCameraImage::Ptr camera_msg_;
+
+
 };
 
 int main(int argc, char **argv)
@@ -202,6 +289,7 @@ int main(int argc, char **argv)
   //    &MyCompetitionClass::proximity_sensor_callback,
   //    &comp_class);
 
+
   // Subscribe to the '/ariac/breakbeam_0_change' Topic.
   ros::Subscriber break_beam_subscriber = node.subscribe(
       "/ariac/breakbeam_0_change", 10,
@@ -209,9 +297,17 @@ int main(int argc, char **argv)
       &comp_class);
 
   // Subscribe to the '/ariac/logical_camera_12' Topic.
-  ros::Subscriber logical_camera_subscriber = node.subscribe(
-      "/ariac/logical_camera_12", 10,
-      &MyCompetitionClass::logical_camera_callback, &comp_class);
+  // ros::Subscriber logical_camera_subscriber = node.subscribe(
+  //     "/ariac/logical_camera_12", 10,
+  //     &MyCompetitionClass::logical_camera_callback, &comp_class);
+
+  const int num_cams = 7; // ADD NUM CAMS
+  std::array<ros::Subscriber, num_cams> logical_camera_subscriber{};
+  for(int i = 0; i < num_cams; i++) {
+      logical_camera_subscriber[i] = node.subscribe<nist_gear::LogicalCameraImage> (
+        "/ariac/logical_camera_"+std::to_string(i), 10,
+        boost::bind(&MyCompetitionClass::logical_camera_callback, &comp_class, _1, i));
+  }
 
   // Subscribe to the '/ariac/laser_profiler_0' Topic.
   // ros::Subscriber laser_profiler_subscriber = node.subscribe(
@@ -219,7 +315,11 @@ int main(int argc, char **argv)
 
   ROS_INFO("Setup complete.");
   start_competition(node);
-  ros::spin(); // This executes callbacks on new data until ctrl-c.
-
+  while(ros::ok()) {
+    comp_class.sort_camera_parts_list();
+    ros::spinOnce(); // This executes callbacks on new data until ctrl-c.
+  }
+  
   return 0;
 }
+
