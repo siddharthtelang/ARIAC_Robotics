@@ -263,11 +263,13 @@ private:
       while (!transform_detected) {  
         geometry_msgs::TransformStamped transformStamped;
         try{
-          transformStamped = tfBuffer.lookupTransform("world", *model.id,
+          transformStamped = tfBuffer.lookupTransform("world", (*model).id,
                                    ros::Time(0), timeout);
           transform_detected = true;
-          *model.world_pose.position = transformStamped.translation;
-          *model.world_pose.orientation = transformStamped.rotation;
+          (*model).world_pose.position.x = transformStamped.transform.translation.x;
+          (*model).world_pose.position.y = transformStamped.transform.translation.y;
+          (*model).world_pose.position.z = transformStamped.transform.translation.z;
+          (*model).world_pose.orientation = transformStamped.transform.rotation;
         }
         catch (tf2::TransformException &ex) {
           ROS_WARN("%s",ex.what());
