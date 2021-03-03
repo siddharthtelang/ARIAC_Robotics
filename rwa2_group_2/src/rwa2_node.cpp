@@ -243,21 +243,20 @@ public:
           get_world_pose(&model);
           
           tf2::Quaternion q(
-             model.orientation.x,
-             model.orientation.y,
-             model.orientation.z,
-             model.orientation.w);
+             model.world_pose.orientation.x,
+             model.world_pose.orientation.y,
+             model.world_pose.orientation.z,
+             model.world_pose.orientation.w);
           tf2::Matrix3x3 m(q);
           double roll, pitch, yaw;
           m.getRPY(roll, pitch, yaw);
-          ROS_INFO(model.id + ": [%f,%f,%f] [%f,%f,%f]",model.world_pose.position.x,
+          ROS_INFO("Position(XYZ): [%f,%f,%f] || Orientation(RPY): [%f,%f,%f]",model.world_pose.position.x,
           model.world_pose.position.y,
           model.world_pose.position.z,
           roll,
           pitch,
           yaw);
           
-          // ROS_INFO_STREAM(model.world_pose); // THIS MUST BE POPULATED BEFORE IT CAN RUN!
         }
       }
     }
