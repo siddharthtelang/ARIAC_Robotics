@@ -1,9 +1,10 @@
 sensors:
-  depth_camera_0:
-    type: depth_camera
+
+  breakbeam_0:
+    type: break_beam
     pose:
-      xyz: [3.082385, 1.750927, 1.82]
-      rpy: [0, 'pi/2', 0]
+      xyz: [-0.004795, 4.492549, 0.879306]
+      rpy: [0, 0, -1.557900]
 
   logical_camera_0:
     type: logical_camera
@@ -22,12 +23,6 @@ sensors:
     pose:
       xyz: [3.160776, -1.806997, 1.653007]
       rpy: [0, 'pi/2', 'pi/2']
-
-  breakbeam_0:
-    type: break_beam
-    pose:
-      xyz: [-0.004795, 4.492549, 0.879306]
-      rpy: [0, 0, -1.557900]
     
   logical_camera_3: # over agv1
     type: logical_camera
@@ -47,8 +42,26 @@ sensors:
       xyz: [-0.017222, 3.202186, 1.868044]
       rpy: [-3.112917, 1.561484, -3.109819]
 
-  logical_camera_12: # over shelf
+  logical_camera_6: # over shelf
     type: logical_camera
     pose:
       xyz: [-14.074425, 0.000000, 2.490000]
+      rpy: [0, 'pi/2', 'pi/2']
+
+  logical_camera_7: # over bin
+    type: logical_camera
+    pose:
+      xyz: [2.961171, 1.698910, 1.820011]
+      rpy: [0, 'pi/2', 'pi/2']
+
+  logical_camera_8: # over shelf
+    type: logical_camera
+    pose:
+      xyz: [-14.055191, -3.024268, 2.490000]
+      rpy: [0, 'pi/2', 'pi/2']
+
+  logical_camera_9: # over shelf
+    type: logical_camera
+    pose:
+      xyz: [-14.047311, 3.006604, 2.490000]
       rpy: [0, 'pi/2', 'pi/2']
