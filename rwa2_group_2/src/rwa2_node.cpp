@@ -19,6 +19,7 @@
 #include <unordered_map>
 
 #include <ros/ros.h>
+#include <boost/bind.hpp>
 
 #include <nist_gear/LogicalCameraImage.h>
 #include <nist_gear/Order.h>
@@ -238,6 +239,8 @@ public:
         ROS_INFO_STREAM("\n====================== " << color << " " << type << " ======================");
         for (auto model : ordered_color_type[color][type]) {
           ROS_INFO_STREAM(model.id);
+          // Call the transform on model pose to world pose
+          get_world_pose(&model);
           ROS_INFO_STREAM(model.world_pose); // THIS MUST BE POPULATED BEFORE IT CAN RUN!
         }
       }
@@ -249,6 +252,32 @@ private:
   double current_score_;
   std::vector<nist_gear::Order> received_orders_;
   std::array<std::vector<ModelInfo>, 7> camera_parts_list_; // ADD NUM CAMS
+  
+  void get_world_pose(ModelInfo *model) {
+      tf2_ros::Buffer tfBuffer;
+      tf2_ros::TransformListener tfListener(tfBuffer);
+
+      ros::Rate rate(10);
+      ros::Duration timeout(5.0);
+      bool transform_detected = false;
+      while (!transform_detected) {  
+        geometry_msgs::TransformStamped transformStamped;
+        try{
+          transformStamped = tfBuffer.lookupTransform("world", *model.id,
+                                   ros::Time(0), timeout);
+          transform_detected = true;
+          *model.world_pose.position = transformStamped.translation;
+          *model.world_pose.orientation = transformStamped.rotation;
+        }
+        catch (tf2::TransformException &ex) {
+          ROS_WARN("%s",ex.what());
+          ros::Duration(1.0).sleep();
+          continue;
+        }
+ 
+       rate.sleep();
+    }
+  }
 
   // const nist_gear::LogicalCameraImage camera_msg_;
   // std::vector<nist_gear::Model_<std::allocator<void>>, std::allocator<nist_gear::Model_<std::allocator<void>>>> = camera_msg_;
