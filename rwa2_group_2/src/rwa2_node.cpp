@@ -241,7 +241,23 @@ public:
           ROS_INFO_STREAM(model.id);
           // Call the transform on model pose to world pose
           get_world_pose(&model);
-          ROS_INFO_STREAM(model.world_pose); // THIS MUST BE POPULATED BEFORE IT CAN RUN!
+          
+          tf2::Quaternion q(
+             model.orientation.x,
+             model.orientation.y,
+             model.orientation.z,
+             model.orientation.w);
+          tf2::Matrix3x3 m(q);
+          double roll, pitch, yaw;
+          m.getRPY(roll, pitch, yaw);
+          ROS_INFO(model.id + ": [%f,%f,%f] [%f,%f,%f]",model.world_pose.position.x,
+          model.world_pose.position.y,
+          model.world_pose.position.z,
+          roll,
+          pitch,
+          yaw);
+          
+          // ROS_INFO_STREAM(model.world_pose); // THIS MUST BE POPULATED BEFORE IT CAN RUN!
         }
       }
     }
