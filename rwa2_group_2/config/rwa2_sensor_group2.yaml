@@ -68,11 +68,6 @@ sensors:
 
 ####################################################
 
-  logical_camera_10: # over shelf
-    type: logical_camera
-    pose:
-      xyz: [-15.52, 0.000000, 2.490000]
-      rpy: [0, 'pi/2', 'pi/2']
 
   logical_camera_11: # over shelf
     type: logical_camera
@@ -85,8 +80,6 @@ sensors:
     pose:
       xyz: [-15.52, 3.006604, 2.490000]
       rpy: [0, 'pi/2', 'pi/2']
-
-
 
 
   logical_camera_13: # over shelf back
@@ -107,7 +100,7 @@ sensors:
       xyz: [5.1, 3.78, 2.490000]
       rpy: [0, 'pi/2', 'pi/2']
 
-  logical_camera_16: # over shelf back
+  logical_camera_10: # over shelf back
     type: logical_camera
     pose:
       xyz: [5.1, -3.024268, 2.490000]

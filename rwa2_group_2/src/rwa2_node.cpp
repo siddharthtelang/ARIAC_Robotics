@@ -266,16 +266,16 @@ private:
   std::string competition_state_;
   double current_score_;
   std::vector<nist_gear::Order> received_orders_;
-  std::array<std::vector<ModelInfo>, 7> camera_parts_list_; // ADD NUM CAMS
+  std::array<std::vector<ModelInfo>, 16> camera_parts_list_; // ADD NUM CAMS
   
   void get_world_pose(ModelInfo *model) {
       tf2_ros::Buffer tfBuffer;
       tf2_ros::TransformListener tfListener(tfBuffer);
 
       ros::Rate rate(10);
-      ros::Duration timeout(5.0);
+      ros::Duration timeout(2.0);
       bool transform_detected = false;
-      while (!transform_detected) {  
+      // while (!transform_detected) {  
         geometry_msgs::TransformStamped transformStamped;
         try{
           transformStamped = tfBuffer.lookupTransform("world", (*model).id,
@@ -289,11 +289,11 @@ private:
         catch (tf2::TransformException &ex) {
           ROS_WARN("%s",ex.what());
           ros::Duration(1.0).sleep();
-          continue;
+          // continue;
         }
  
        rate.sleep();
-    }
+    // }
   }
 
   // const nist_gear::LogicalCameraImage camera_msg_;
@@ -347,7 +347,7 @@ int main(int argc, char **argv)
   //     "/ariac/logical_camera_12", 10,
   //     &MyCompetitionClass::logical_camera_callback, &comp_class);
 
-  const int num_cams = 7; // ADD NUM CAMS
+  const int num_cams = 16; // ADD NUM CAMS
   std::array<ros::Subscriber, num_cams> logical_camera_subscriber{};
   for(int i = 0; i < num_cams; i++) {
       logical_camera_subscriber[i] = node.subscribe<nist_gear::LogicalCameraImage> (
@@ -368,4 +368,3 @@ int main(int argc, char **argv)
   
   return 0;
 }
-
