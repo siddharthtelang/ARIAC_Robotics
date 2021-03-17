@@ -169,6 +169,7 @@ add_executable(rwa3_node
         src/utils.cpp
         src/agv_control.cpp
         )
+add_executable(part_finder_node src/part_finder.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -182,6 +183,7 @@ add_executable(rwa3_node
 add_dependencies(rwa3_node  ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
 target_link_libraries(rwa3_node ${catkin_LIBRARIES})
+target_link_libraries(part_finder_node ${catkin_LIBRARIES})
 # target_link_libraries(robot_controller_node ${catkin_LIBRARIES})
 
 #############
@@ -227,7 +229,7 @@ install(TARGETS rwa3_node
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 install(FILES
-        config/rwa3_sensor_kootbally.yaml
+        config/rwa3_sensor_group2.yaml
         config/rwa3-sample.yaml
         launch/rwa3.launch
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config
