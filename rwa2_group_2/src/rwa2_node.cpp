@@ -74,6 +74,7 @@ struct ModelInfo
   std::string color;
   geometry_msgs::Pose model_pose;
   geometry_msgs::Pose world_pose;
+  geometry_msgs:: TransformStamped transformStamped;
   std::string type;
   std::string id;
 };
@@ -89,7 +90,7 @@ class MyCompetitionClass
 {
 public:
   explicit MyCompetitionClass(ros::NodeHandle &node)
-      : current_score_(0)
+      : current_score_(0), tfBuffer(), tfListener(tfBuffer) // create buffer and listener once
   {
   }
 
@@ -156,6 +157,30 @@ public:
     std::unordered_map<std::string, int> part_count;
     camera_parts_list_[cam_idx].clear();
 
+      /* Start: Get TF of camera */
+      geometry_msgs::TransformStamped transformStamped;
+      if (msg->models.size()) {
+
+        ros::Duration timeout(1.0);
+        bool transform_detected = false;
+        std::string cam_id = "logical_camera_" + std::to_string(cam_idx) + "_frame";
+
+        while (!transform_detected) {
+          try{
+            transformStamped = tfBuffer.lookupTransform("world", cam_id,
+                                     ros::Time(0), timeout);
+            transform_detected = true;
+          }
+          catch (tf2::TransformException &ex) {
+            ROS_WARN("%s",ex.what());
+            ros::Duration(1.0).sleep();
+            continue;
+          }
+        }
+      }
+    //ROS_INFO_STREAM("transformStamped = "<< transformStamped);
+    /* End: Get TF of camera */
+
     for (int i = 0; i < msg->models.size(); i++) {
 
       // ROS_INFO_STREAM("Model = " << msg->models[i].type << "\nPose = "
@@ -165,6 +190,7 @@ public:
       temp_model.cam_index = cam_idx;
       temp_model.camera_pose = msg->pose;
       temp_model.model_pose = msg->models[i].pose;
+      temp_model.transformStamped = transformStamped;
 
       std::string color = msg->models[i].type;
       std::string delimiter = "_";
@@ -222,6 +248,23 @@ public:
     }
   }
 
+  // Function to perform transform without passing actual frame ids
+  void performTransform(ModelInfo *model) {
+
+    geometry_msgs::PoseStamped pose_target, pose_rel;
+    std::string cam_id = "logical_camera_" + std::to_string(model->cam_index) + "_frame";
+    pose_rel.header.frame_id = cam_id;
+    pose_rel.pose = model->model_pose;
+
+    tf2::doTransform(pose_rel, pose_target, model->transformStamped);
+    (*model).world_pose.position.x = pose_target.pose.position.x;
+    (*model).world_pose.position.y = pose_target.pose.position.y;
+    (*model).world_pose.position.z = pose_target.pose.position.z;
+    (*model).world_pose.orientation = pose_target.pose.orientation;
+    //ROS_INFO_STREAM("transform  for  " << msg->models[i].type << " = " << pose_target);
+
+  }
+
   void sort_camera_parts_list() {
 
     std::unordered_map<std::string, std::unordered_map<std::string, std::vector<ModelInfo>>> ordered_color_type;
@@ -240,7 +283,8 @@ public:
         for (auto model : ordered_color_type[color][type]) {
           ROS_INFO_STREAM(model.id);
           // Call the transform on model pose to world pose
-          get_world_pose(&model);
+          //get_world_pose(&model);
+          performTransform(&model);
           
           tf2::Quaternion q(
              model.world_pose.orientation.x,
@@ -267,12 +311,14 @@ private:
   double current_score_;
   std::vector<nist_gear::Order> received_orders_;
   std::array<std::vector<ModelInfo>, 16> camera_parts_list_; // ADD NUM CAMS
+  tf2_ros::Buffer tfBuffer; // keep this in scope, buffer holds last 10 seconds of tf frames
+  tf2_ros::TransformListener tfListener; // keep this in scope, and only create it once
   
   void get_world_pose(ModelInfo *model) {
       tf2_ros::Buffer tfBuffer;
       tf2_ros::TransformListener tfListener(tfBuffer);
 
-      ros::Rate rate(10);
+      // ros::Rate rate(10);
       ros::Duration timeout(2.0);
       bool transform_detected = false;
       // while (!transform_detected) {  
@@ -292,7 +338,7 @@ private:
           // continue;
         }
  
-       rate.sleep();
+      //  rate.sleep();
     // }
   }
 
@@ -361,9 +407,12 @@ int main(int argc, char **argv)
 
   ROS_INFO("Setup complete.");
   start_competition(node);
+
+  ros::Rate loop_rate(0.5); // update from cameras and print sorted list 0.5 times per second
   while(ros::ok()) {
-    comp_class.sort_camera_parts_list();
     ros::spinOnce(); // This executes callbacks on new data until ctrl-c.
+    comp_class.sort_camera_parts_list();
+    loop_rate.sleep();
   }
   
   return 0;
