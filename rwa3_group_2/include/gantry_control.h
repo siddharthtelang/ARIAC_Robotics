@@ -64,7 +64,8 @@ class GantryControl {
     //--preset locations;
     start start_;
     bin3 bin3_;
-    agv2 agv2_;
+    agv2 agv2_; // given
+    agv1 agv1_; // the one closer to us
 
   private:
     std::vector<double> joint_group_positions_;

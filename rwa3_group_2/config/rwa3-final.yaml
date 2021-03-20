@@ -65,6 +65,29 @@ orders:
           rpy: [0, 0, 'pi/4']
 
 
+
+
+# orders:
+#   order_0:
+#     announcement_condition: time
+#     announcement_condition_value: 0.0
+#     shipment_count: 2
+#     destinations: [agv1, agv2]
+#     products:
+#       part_0:
+#         type: disk_part_green
+#         pose:
+#           xyz: [0.0, 0.0, 0]
+#           rpy: [0, 0, 'pi/2']
+#       part_1:
+#         type: disk_part_blue
+#         pose:
+#           xyz: [-0.15, 0.2, 0]
+#           rpy: [0, 0, 'pi/4']
+
+
+
+
 models_over_bins:
   bin1:
     models:
@@ -90,6 +113,7 @@ models_over_bins:
         rpy: [0, 0, 0]
         num_models_x: 2
         num_models_y: 1
+
 
 models_over_shelves:
   shelf5:
