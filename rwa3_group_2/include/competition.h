@@ -84,6 +84,10 @@ public:
         return product_list_;
     }
 
+    std::vector<Order> get_orders_list() {
+        return order_list_;
+    }
+
 private:
     ros::NodeHandle node_;/*!< node handle for this class */
     std::string competition_state_;/*!< state of the competition */

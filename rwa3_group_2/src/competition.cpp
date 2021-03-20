@@ -96,13 +96,15 @@ void Competition::competition_clock_callback(const rosgraph_msgs::Clock::ConstPt
 ////////////////////////
 void Competition::processOrder(){
   auto current_order = order_list_.front();
-  auto current_shipment = current_order.shipments.front();//--change this line to handle multiple shipments
+  auto current_shipment = current_order.shipments.front();//--TODO change this line to handle multiple shipments
   auto product_list = current_shipment.products;
 
   for (const auto &product: product_list)
   {
+    ROS_INFO("add product in list - called");
     product_list.push_back(product);
   }
+  product_list_ = product_list;
 }
 
 

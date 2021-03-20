@@ -34,6 +34,7 @@
 #include "utils.h"
 #include "gantry_control.h"
 #include "agv_control.h"
+#include "camera_listener.h"
 
 #include <tf2/LinearMath/Quaternion.h>
 
@@ -53,54 +54,142 @@ int main(int argc, char ** argv) {
     gantry.init();
     gantry.goToPresetLocation(gantry.start_);
 
+    CameraListener cam_listener(node);
+
     //--1-Read order
-    
+    std::vector<Product> total_products;
+    std::vector<Product> products;
+    product product;
+    CameraListener::ModelInfo pickPart;
+    std::vector<Order> orders;
+    std::vector<Shipment> shipments;
+    std::string shipment_type;
+    std::string agv_id;
+    std::string kit_id;
+    bool partFound = false;
+
+    do{
+    //comp.processOrder();
+    orders = comp.get_orders_list();
+    //total_products = comp.get_product_list();
+    } while (orders.size() == 0);
+
+    // iterate through each order
+    for (int i = 0; i < orders.size(); i++) {
+        shipments = orders[i].shipments;
+        // iterate through each shipment
+        //for (int j = 0; j < shipments.size(); j++) {
+        for (int j = 1; j < 2; j++) {
+            shipment_type = shipments[j].shipment_type;
+            agv_id = shipments[j].agv_id;
+            products = shipments[j].products;
+
+            ROS_INFO_STREAM("Shipment type = " << shipment_type);
+            ROS_INFO_STREAM("AGV ID = " << agv_id);
+
+            // iterate through each product
+            //for (int k = 0; k < products.size(); k++) {
+            for (int k = 0; k < 2; k++) {
+                product = products[k];
+                partFound = false;
+                ROS_INFO_STREAM("Product type = " << product.type);
+
+                // get the parts from camera sensor
+                auto list = cam_listener.fetchParts(node);
+                for (auto cam : list) {
+                    if (cam[0].cam_index == 3 || cam[0].cam_index == 4) {
+                        ROS_INFO("Part found on camera over AGV. Skip this.");
+                        continue;
+                    }
+                    for (auto model : cam) {
+                        if (product.type == (model.type + "_part_" + model.color)) {
+                            ROS_INFO("Part found. Perform the pickup action");
+                            pickPart = model;
+                            partFound = true;
+                            break;
+                        }
+                    }
+                    if (partFound)
+                        break;
+                }
+
+                if (partFound) {
+                    ROS_INFO_STREAM("Pose --- " << pickPart.world_pose);
+                    //TODO: deduce the position based on camera and go to location
+                    gantry.goToPresetLocation(gantry.bin3_);
+                    // part to pick
+                    part my_part;
+                    my_part.type = product.type;
+                    my_part.pose = pickPart.world_pose;
+                    // tray location
+                    part part_in_tray;
+                    part_in_tray.type = product.type;
+                    part_in_tray.pose = product.pose;
+                    //--Go pick the part
+                    if (!gantry.pickPart(my_part)){
+                        gantry.goToPresetLocation(gantry.start_);
+                        spinner.stop();
+                        ros::shutdown();
+                    }
+                    //place the part
+                    gantry.placePart(part_in_tray, agv_id);
+                }
+            }
+            ROS_INFO("\n\n");
+
+            // one shipment completed. Send to AGV
+            AGVControl agv_control(node);
+            kit_id = (agv_id == "agv1" ? "kit_tray_1" : "kit_tray_2");
+            agv_control.sendAGV(shipment_type, kit_id);
+
+        }
+    }
     //--2-Look for parts in this order
     //--We go to this bin because a camera above
     //--this bin found one of the parts in the order
-    gantry.goToPresetLocation(gantry.bin3_);
+    //gantry.goToPresetLocation(gantry.bin3_);
 
-    std::vector<Product> list_of_products = comp.get_product_list();
+    //std::vector<Product> list_of_products = comp.get_product_list();
     //--TODO: Parse each product in list_of_products
     //--TODO: For each product in list_of_product find the part in the environment using cameras
     //--TODO: Choose one part and pick it up
     //--Assume the following part was found by a camera
-    part my_part;
-    my_part.type = "pulley_part_red";
-    my_part.pose.position.x = 4.365789;
-    my_part.pose.position.y = 1.173381;
-    my_part.pose.position.z = 0.728011;
-    my_part.pose.orientation.x = 0.012;
-    my_part.pose.orientation.y = -0.004;
-    my_part.pose.orientation.z = 0.002;
-    my_part.pose.orientation.w = 1.000;
+    // part my_part;
+    // my_part.type = "pulley_part_red";
+    // my_part.pose.position.x = 4.365789;
+    // my_part.pose.position.y = 1.173381;
+    // my_part.pose.position.z = 0.728011;
+    // my_part.pose.orientation.x = 0.012;
+    // my_part.pose.orientation.y = -0.004;
+    // my_part.pose.orientation.z = 0.002;
+    // my_part.pose.orientation.w = 1.000;
 
     //--Where to place the part in the tray?
     //--TODO: Get this information from /ariac/orders (list_of_products in this case)
-    part part_in_tray;
-    part_in_tray.type = "pulley_part_red";
-    part_in_tray.pose.position.x = -0.1;
-    part_in_tray.pose.position.y = -0.2;
-    part_in_tray.pose.position.z = 0.0;
-    part_in_tray.pose.orientation.x = 0.0;
-    part_in_tray.pose.orientation.y = 0.0;
-    part_in_tray.pose.orientation.z = 0.382683;
-    part_in_tray.pose.orientation.w = 0.92388;
+    // part part_in_tray;
+    // part_in_tray.type = "pulley_part_red";
+    // part_in_tray.pose.position.x = -0.1;
+    // part_in_tray.pose.position.y = -0.2;
+    // part_in_tray.pose.position.z = 0.0;
+    // part_in_tray.pose.orientation.x = 0.0;
+    // part_in_tray.pose.orientation.y = 0.0;
+    // part_in_tray.pose.orientation.z = 0.382683;
+    // part_in_tray.pose.orientation.w = 0.92388;
 
-    //--Go pick the part
-    if (!gantry.pickPart(my_part)){
-        gantry.goToPresetLocation(gantry.start_);
-        spinner.stop();
-        ros::shutdown();
-    }
+    // //--Go pick the part
+    // if (!gantry.pickPart(my_part)){
+    //     gantry.goToPresetLocation(gantry.start_);
+    //     spinner.stop();
+    //     ros::shutdown();
+    // }
     
     //--Go place the part
     //--TODO: agv2 should be retrieved from /ariac/orders (list_of_products in this case)
-    gantry.placePart(part_in_tray, "agv2");
+    // gantry.placePart(part_in_tray, "agv2");
 
-    AGVControl agv_control(node);
-    //--TODO: get the following arguments from the order
-    agv_control.sendAGV("order_0_shipment_0", "kit_tray_2");
+    // AGVControl agv_control(node);
+    // //--TODO: get the following arguments from the order
+    // agv_control.sendAGV("order_0_shipment_0", "kit_tray_2");
     comp.endCompetition();
 
     spinner.stop();
