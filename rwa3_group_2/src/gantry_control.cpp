@@ -54,10 +54,15 @@ void GantryControl::init()
     bin3_.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     bin3_.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
 
-    // joint positions to go to agv2
+    // joint positions to go to agv2, given
     agv2_.gantry = {0.6, 6.9, PI};
     agv2_.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     agv2_.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+
+    // joint positions to go to agv1
+    agv1_.gantry = {0.6, -6.9, PI};
+    agv1_.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    agv1_.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
 
     //--Raw pointers are frequently used to refer to the planning group for improved performance.
     //--To start, we will create a pointer that references the current robot’s state.
@@ -132,7 +137,7 @@ geometry_msgs::Pose GantryControl::getTargetWorldPose(geometry_msgs::Pose target
     else
         kit_tray = "kit_tray_2";
     transformStamped.header.stamp = ros::Time::now();
-    transformStamped.header.frame_id = "kit_tray_2";
+    transformStamped.header.frame_id = kit_tray;
     transformStamped.child_frame_id = "target_frame";
     transformStamped.transform.translation.x = target.position.x;
     transformStamped.transform.translation.y = target.position.y;
@@ -248,9 +253,12 @@ bool GantryControl::pickPart(part part)
             //--Move arm to previous position
             left_arm_group_.setPoseTarget(currentPose);
             left_arm_group_.move();
-            ros::Duration(0.5).sleep(); // try to get it to lift before doing anything else!
+            ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else!
 
-            // goToPresetLocation(start_);
+            // goToPresetLocation(start_); // having this line here is great, but does not work for shelf, since path is impeded
+            // move this to main code, but maybe let's keep the delay below?
+            ros::Duration(1.0).sleep(); // try to get it to actually go to start....
+
             return true;
         }
         else
@@ -263,15 +271,16 @@ bool GantryControl::pickPart(part part)
             {
                 left_arm_group_.setPoseTarget(currentPose);
                 left_arm_group_.move();
-                ros::Duration(0.5).sleep();
+                ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
                 left_arm_group_.setPoseTarget(part.pose);
                 left_arm_group_.move();
+                ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
                 activateGripper("left_arm");
                 current_attempt++;
             }
             left_arm_group_.setPoseTarget(currentPose);
-            ros::Duration(0.5).sleep(); // try to get it to lift before doing anything else!
             left_arm_group_.move();
+            ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else! upped to 1.0 from 0.5
         }
     }
     else
@@ -290,6 +299,8 @@ void GantryControl::placePart(part part, std::string agv)
     //--TODO: Consider agv1 too
     if (agv == "agv2")
         goToPresetLocation(agv2_);
+    else if (agv == "agv1")
+        goToPresetLocation(agv1_);
     target_pose_in_tray.position.z += (ABOVE_TARGET + 1.5 * model_height[part.type]);
 
     left_arm_group_.setPoseTarget(target_pose_in_tray);

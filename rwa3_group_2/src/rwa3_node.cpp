@@ -161,8 +161,8 @@ int main(int argc, char ** argv) {
     for (int i = 0; i < orders.size(); i++) {////////// FOR ORDER IN ORDERS
         shipments = orders[i].shipments;
         // iterate through each shipment
-        // for (int j = 0; j < shipments.size(); j++) { ////////// FOR SHIPMENT IN SHIPMENTS
-        for (int j = 1; j < 2; j++) { ////////// Testing: FOR FIRST SHIPMENT ONLY (FOR NOW)
+        for (int j = 0; j < shipments.size(); j++) { ////////// FOR SHIPMENT IN SHIPMENTS
+        // for (int j = 1; j < 2; j++) { ////////// Testing: FOR FIRST SHIPMENT ONLY (FOR NOW)
             shipment_type = shipments[j].shipment_type;
             agv_id = shipments[j].agv_id;
             products = shipments[j].products;
@@ -197,11 +197,11 @@ int main(int argc, char ** argv) {
                             ROS_INFO("Part found on camera over AGV. Skip this.");
                             continue;
                         }
-                        else if (cam[0].cam_index == 9 || cam[0].cam_index == 12) /////////// TODO: REMOVE
-                        {
-                            ROS_INFO("Skipping cam 9 and 12 for now for testing_________________________________________________________.");
-                            continue;
-                        }
+                        // else if (cam[0].cam_index == 9 || cam[0].cam_index == 12) /////////// TODO: REMOVE
+                        // {
+                        //     ROS_INFO("Skipping cam 9 and 12 for now for testing_________________________________________________________.");
+                        //     continue;
+                        // }
 
                         for (auto model : cam) {
                             if (product.type == (model.type + "_part_" + model.color)) {
@@ -250,13 +250,41 @@ int main(int argc, char ** argv) {
 
                             // go back to start
                             gantry.goToPresetLocation(start_a);
+                            ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
                             // gantry.goToPresetLocation(start_a);
 
                             //place the part
                             gantry.placePart(part_in_tray, agv_id);
                         }
                         else if (discovered_cam_idx == 9 || discovered_cam_idx == 12) { // 9 and 12 are shelf cameras
-                            ;//pass
+                            // part to pick
+                            part my_part;
+                            my_part.type = product.type;
+                            my_part.pose = pickPart.world_pose;
+                            // tray location
+                            part part_in_tray;
+                            part_in_tray.type = product.type;
+                            part_in_tray.pose = product.pose;
+
+                            gantry.goToPresetLocation(agv1_staging_a);
+                            gantry.goToPresetLocation(bottom_left_staging_a);
+                            double add_to_x_shelf = my_part.pose.position.x - -13.522081;
+                            gantry.goToPresetLocation( Bump(shelf5_a, add_to_x_shelf, 0, 0) ); // offset gantry from pulley by some units in x direction
+
+                            //--Go pick the part
+                            if (!gantry.pickPart(my_part)){
+                                // gantry.goToPresetLocation(gantry.start_);
+                                // spinner.stop();
+                                // ros::shutdown();
+                                ;//pass
+                            }
+
+                            gantry.goToPresetLocation(shelf5_a); // keep part from sliding across table
+                            gantry.goToPresetLocation(bottom_left_staging_a);
+                            gantry.goToPresetLocation(agv1_staging_a);
+                            gantry.goToPresetLocation(start_a);
+                            //place the part
+                            gantry.placePart(part_in_tray, agv_id);                            
                         }
 
                     }
