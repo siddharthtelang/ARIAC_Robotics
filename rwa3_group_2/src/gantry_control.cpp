@@ -248,7 +248,9 @@ bool GantryControl::pickPart(part part)
             //--Move arm to previous position
             left_arm_group_.setPoseTarget(currentPose);
             left_arm_group_.move();
-            goToPresetLocation(start_);
+            ros::Duration(0.5).sleep(); // try to get it to lift before doing anything else!
+
+            // goToPresetLocation(start_);
             return true;
         }
         else
@@ -268,6 +270,7 @@ bool GantryControl::pickPart(part part)
                 current_attempt++;
             }
             left_arm_group_.setPoseTarget(currentPose);
+            ros::Duration(0.5).sleep(); // try to get it to lift before doing anything else!
             left_arm_group_.move();
         }
     }
@@ -295,6 +298,7 @@ void GantryControl::placePart(part part, std::string agv)
     deactivateGripper("left_arm");
     auto state = getGripperState("left_arm");
     if (state.attached)
+        // ;// pass, don't necesarily go back to start in case of faulty part
         goToPresetLocation(start_);
 }
 
