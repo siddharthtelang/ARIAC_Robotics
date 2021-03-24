@@ -190,19 +190,19 @@ void CameraListener::quality_control_callback(
        const nist_gear::LogicalCameraImage::ConstPtr &msg, int q_sensor) {
     std::string sensor_tf_frame = "quality_control_sensor_" + std::to_string(q_sensor) + "_frame";
     if (msg->models.size() > 0) {
-        ROS_DEBUG("Detected faulty part(s)! ");
+        ROS_INFO("Detected faulty part(s)! ");
         faulty_parts = true;
        for(auto model: msg->models) {
             geometry_msgs::Pose model_pose = model.pose;
             geometry_msgs::TransformStamped transformStamped;
-            tf2_ros::Buffer tfBuffer;
-            tf2_ros::TransformListener tfListener(tfBuffer);
+//            tf2_ros::Buffer tfBuffer;
+//            tf2_ros::TransformListener tfListener(tfBuffer);
             ros::Duration timeout(1.0);
             bool transform_exists = tfBuffer.canTransform("world", sensor_tf_frame, ros::Time(0), timeout);
             if (transform_exists)
                 transformStamped = tfBuffer.lookupTransform("world", sensor_tf_frame, ros::Time(0));
             else {
-                ROS_INFO("Cannot transform from %s to world", sensor_tf_frame.c_str());
+                ROS_INFO("Cannot trans  faulty_parts_list.push_back(temp_model);form from %s to world", sensor_tf_frame.c_str());
                 break;
             }
             ModelInfo temp_model;
@@ -224,7 +224,8 @@ void CameraListener::quality_control_callback(
             temp_model.world_pose.orientation = pose_target.pose.orientation;
 
             // TODO:get the model color and type to be replaced
-            faulty_parts_list.push_back(temp_model);
+
+           ROS_INFO("Detected faulty part added to the list");
         }
     }
     else {
