@@ -256,15 +256,25 @@ int main(int argc, char ** argv) {
 
                             //place the part
                             gantry.placePart(part_in_tray, agv_id);
+                            ros::Duration(5.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
 
                             if (cam_listener.faulty_parts) {
+                                ROS_INFO("Detected Faulty Part");
+                                for(auto faulty:cam_listener.faulty_parts_list) {
+                                    Part faulty_part;
+                                    faulty_part.pose = faulty.model_pose;
+                                    for(auto product:products) {
+                                        if (product.pose == faulty_part.pose)
+                                            faulty_part.type = product.type;
+                                    }
+                                    bool success = gantry.replaceFaultyPart(faulty_part, agv_id);
+                                }
                                 // tray location
                                 // todo: poll quality sensor (eg camera 3 and 4), pick part, gantry go to start, drop part
-                                ROS_INFO("Detected Faulty Part");
-                                gantry.pickPart(part_in_tray);
-                                gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
-                                gantry.deactivateGripper("left_arm");
-                                gantry.deactivateGripper("right_arm");
+//                                gantry.pickPart(part_in_tray);
+//                                gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
+//                                gantry.deactivateGripper("left_arm");
+//                                gantry.deactivateGripper("right_arm");
                             }
                             else {
                                 gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
@@ -299,15 +309,26 @@ int main(int argc, char ** argv) {
                             gantry.goToPresetLocation(start_a);
                             //place the part
                             gantry.placePart(part_in_tray, agv_id);
+                            ros::Duration(5.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
 
                             if (cam_listener.faulty_parts) {
+                                ROS_INFO("Detected Faulty Part");
+                                for(auto faulty:cam_listener.faulty_parts_list) {
+                                    Part faulty_part;
+                                    faulty_part.pose = faulty.model_pose;
+                                    for(auto product:products) {
+                                        if (product.pose == faulty_part.pose)
+                                            faulty_part.type = product.type;
+                                    }
+                                    bool success = gantry.replaceFaultyPart(faulty_part, agv_id);
+                                }
                                 // tray location
                                 // todo: poll quality sensor (eg camera 3 and 4), pick part, gantry go to start, drop part
-                                ROS_INFO("Detected Faulty Part");
-                                gantry.pickPart(part_in_tray);
-                                gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
-                                gantry.deactivateGripper("left_arm");
-                                gantry.deactivateGripper("right_arm");
+//                                ROS_INFO("Detected Faulty Part");
+//                                gantry.pickPart(part_in_tray);
+//                                gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
+//                                gantry.deactivateGripper("left_arm");
+//                                gantry.deactivateGripper("right_arm");
 
                             }
                             else {
