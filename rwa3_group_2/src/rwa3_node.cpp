@@ -183,7 +183,7 @@ int main(int argc, char ** argv) {
                 while (isPartFaulty == true) // break if part is good (nonfaulty) or if part not found (assume not found == there are no more parts available)
                 {
                     // get the parts from camera sensor
-                    int discovered_cam_idx = 0; // the camera we found it on. TODO: initialize to None? handle errors
+                    int discovered_cam_idx = 0; // the camera we found it on.
                     auto list = cam_listener.fetchParts(node);
                     
                     for (auto cam : list) {
@@ -294,13 +294,29 @@ int main(int argc, char ** argv) {
                     }
 
                     // isPartFaulty = check_if_part_faulty(...)
-                    isPartFaulty = false; // Todo: actually check. for now, assume part was not faulty
-                    if (isPartFaulty == true) {
-                        ;// todo: poll quality sensor (eg camera 3 and 4), pick part, gantry go to start, drop part
+//                    std::vector<CameraListener::ModelInfo> faulty_parts = cam_listener.faulty_parts; // Todo: actually check. for now, assume part was not faulty
+                    isPartFaulty =cam_listener.checkFaulty(node, agv_id);
+                    /*for (auto faulty = cam_listener.faulty_parts.begin(); faulty != cam_listener.faulty_parts.end(); ++faulty)
+                        CameraListener::ModelInfo model = *faulty;
+                        part part_in_tray;
+//                        part_in_tray.type = model.type;   // TODO: this model does not have a type yet
+                        part_in_tray.pose = model.pose;
                     }
-                    else if (isPartFaulty == false) {
+                    if (cam_listener.faulty_parts.size()) {
+                        // tray location
+                        part part_in_tray;
+                        part_in_tray.type = product.type;
+                        part_in_tray.pose = product.pose;
+                        // todo: poll quality sensor (eg camera 3 and 4), pick part, gantry go to start, drop part
+                        gantry.pickPart(part_in_tray);
                         gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
+                        gantry.deactivateGripper("left_arm");
+                        gantry.deactivateGripper("right_arm");
+                        
                     }
+                    else {
+                        gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
+                    }*/
 
                 }//end while loop
             }

@@ -308,9 +308,9 @@ void GantryControl::placePart(part part, std::string agv)
 
     deactivateGripper("left_arm");
     auto state = getGripperState("left_arm");
-    if (state.attached)
+//    if (state.attached)
         // ;// pass, don't necesarily go back to start in case of faulty part
-        goToPresetLocation(start_);
+        //goToPresetLocation(start_);
 }
 
 ////////////////////////////
