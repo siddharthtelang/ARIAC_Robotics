@@ -47,7 +47,8 @@ struct ModelInfo
   void performTransform(ModelInfo *model);
   void sort_camera_parts_list();
   void quality_control_callback(const nist_gear::LogicalCameraImage::ConstPtr &msg, int q_sensor);
-  bool checkFaulty(ros::NodeHandle &node,std::string agv_id);
+  void checkFaulty(ros::NodeHandle &node,std::string agv_id);
+//    bool checkFaulty(ros::NodeHandle &node,std::string agv_id);
 //    std::vector<CameraListener::ModelInfo> checkFaulty(ros::NodeHandle &node,std::string agv_id);
   std::array<std::vector<ModelInfo>,16> fetchParts(ros::NodeHandle &node);
   ros::NodeHandle node_;
@@ -56,7 +57,7 @@ struct ModelInfo
       return ordered_color_type;
   }
 
-//  std::vector<ModelInfo> faulty_parts;  // to check if there are faulty parts in either tray
+  std::vector<ModelInfo> faulty_parts_list;  // to check if there are faulty parts in either tray
   bool faulty_parts;  // to check if there are faulty parts in either tray
   std::array<std::vector<ModelInfo>, 16> camera_parts_list_; // ADD NUM CAMS
   tf2_ros::Buffer tfBuffer; // keep this in scope, buffer holds last 10 seconds of tf frames

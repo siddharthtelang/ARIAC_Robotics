@@ -51,6 +51,7 @@ class GantryControl {
 //    bool pickPart(part part, std::string arm_name);
     bool pickPart(part part);
     void placePart(part part, std::string agv);
+    bool replaceFaultyPart(part part, std::string agv);
 
     
     /// Send command message to robot controller

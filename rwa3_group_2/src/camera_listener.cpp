@@ -164,7 +164,8 @@ return camera_parts_list_;
 }
 
 //std::vector<CameraListener::ModelInfo> CameraListener::checkFaulty(ros::NodeHandle &node,std::string agv_id)
-bool CameraListener::checkFaulty(ros::NodeHandle &node,std::string agv_id)
+//bool CameraListener::checkFaulty(ros::NodeHandle &node,std::string agv_id)
+void CameraListener::checkFaulty(ros::NodeHandle &node,std::string agv_id)
 {
     int q_sensor = 1;
     ROS_INFO("Subscribing to Quality Sensor above %s", agv_id.c_str());
@@ -176,12 +177,12 @@ bool CameraListener::checkFaulty(ros::NodeHandle &node,std::string agv_id)
     }
     faulty_parts = false;
     ros::Subscriber quality_sensor_subscriber = node.subscribe<nist_gear::LogicalCameraImage> (
-            "/ariac/quality_control_sensor_"+std::to_string(q_sensor),10, boost::bind(&CameraListener::quality_control_callback, this, _1, q_sensor)
+            "/ariac/quality_control_sensor_"+std::to_string(q_sensor),1000, boost::bind(&CameraListener::quality_control_callback, this, _1, q_sensor)
             );
     ROS_INFO("Param is set. Query the Quality Control camera");
-    ros::spinOnce();
+//    ros::spinOnce();
     ros::Duration(1.2).sleep();
-    return faulty_parts;
+//    return faulty_parts;
 
 }
 
@@ -189,9 +190,9 @@ void CameraListener::quality_control_callback(
        const nist_gear::LogicalCameraImage::ConstPtr &msg, int q_sensor) {
     std::string sensor_tf_frame = "quality_control_sensor_" + std::to_string(q_sensor) + "_frame";
     if (msg->models.size() > 0) {
-        ROS_INFO("Detected faulty part(s)! ");
+        ROS_DEBUG("Detected faulty part(s)! ");
         faulty_parts = true;
-      /*  for(auto model: msg->models) {
+       for(auto model: msg->models) {
             geometry_msgs::Pose model_pose = model.pose;
             geometry_msgs::TransformStamped transformStamped;
             tf2_ros::Buffer tfBuffer;
@@ -223,7 +224,10 @@ void CameraListener::quality_control_callback(
             temp_model.world_pose.orientation = pose_target.pose.orientation;
 
             // TODO:get the model color and type to be replaced
-            faulty_parts.push_back(temp_model);
-        }*/
+            faulty_parts_list.push_back(temp_model);
+        }
+    }
+    else {
+        faulty_parts = false;
     }
 }

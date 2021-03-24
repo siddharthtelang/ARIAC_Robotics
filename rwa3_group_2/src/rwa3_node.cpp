@@ -154,7 +154,7 @@ int main(int argc, char ** argv) {
     do{
     //comp.processOrder();
     orders = comp.get_orders_list();
-    //total_products = comp.get_product_list();
+        //total_products = comp.get_product_list();
     } while (orders.size() == 0);
 
     // iterate through each order
@@ -185,7 +185,8 @@ int main(int argc, char ** argv) {
                     // get the parts from camera sensor
                     int discovered_cam_idx = 0; // the camera we found it on.
                     auto list = cam_listener.fetchParts(node);
-                    
+                    cam_listener.checkFaulty(node, agv_id);
+
                     for (auto cam : list) {
                         if (cam.empty() == true) // check if cam is empty, prevent segfault when doing cam[0] in the else if
                         {
@@ -255,6 +256,19 @@ int main(int argc, char ** argv) {
 
                             //place the part
                             gantry.placePart(part_in_tray, agv_id);
+
+                            if (cam_listener.faulty_parts) {
+                                // tray location
+                                // todo: poll quality sensor (eg camera 3 and 4), pick part, gantry go to start, drop part
+                                ROS_INFO("Detected Faulty Part");
+                                gantry.pickPart(part_in_tray);
+                                gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
+                                gantry.deactivateGripper("left_arm");
+                                gantry.deactivateGripper("right_arm");
+                            }
+                            else {
+                                gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
+                            }
                         }
                         else if (discovered_cam_idx == 9 || discovered_cam_idx == 12) { // 9 and 12 are shelf cameras
                             // part to pick
@@ -284,7 +298,21 @@ int main(int argc, char ** argv) {
                             gantry.goToPresetLocation(agv1_staging_a);
                             gantry.goToPresetLocation(start_a);
                             //place the part
-                            gantry.placePart(part_in_tray, agv_id);                            
+                            gantry.placePart(part_in_tray, agv_id);
+
+                            if (cam_listener.faulty_parts) {
+                                // tray location
+                                // todo: poll quality sensor (eg camera 3 and 4), pick part, gantry go to start, drop part
+                                ROS_INFO("Detected Faulty Part");
+                                gantry.pickPart(part_in_tray);
+                                gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
+                                gantry.deactivateGripper("left_arm");
+                                gantry.deactivateGripper("right_arm");
+
+                            }
+                            else {
+                                gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
+                            }
                         }
 
                     }
@@ -295,28 +323,28 @@ int main(int argc, char ** argv) {
 
                     // isPartFaulty = check_if_part_faulty(...)
 //                    std::vector<CameraListener::ModelInfo> faulty_parts = cam_listener.faulty_parts; // Todo: actually check. for now, assume part was not faulty
-                    isPartFaulty =cam_listener.checkFaulty(node, agv_id);
-                    /*for (auto faulty = cam_listener.faulty_parts.begin(); faulty != cam_listener.faulty_parts.end(); ++faulty)
-                        CameraListener::ModelInfo model = *faulty;
-                        part part_in_tray;
+//                    isPartFaulty =cam_listener.checkFaulty(node, agv_id);
+//                    for (auto faulty = cam_listener.faulty_parts_list.begin(); faulty != cam_listener.faulty_parts_list.end(); ++faulty)
+//                        CameraListener::ModelInfo model = *faulty;
+//                        part part_in_tray;
 //                        part_in_tray.type = model.type;   // TODO: this model does not have a type yet
-                        part_in_tray.pose = model.pose;
-                    }
-                    if (cam_listener.faulty_parts.size()) {
-                        // tray location
-                        part part_in_tray;
-                        part_in_tray.type = product.type;
-                        part_in_tray.pose = product.pose;
-                        // todo: poll quality sensor (eg camera 3 and 4), pick part, gantry go to start, drop part
-                        gantry.pickPart(part_in_tray);
-                        gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
-                        gantry.deactivateGripper("left_arm");
-                        gantry.deactivateGripper("right_arm");
-                        
-                    }
-                    else {
-                        gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
-                    }*/
+//                        part_in_tray.pose = model.pose;
+//                    }
+//                    if (cam_listener.faulty_parts) {
+//                         tray location
+//                        part part_in_tray;
+//                        part_in_tray.type = product.type;
+//                        part_in_tray.pose = product.pose;
+//                         todo: poll quality sensor (eg camera 3 and 4), pick part, gantry go to start, drop part
+//                        gantry.pickPart(part_in_tray);
+//                        gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
+//                        gantry.deactivateGripper("left_arm");
+//                        gantry.deactivateGripper("right_arm");
+//
+//                    }
+//                    else {
+//                        gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
+//                    }
 
                 }//end while loop
             }
