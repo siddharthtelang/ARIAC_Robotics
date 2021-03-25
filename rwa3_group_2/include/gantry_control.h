@@ -39,22 +39,43 @@
 #include "utils.h"
 
 
+/**
+ * \brief: Controlling for gantry movement
+ * \param: reference Ros Node Handle
+ * \result: 1 or 0 whether part is picked
+ */
 class GantryControl {
 
   public:
     GantryControl(ros::NodeHandle & node);
-
+    /**
+    * \brief: Create moveit joint groups, subscriptions and publishers
+    */
     void init();
 
-//    bool moveGantry(std::string waypoints);
-
-//    bool pickPart(part part, std::string arm_name);
+    /**
+     * \brief: Returns true or false depending on whether part was successfully picked.
+     * \param: part to pick
+     * \result: true false success boolean
+     */
     bool pickPart(part part);
+
+    /**
+     * \brief: Returns true or false depending on whether part was successfully placed.
+     * \param: part to place
+     * \result: true false success boolean
+     */
     void placePart(part part, std::string agv);
+
+
     bool replaceFaultyPart(part part, std::string agv);
 
     
-    /// Send command message to robot controller
+    /**
+     * \brief: Send command message to robot controller
+     * \param: trajectory message
+     * \result: true or false success boolean
+     */
     bool sendJointPosition(trajectory_msgs::JointTrajectory command_msg);
     void goToPresetLocation(PresetLocation location);
 
