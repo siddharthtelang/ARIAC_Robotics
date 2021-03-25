@@ -20,6 +20,12 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h> //--needed for tf2::Matrix3x3
 
+
+/**
+ * \brief: Defines class for camera ROS interactions
+ * \param: reference to ROS Node Handle
+ * \result: object
+ */
 class CameraListener
 {
 public:
@@ -43,13 +49,48 @@ struct ModelInfo
   std::string id;
 };
 
+   /**
+  * \brief: Defines camera subscriber callback
+  * \param: pointer to ROS message
+  * \param: camera index
+  * \result: Adds models to camera parts list
+  */
   void logical_camera_callback(const nist_gear::LogicalCameraImage::ConstPtr &msg, int cam_idx);
+
+   /**
+  * \brief: Function to perform transform without passing actual frame ids
+  * \param: Individual model
+  * \result: Updated model pose
+  */
   void performTransform(ModelInfo *model);
+
+  /**
+  * \brief: Sorts the camera parts by type and color
+  * \result: Updates hash map with ordered parts
+  */
   void sort_camera_parts_list();
-  void quality_control_callback(const nist_gear::LogicalCameraImage::ConstPtr &msg, int q_sensor);
+
+  /**
+  * \brief: Checks AGV for faulty parts
+  * \param: reference to ROS node handle
+  * \param: agv id
+  * \result: Applies callback function below
+  */
   void checkFaulty(ros::NodeHandle &node,std::string agv_id);
-//    bool checkFaulty(ros::NodeHandle &node,std::string agv_id);
-//    std::vector<CameraListener::ModelInfo> checkFaulty(ros::NodeHandle &node,std::string agv_id);
+
+  /**
+  * \brief: Callback function for AGV faulty part check
+  * \param: pointer to ROS msg
+  * \param: sensor index
+  * \result: Updated faulty part list
+  */
+  void quality_control_callback(const nist_gear::LogicalCameraImage::ConstPtr &msg, int q_sensor);
+
+  /**
+  * \brief: Getter for camera part list after querying all cams
+  * \param: reference to ROS node handle
+  * \result: returns camera part list
+  */
   std::array<std::vector<ModelInfo>,16> fetchParts(ros::NodeHandle &node);
   ros::NodeHandle node_;
 
