@@ -224,11 +224,12 @@ void CameraListener::quality_control_callback(
             temp_model.world_pose.orientation = pose_target.pose.orientation;
 
             // TODO:get the model color and type to be replaced
-
+           faulty_parts_list.push_back(temp_model);
            ROS_INFO("Detected faulty part added to the list");
         }
     }
     else {
         faulty_parts = false;
     }
+    ROS_INFO_STREAM("faulty parts: " << faulty_parts);
 }
