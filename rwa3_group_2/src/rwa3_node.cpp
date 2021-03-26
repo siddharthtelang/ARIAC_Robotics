@@ -38,7 +38,12 @@
 
 #include <tf2/LinearMath/Quaternion.h>
 
-// Note this is NOT x, y, z, it is x, y, Torso twist!
+/**
+ * \brief: Main for rwa3 node
+ * \param: argc
+ * \param: argv
+ * \result: Applies control of gantry robot
+ */
 PresetLocation Bump(PresetLocation location_to_modify, double small_rail, double large_rail, double torso ) {
     location_to_modify.gantry.at(0) = location_to_modify.gantry.at(0) + small_rail;
     location_to_modify.gantry.at(1) = location_to_modify.gantry.at(1) - large_rail; // Minus now, does simulation switch?
