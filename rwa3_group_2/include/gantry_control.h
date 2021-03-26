@@ -77,11 +77,41 @@ class GantryControl {
      * \result: true or false success boolean
      */
     bool sendJointPosition(trajectory_msgs::JointTrajectory command_msg);
+    
+    /**
+     * \brief: goes to location
+     * \param: location to move to
+     * \result: Moves gantry to location
+     */
     void goToPresetLocation(PresetLocation location);
 
+    /**
+     * \brief: activates vacuum gripper
+     * \param: gripper's id
+     * \result: picks up object
+     */
     void activateGripper(std::string gripper_id);
+
+    /**
+     * \brief: deactivates vacuum gripper
+     * \param: gripper's id
+     * \result: releases object
+     */
     void deactivateGripper(std::string gripper_id);
+    
+    /**
+     * \brief: Getter for gripper state
+     * \param: arm_name
+     * \result: returns gripper state
+     */
     nist_gear::VacuumGripperState getGripperState(std::string arm_name);
+    
+    /**
+     * \brief: Getter for world pose
+     * \param: target
+     * \param: agv
+     * \result: returns world pose
+     */
     geometry_msgs::Pose getTargetWorldPose(geometry_msgs::Pose target, std::string agv);
     //--preset locations;
     start start_;
