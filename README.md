@@ -39,7 +39,7 @@ ca ~/catkin_ws/src/
 git clone https://github.com/usnistgov/ARIAC.git
 git clone https://github.com/osrf/ariac-gazebo_ros_pkgs
 ```
-##Instructions to install packages
+## Instructions to install packages
 Clone this repository in the ```src``` directory of catkin workspace. The build the packages 
 using ```catkin build```
 
