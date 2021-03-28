@@ -9,10 +9,27 @@
 
 #include "utils.h"
 
+
+/**
+ * \brief: Defines class for AGV control
+ * \param: reference to ROS Node Handle
+ * \result: object
+ */
 class AGVControl {
 
 public:
+    /**
+    * \brief: Prepares AGV controls
+    * \param: reference to ROS Node Handle
+    * \result: Ensured existence of AGV and ability to communicate
+    */
     explicit AGVControl(ros::NodeHandle &);
+
+    /**
+    * \brief: Checks if specific AGV is ready
+    * \param: Tray name
+    * \result: boolean
+    */
     bool isAGVReady(std::string tray_name);
     
     /**

@@ -39,27 +39,79 @@
 #include "utils.h"
 
 
+/**
+ * \brief: Controlling for gantry movement
+ * \param: reference Ros Node Handle
+ * \result: 1 or 0 whether part is picked
+ */
 class GantryControl {
 
   public:
     GantryControl(ros::NodeHandle & node);
-
+    /**
+    * \brief: Create moveit joint groups, subscriptions and publishers
+    */
     void init();
 
-//    bool moveGantry(std::string waypoints);
-
-//    bool pickPart(part part, std::string arm_name);
+    /**
+     * \brief: Returns true or false depending on whether part was successfully picked.
+     * \param: part to pick
+     * \result: true false success boolean
+     */
     bool pickPart(part part);
+
+    /**
+     * \brief: Returns true or false depending on whether part was successfully placed.
+     * \param: part to place
+     * \result: true false success boolean
+     */
     void placePart(part part, std::string agv);
 
+
+    bool replaceFaultyPart(part part, std::string agv);
+
     
-    /// Send command message to robot controller
+    /**
+     * \brief: Send command message to robot controller
+     * \param: trajectory message
+     * \result: true or false success boolean
+     */
     bool sendJointPosition(trajectory_msgs::JointTrajectory command_msg);
+    
+    /**
+     * \brief: goes to location
+     * \param: location to move to
+     * \result: Moves gantry to location
+     */
     void goToPresetLocation(PresetLocation location);
 
+    /**
+     * \brief: activates vacuum gripper
+     * \param: gripper's id
+     * \result: picks up object
+     */
     void activateGripper(std::string gripper_id);
+
+    /**
+     * \brief: deactivates vacuum gripper
+     * \param: gripper's id
+     * \result: releases object
+     */
     void deactivateGripper(std::string gripper_id);
+    
+    /**
+     * \brief: Getter for gripper state
+     * \param: arm_name
+     * \result: returns gripper state
+     */
     nist_gear::VacuumGripperState getGripperState(std::string arm_name);
+    
+    /**
+     * \brief: Getter for world pose
+     * \param: target
+     * \param: agv
+     * \result: returns world pose
+     */
     geometry_msgs::Pose getTargetWorldPose(geometry_msgs::Pose target, std::string agv);
     //--preset locations;
     start start_;

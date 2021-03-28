@@ -1,6 +1,8 @@
 #include "camera_listener.h"
 
 
+
+
    void CameraListener::logical_camera_callback(
        const nist_gear::LogicalCameraImage::ConstPtr &msg, int cam_idx)
   // void CameraListener::logical_camera_callback(
@@ -159,4 +161,75 @@ std::array<std::vector<CameraListener::ModelInfo>,16> CameraListener::fetchParts
 
 return camera_parts_list_;
 
+}
+
+//std::vector<CameraListener::ModelInfo> CameraListener::checkFaulty(ros::NodeHandle &node,std::string agv_id)
+//bool CameraListener::checkFaulty(ros::NodeHandle &node,std::string agv_id)
+void CameraListener::checkFaulty(ros::NodeHandle &node,std::string agv_id)
+{
+    int q_sensor = 1;
+    ROS_INFO("Subscribing to Quality Sensor above %s", agv_id.c_str());
+    if (agv_id == "agv1"){
+        q_sensor=2;
+    }
+    else {
+        q_sensor=1;
+    }
+    faulty_parts = false;
+    ros::Subscriber quality_sensor_subscriber = node.subscribe<nist_gear::LogicalCameraImage> (
+            "/ariac/quality_control_sensor_"+std::to_string(q_sensor),1000, boost::bind(&CameraListener::quality_control_callback, this, _1, q_sensor)
+            );
+    ROS_INFO("Param is set. Query the Quality Control camera");
+//    ros::spinOnce();
+    ros::Duration(1.2).sleep();
+//    return faulty_parts;
+
+}
+
+void CameraListener::quality_control_callback(
+       const nist_gear::LogicalCameraImage::ConstPtr &msg, int q_sensor) {
+    std::string sensor_tf_frame = "quality_control_sensor_" + std::to_string(q_sensor) + "_frame";
+    if (msg->models.size() > 0) {
+        ROS_INFO("Detected faulty part(s)! ");
+        faulty_parts = true;
+       for(auto model: msg->models) {
+            geometry_msgs::Pose model_pose = model.pose;
+            geometry_msgs::TransformStamped transformStamped;
+//            tf2_ros::Buffer tfBuffer;
+//            tf2_ros::TransformListener tfListener(tfBuffer);
+            ros::Duration timeout(1.0);
+            bool transform_exists = tfBuffer.canTransform("world", sensor_tf_frame, ros::Time(0), timeout);
+            if (transform_exists)
+                transformStamped = tfBuffer.lookupTransform("world", sensor_tf_frame, ros::Time(0));
+            else {
+                ROS_INFO("Cannot trans  faulty_parts_list.push_back(temp_model);form from %s to world", sensor_tf_frame.c_str());
+                break;
+            }
+            ModelInfo temp_model;
+            temp_model.cam_index = -q_sensor;   // it collides with cam_index but we do not use it to so it works
+            temp_model.camera_pose = msg->pose;
+            temp_model.model_pose = model.pose;
+            temp_model.transformStamped = transformStamped;
+
+            geometry_msgs::PoseStamped pose_target, pose_rel;
+            pose_rel.header.seq = 1;
+            pose_rel.header.frame_id = sensor_tf_frame;
+            pose_rel.header.stamp = ros::Time(0);
+            pose_rel.pose = model.pose;
+
+            tf2::doTransform(pose_rel, pose_target, transformStamped);
+            temp_model.world_pose.position.x = pose_target.pose.position.x;
+            temp_model.world_pose.position.y = pose_target.pose.position.y;
+            temp_model.world_pose.position.z = pose_target.pose.position.z;
+            temp_model.world_pose.orientation = pose_target.pose.orientation;
+
+            // TODO:get the model color and type to be replaced
+           faulty_parts_list.push_back(temp_model);
+           ROS_INFO("Detected faulty part added to the list");
+        }
+    }
+    else {
+        faulty_parts = false;
+    }
+    ROS_INFO_STREAM("faulty parts: " << faulty_parts);
 }
