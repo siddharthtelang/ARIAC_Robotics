@@ -58,17 +58,17 @@ class GantryControl {
      * \param: part to pick
      * \result: true false success boolean
      */
-    bool pickPart(part part, std::string arm);
-    
+    bool pickPart(part part);
+
     /**
      * \brief: Returns true or false depending on whether part was successfully placed.
      * \param: part to place
      * \result: true false success boolean
      */
-    void placePart(part part, std::string agv, std::string arm);
+    void placePart(part part, std::string agv);
 
 
-    bool replaceFaultyPart(part part, std::string agv, std::string arm);
+    bool replaceFaultyPart(part part, std::string agv);
 
     
     /**
