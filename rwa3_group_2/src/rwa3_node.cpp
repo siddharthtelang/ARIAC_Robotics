@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <deque>
 
 #include <ros/ros.h>
 
@@ -164,20 +165,40 @@ int main(int argc, char ** argv) {
     conveyor_belt.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     
     ros::Subscriber breakbeam_sub = node.subscribe<nist_gear::Proximity>("/ariac/breakbeam_0_change", 10, &CameraListener::breakbeam_callback, &cam_listener);
-
-    ros::Time current_part_on_conveyor;
+    ros::Time current_part_load_time;
+    CameraListener::ModelInfo current_part_on_conveyor;
+    std::deque<CameraListener::ModelInfo> parts_on_conveyor; 
     float dx = 3+4.492549-1;
     bool waiting_for_part{false};
     while(ros::ok()) {
-        if (!waiting_for_part && !cam_listener.parts_on_conveyor_.empty()) {
+        if (!waiting_for_part && !cam_listener.load_time_on_conveyor_.empty()) {
+            auto cam_parts = cam_listener.fetchParts(node)[5];
+            for (auto& found_part : cam_parts) {
+                bool part_in_queue{false};
+                for (auto& part: parts_on_conveyor) {
+                    if (part.id == found_part.id) {
+                        part_in_queue = true;
+                        break;
+                    }
+                } 
+                if (!part_in_queue) parts_on_conveyor.push_back(found_part);
+            }
             waiting_for_part = true;
-            current_part_on_conveyor = cam_listener.parts_on_conveyor_.front();
-            cam_listener.parts_on_conveyor_.pop();
+            current_part_load_time = cam_listener.load_time_on_conveyor_.front();
+            current_part_on_conveyor = parts_on_conveyor.front();
+            cam_listener.load_time_on_conveyor_.pop();
+            parts_on_conveyor.pop_front();
             gantry.goToPresetLocation(conveyor_belt);
-        } else if (waiting_for_part && (ros::Time::now()-current_part_on_conveyor).toSec() > dx/cam_listener.conveyor_spd_) {
+        } else if (waiting_for_part && (ros::Time::now()-current_part_load_time).toSec() > dx/cam_listener.conveyor_spd_) {
             ROS_INFO_STREAM("Pick up part now!");
+            part temp_part;
+            temp_part.type = current_part_on_conveyor.type;
+            temp_part.pose = current_part_on_conveyor.world_pose;
+            temp_part.pose.position.y = -2.5;
+            ROS_INFO_STREAM("x: " << temp_part.pose.position.x << ", y: " << temp_part.pose.position.y << ", z: " << temp_part.pose.position.z);
+            // current_part_on_conveyor.world_pose
             waiting_for_part = false;
-            // gantry.pickPart()
+            gantry.pickPart(temp_part, "left_arm");
         }
         ros::Duration(0.5).sleep();
     }

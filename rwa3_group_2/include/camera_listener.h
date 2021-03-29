@@ -112,8 +112,8 @@ struct ModelInfo
   tf2_ros::Buffer tfBuffer; // keep this in scope, buffer holds last 10 seconds of tf frames
   tf2_ros::TransformListener tfListener; // keep this in scope, and only create it once
   std::unordered_map<std::string, std::unordered_map<std::string, std::vector<ModelInfo>>> ordered_color_type;
-  float conveyor_spd_{0.2}; // m/s
-  std::queue<ros::Time> parts_on_conveyor_;
+  const float conveyor_spd_{0.2}; // m/s
+  std::queue<ros::Time> load_time_on_conveyor_;
   //ros::Subscriber logical_camera_subscriber;
 
 };
