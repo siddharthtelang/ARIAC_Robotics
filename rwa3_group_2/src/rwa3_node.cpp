@@ -38,12 +38,7 @@
 
 #include <tf2/LinearMath/Quaternion.h>
 
-/**
- * \brief: Main for rwa3 node
- * \param: argc
- * \param: argv
- * \result: Applies control of gantry robot
- */
+// Note this is NOT x, y, z, it is x, y, Torso twist!
 PresetLocation Bump(PresetLocation location_to_modify, double small_rail, double large_rail, double torso ) {
     location_to_modify.gantry.at(0) = location_to_modify.gantry.at(0) + small_rail;
     location_to_modify.gantry.at(1) = location_to_modify.gantry.at(1) - large_rail; // Minus now, does simulation switch?
@@ -360,13 +355,19 @@ int main(int argc, char ** argv) {
                             }
                             else {
                                 isPartFaulty = false;
+                                ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
+
                                 gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
                             }
+                            ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
+
                             gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
                         }
 
                     }
                     else { // else part NOT found, or otherwise,
+                        ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
+
                         gantry.goToPresetLocation(start_a);
                         break; // break out of while loop, (assume not found == there are no more parts available, conveyor might mess with this)
                     }
