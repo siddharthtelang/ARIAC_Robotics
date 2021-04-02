@@ -56,7 +56,7 @@ public:
         breakbeam_sub_ = node.subscribe<nist_gear::Proximity>("/ariac/breakbeam_0_change", 10, &CameraListener::breakbeam_callback, &cam_listener_);
     };
 
-    void checkConveyor(bool part_wanted);
+    bool checkConveyor(bool part_wanted);
     void initPresetLocs();
     void processOrder(Order order);
 

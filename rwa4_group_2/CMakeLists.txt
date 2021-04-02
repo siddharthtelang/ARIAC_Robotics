@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(rwa3_group_2)
+project(rwa4_group_2)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -162,8 +162,8 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(rwa3_node
-        src/rwa3_node.cpp
+add_executable(rwa4_node
+        src/rwa4_node.cpp
         src/competition.cpp
         src/gantry_control.cpp
         src/utils.cpp

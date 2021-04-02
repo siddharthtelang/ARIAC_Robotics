@@ -1,4 +1,4 @@
-#include "rwa_implementation.h"
+#include "include/rwa_implementation.h"
 
 void RWAImplementation::processOrder(Order order) {
     std::vector<Product> total_products;
@@ -14,7 +14,7 @@ void RWAImplementation::processOrder(Order order) {
     bool partFound = false;
     bool isPartFaulty = true; // assume part is faulty (repeat while loop) until we see otherwise
 
-    for(auto shipment : order.shipments) {
+    for(const auto& shipment : order.shipments) {
         shipment_type = shipment.shipment_type;
         agv_id = shipment.agv_id;
         products = shipment.products;
@@ -52,9 +52,9 @@ void RWAImplementation::checkConveyor(bool part_wanted) {
 
     if (!waiting_for_part_ && !cam_listener_.load_time_on_conveyor_.empty()) {
         auto cam_parts = cam_listener_.fetchParts(node_)[5];
-        for (auto& found_part : cam_parts) {
+        for (const auto& found_part : cam_parts) {
             bool part_in_queue{false};
-            for (auto& part: parts_on_conveyor_) {
+            for (const auto& part: parts_on_conveyor_) {
                 if (part.id == found_part.id) {
                     part_in_queue = true;
                     break;

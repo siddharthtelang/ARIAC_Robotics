@@ -101,7 +101,7 @@ int main(int argc, char ** argv) {
         orders = comp.get_orders_list(); 
 
         // Check conveyor belt
-        rwa.checkConveyor(true);
+        if(!rwa.checkConveyor(true)) continue;
 
         // Grab part
         // if(orders.size > 0)
