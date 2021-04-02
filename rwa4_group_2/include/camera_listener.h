@@ -100,6 +100,15 @@ struct ModelInfo
   * \result: returns camera part list
   */
   std::array<std::vector<ModelInfo>,16> fetchParts(ros::NodeHandle &node);
+
+  /**
+  * \brief: Getter for parts from specific camera
+  * \param: reference to ROS node handle
+  * \param: camera index to be queried
+  * \result: returns camera part list for camera index
+  */
+  std::vector<ModelInfo> fetchPartsFromCamera(ros::NodeHandle &node, int cam_idx);
+
   ros::NodeHandle node_;
 
   std::unordered_map<std::string, std::unordered_map<std::string, std::vector<ModelInfo>>> getPartsMap(){

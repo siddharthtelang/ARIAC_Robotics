@@ -242,3 +242,20 @@ void CameraListener::breakbeam_callback(const nist_gear::Proximity::ConstPtr &ms
     ROS_INFO_STREAM("\n=========================================\n" << "Objected detected from breakbeam! Time: " << t_hit_breakbeam << "\n=========================================\n");
   }
 }
+
+//Function to fetch parts from specific camera
+std::vector<CameraListener::ModelInfo> CameraListener::fetchPartsFromCamera(ros::NodeHandle &node, int cam_idx)
+{
+  camera_parts_list_[cam_idx].clear();
+  ROS_INFO("Subscribing only for camera ", cam_idx);
+
+  ros::Subscriber logical_camera_subscriber;
+  logical_camera_subscriber = node.subscribe<nist_gear::LogicalCameraImage> (
+    "/ariac/logical_camera_"+std::to_string(cam_idx), 10,
+        boost::bind(&CameraListener::logical_camera_callback, this, _1, cam_idx));
+
+  ros::Duration(0.2).sleep();
+
+return camera_parts_list_[cam_idx];
+
+}
