@@ -4,6 +4,8 @@
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
 
+#include <cmath>
+
 /**
  * @brief Construct a new Gantry Control:: Gantry Control object
  * 
@@ -225,20 +227,104 @@ geometry_msgs::Pose GantryControl::getTargetWorldPose(geometry_msgs::Pose target
     return world_target;
 }
 
-////////////////////////////
-bool GantryControl::pickPart(part part, std::string arm)
-{
-    moveit::planning_interface::MoveGroupInterface* temp_arm_group;
-    if (arm == "left_arm") temp_arm_group = &left_arm_group_;
-    else if (arm == "right_arm") temp_arm_group = &right_arm_group_;
-    else {
-        ROS_INFO_STREAM("Please select arm to use.");
-        throw 1;
-    }
+// ////////////////////////////
+// bool GantryControl::pickPart_smooth(part part)
+// {
+//     //--Activate gripper
+//     activateGripper("left_arm");
+//     geometry_msgs::Pose currentPose = left_arm_group_.getCurrentPose().pose;
 
+//     std::vector<geometry_msgs::Pose> waypoints;
+//     // waypoints.push_back(currentPose); // add waypoint, initial position. want straight line motion. update: according to moveit documentation, don't need initial point
+
+
+//     part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - EPSILON_ONE_MOTION_GRASP;
+//     part.pose.orientation.x = currentPose.orientation.x;
+//     part.pose.orientation.y = currentPose.orientation.y;
+//     part.pose.orientation.z = currentPose.orientation.z;
+//     part.pose.orientation.w = currentPose.orientation.w;
+//     //    ROS_INFO_STREAM("["<< part.type<<"]= " << part.pose.position.x << ", " << part.pose.position.y << "," << part.pose.position.z << "," << part.pose.orientation.x << "," << part.pose.orientation.y << "," << part.pose.orientation.z << "," << part.pose.orientation.w);
+
+//     waypoints.push_back(part.pose); // add waypoint, move down
+
+//     waypoints.push_back(currentPose); // add waypoint, move back up
+
+
+
+//     moveit_msgs::RobotTrajectory trajectory;
+//     const double jump_threshold = 0.0;
+//     const double eef_step = 0.1; // changed from 0.01 to 0.1, fixed some errors
+//     double fraction = left_arm_group_.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
+//     ROS_INFO_STREAM("trajectory computed!");
+//     // ROS_INFO_NAMED("tutorial", "Visualizing plan 4 (Cartesian path) (%.2f%% acheived)", fraction * 100.0);
+
+//     // // also calculate path from part and back
+//     // std::vector<geometry_msgs::Pose> waypoints_back;
+//     // waypoints_back.push_back(part.pose); // add waypoint
+//     // waypoints_back.push_back(currentPose); // add waypoint, want straight line
+//     // moveit_msgs::RobotTrajectory trajectory_back;
+//     // double fraction_back = left_arm_group_.computeCartesianPath(waypoints_back, eef_step, jump_threshold, trajectory_back);
+//     // ROS_INFO_STREAM("trajectory back computed!");
+
+//     auto state = getGripperState("left_arm");
+//     if (state.enabled) {
+
+//         ROS_INFO_STREAM("[Gripper] = enabled");
+
+//         for (int i=1; i<=2; i++) { // Two tries: execute trajectory, try to pick up part.
+//             //--Move arm to part
+//             left_arm_group_.execute(trajectory);
+//             ROS_INFO_STREAM("trajectory forward executed!!!!");
+
+
+//             auto aa = left_arm_group_.execute(trajectory); // an error code, 1 if good, usually -4 if bad
+
+//             while( aa != 1 ) { // while error code indicates failure to move along trajectory. Keep trying until it does, it should be able to simply move.
+//                 // geometry_msgs::Pose nowPose = left_arm_group_.getCurrentPose().pose; // check that trajectory back was actually executed, in case of "path plan succeeded but controller failed"
+//                 std::vector<geometry_msgs::Pose> waypoints_back_again;
+
+//                 // waypoints_back_again.push_back(nowPose); // add waypoint, current position
+//                 // waypoints_back_again.push_back(part.pose); // add waypoint, move down
+//                 // waypoints_back_again.push_back(nowPose); // add waypoint, move back to current position
+//                 waypoints_back_again.push_back(currentPose); // add waypoint, move back to original position
+
+//                 moveit_msgs::RobotTrajectory trajectory_back_again;
+//                 double fraction_back_again = left_arm_group_.computeCartesianPath(waypoints_back_again, eef_step, jump_threshold, trajectory_back_again);
+//                 ROS_INFO_STREAM("trajectory back again computed!");
+//                 aa = left_arm_group_.execute(trajectory_back_again);
+//                 ROS_INFO_STREAM("trajectory back again executed (second+ try) !!!!============");
+
+//             }
+
+//             auto state = getGripperState("left_arm");
+//             if (state.attached) {
+//                 ROS_INFO_STREAM("[Gripper] = object attached");
+//                 return true;
+//             }
+        
+//         }
+
+//         return false; // if this returns false, means we have tried 1-2 times to pick the part, and failed both times.
+
+//     }
+//     else {
+//         ROS_INFO_STREAM("[Gripper] = not enabled");
+//         return false;
+//     }
+
+// }
+
+
+////////////////////////////
+bool GantryControl::pickPart(part part)
+{
     //--Activate gripper
-    activateGripper(arm);
-    geometry_msgs::Pose currentPose = temp_arm_group->getCurrentPose().pose;
+    activateGripper("left_arm");
+    geometry_msgs::Pose currentPose = left_arm_group_.getCurrentPose().pose;
+
+    std::vector<geometry_msgs::Pose> waypoints;
+    // waypoints.push_back(currentPose); // add waypoint
+
 
     part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - EPSILON;
     part.pose.orientation.x = currentPose.orientation.x;
@@ -247,68 +333,71 @@ bool GantryControl::pickPart(part part, std::string arm)
     part.pose.orientation.w = currentPose.orientation.w;
     //    ROS_INFO_STREAM("["<< part.type<<"]= " << part.pose.position.x << ", " << part.pose.position.y << "," << part.pose.position.z << "," << part.pose.orientation.x << "," << part.pose.orientation.y << "," << part.pose.orientation.z << "," << part.pose.orientation.w);
 
-    auto state = getGripperState(arm);
-    if (state.enabled)
-    {
+    waypoints.push_back(part.pose); // add waypoint, want straight line
+
+
+    moveit_msgs::RobotTrajectory trajectory;
+    const double jump_threshold = 0.0;
+    const double eef_step = 0.1; // changed from 0.01 to 0.1, fixed some errors
+    double fraction = left_arm_group_.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
+    ROS_INFO_STREAM("trajectory computed!");
+    // ROS_INFO_NAMED("tutorial", "Visualizing plan 4 (Cartesian path) (%.2f%% acheived)", fraction * 100.0);
+
+    // also calculate path from part and back
+    std::vector<geometry_msgs::Pose> waypoints_back;
+    // waypoints_back.push_back(part.pose); // add waypoint
+    waypoints_back.push_back(currentPose); // add waypoint, want straight line
+    moveit_msgs::RobotTrajectory trajectory_back;
+    double fraction_back = left_arm_group_.computeCartesianPath(waypoints_back, eef_step, jump_threshold, trajectory_back);
+    ROS_INFO_STREAM("trajectory back computed!");
+
+    auto state = getGripperState("left_arm");
+    if (state.enabled) {
+
         ROS_INFO_STREAM("[Gripper] = enabled");
-        //--Move arm to part
-        temp_arm_group->setPoseTarget(part.pose);
-        temp_arm_group->move();
-        auto state = getGripperState(arm);
-        if (state.attached)
-        {
-            ROS_INFO_STREAM("[Gripper] = object attached");
-            //--Move arm to previous position
-            temp_arm_group->setPoseTarget(currentPose);
-            temp_arm_group->move();
-            ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else!
 
-            // goToPresetLocation(start_); // having this line here is great, but does not work for shelf, since path is impeded
-            // move this to main code, but maybe let's keep the delay below?
-            ros::Duration(1.0).sleep(); // try to get it to actually go to start....
+        for (int i=1; i<=2; i++) { // Two tries: execute trajectory, try to pick up part.
+            //--Move arm to part
+            left_arm_group_.execute(trajectory);
+            ROS_INFO_STREAM("trajectory forward executed!!!!");
 
-            return true;
-        }
-        else
-        {
-            ROS_INFO_STREAM("[Gripper] = object not attached");
-            int max_attempts{5};
-            int current_attempt{0};
-            //--try to pick up the part 5 times
-            while (current_attempt<max_attempts)
-            {
-                temp_arm_group->setPoseTarget(currentPose);
-                temp_arm_group->move();
-                ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
-                temp_arm_group->setPoseTarget(part.pose);
-                temp_arm_group->move();
-                ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
-                activateGripper(arm);
-                current_attempt++;
+
+            auto aa = left_arm_group_.execute(trajectory_back); // an error code, 1 if good, usually -4 if bad
+
+            while( aa != 1 ) { // while error code indicates failure to move along trajectory
+                geometry_msgs::Pose nowPose = left_arm_group_.getCurrentPose().pose; // check that trajectory back was actually executed, in case of "path plan succeeded but controller failed"
+                std::vector<geometry_msgs::Pose> waypoints_back_again;
+                // waypoints_back_again.push_back(nowPose); // add waypoint
+                waypoints_back_again.push_back(currentPose); // add waypoint, want straight line
+                moveit_msgs::RobotTrajectory trajectory_back_again;
+                double fraction_back_again = left_arm_group_.computeCartesianPath(waypoints_back_again, eef_step, jump_threshold, trajectory_back_again);
+                ROS_INFO_STREAM("trajectory back again computed!");
+                aa = left_arm_group_.execute(trajectory_back_again);
+                ROS_INFO_STREAM("trajectory back again executed (second try) !!!!============");
+
             }
-            temp_arm_group->setPoseTarget(currentPose);
-            temp_arm_group->move();
-            ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else! upped to 1.0 from 0.5
+
+            auto state = getGripperState("left_arm");
+            if (state.attached) {
+                ROS_INFO_STREAM("[Gripper] = object attached");
+                return true;
+            }
+        
         }
+
+        return false; // if this returns false, means we have tried 1-2 times to pick the part, and failed both times.
+
     }
-    else
-    {
+    else {
         ROS_INFO_STREAM("[Gripper] = not enabled");
+        return false;
     }
-    return false;
+
 }
 
 ////////////////////////////
-void GantryControl::placePart(part part, std::string agv, std::string arm)
+void GantryControl::placePart(part part, std::string agv)
 {
-    moveit::planning_interface::MoveGroupInterface* temp_arm_group;
-    if (arm == "left_arm") temp_arm_group = &left_arm_group_;
-    else if (arm == "right_arm") temp_arm_group = &right_arm_group_;
-    else {
-        ROS_INFO_STREAM("Please select arm to use.");
-        throw 1;
-    }
-
     auto target_pose_in_tray = getTargetWorldPose(part.pose, agv);
 
     ros::Duration(2.0).sleep();
@@ -319,27 +408,20 @@ void GantryControl::placePart(part part, std::string agv, std::string arm)
         goToPresetLocation(agv1_);
     target_pose_in_tray.position.z += (ABOVE_TARGET + 1.5 * model_height[part.type]);
 
-    temp_arm_group->setPoseTarget(target_pose_in_tray);
-    temp_arm_group->move();
+    left_arm_group_.setPoseTarget(target_pose_in_tray);
+    left_arm_group_.move();
 
-    deactivateGripper(arm);
-    auto state = getGripperState(arm);
+    deactivateGripper("left_arm");
+    auto state = getGripperState("left_arm");
 //    if (state.attached)
         // ;// pass, don't necesarily go back to start in case of faulty part
         //goToPresetLocation(start_);
 }
 
-bool GantryControl::replaceFaultyPart(part part, std::string agv, std::string arm)
+bool GantryControl::replaceFaultyPart(part part, std::string agv)
 {
-    moveit::planning_interface::MoveGroupInterface* temp_arm_group;
-    if (arm == "left_arm") temp_arm_group = &left_arm_group_;
-    else if (arm == "right_arm") temp_arm_group = &right_arm_group_;
-    else {
-        ROS_INFO_STREAM("Please select arm to use.");
-        throw 1;
-    }
-    activateGripper(arm);
-    geometry_msgs::Pose currentPose = temp_arm_group->getCurrentPose().pose;
+    activateGripper("left_arm");
+    geometry_msgs::Pose currentPose = left_arm_group_.getCurrentPose().pose;
     auto target_pose_in_tray = getTargetWorldPose(part.pose, agv);
     ros::Duration(2.0).sleep();
     //--TODO: Consider agv1 too
@@ -349,26 +431,26 @@ bool GantryControl::replaceFaultyPart(part part, std::string agv, std::string ar
         goToPresetLocation(agv1_);*/
 //    target_pose_in_tray.position.z += (ABOVE_TARGET + 1.5 * model_height[part.type]);
     target_pose_in_tray.position.z += model_height.at(part.type) + GRIPPER_HEIGHT - EPSILON;
-    temp_arm_group->setPoseTarget(target_pose_in_tray);
-    temp_arm_group->move();
-    activateGripper(arm);
-    auto state = getGripperState(arm);
+    left_arm_group_.setPoseTarget(target_pose_in_tray);
+    left_arm_group_.move();
+    activateGripper("left_arm");
+    auto state = getGripperState("left_arm");
 
-//    auto state = getGripperState(arm);
+//    auto state = getGripperState("left_arm");
     if (state.enabled)
     {
         ROS_INFO_STREAM("[Gripper] = enabled");
         //--Move arm to part
-//        temp_arm_group->setPoseTarget(part.pose);
-//        temp_arm_group->move();
-//        auto state = getGripperState(arm);
+//        left_arm_group_.setPoseTarget(part.pose);
+//        left_arm_group_.move();
+//        auto state = getGripperState("left_arm");
         if (state.attached)
         {
             ROS_INFO_STREAM("[Gripper] = object attached");
             //--Move arm to previous position
 //            currentPose.position.z =
-            temp_arm_group->setPoseTarget(currentPose);
-            temp_arm_group->move();
+            left_arm_group_.setPoseTarget(currentPose);
+            left_arm_group_.move();
             ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else!
 
             if (agv == "agv2")
@@ -382,7 +464,7 @@ bool GantryControl::replaceFaultyPart(part part, std::string agv, std::string ar
             start_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
             goToPresetLocation(start_a);
             ros::Duration(1.0).sleep(); // try to get it to actually go to start....
-            deactivateGripper(arm);
+            deactivateGripper("left_arm");
             // goToPresetLocation(start_); // having this line here is great, but does not work for shelf, since path is impeded
             // move this to main code, but maybe let's keep the delay below?
             ros::Duration(1.0).sleep(); // try to get it to actually go to start....
@@ -397,17 +479,17 @@ bool GantryControl::replaceFaultyPart(part part, std::string agv, std::string ar
             //--try to pick up the part 5 times
             while (current_attempt<max_attempts)
             {
-                temp_arm_group->setPoseTarget(currentPose);
-                temp_arm_group->move();
+                left_arm_group_.setPoseTarget(currentPose);
+                left_arm_group_.move();
                 ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
-                temp_arm_group->setPoseTarget(part.pose);
-                temp_arm_group->move();
+                left_arm_group_.setPoseTarget(part.pose);
+                left_arm_group_.move();
                 ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
-                activateGripper(arm);
+                activateGripper("left_arm");
                 current_attempt++;
             }
-            temp_arm_group->setPoseTarget(currentPose);
-            temp_arm_group->move();
+            left_arm_group_.setPoseTarget(currentPose);
+            left_arm_group_.move();
             ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else! upped to 1.0 from 0.5
         }
     }
@@ -423,9 +505,9 @@ bool GantryControl::replaceFaultyPart(part part, std::string agv, std::string ar
     start_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
 
     goToPresetLocation(start_a);
-    deactivateGripper(arm);
+    deactivateGripper("left_gripper");
     ros::Duration(1.0).sleep();
-//    auto state = getGripperState(arm);
+//    auto state = getGripperState("left_arm");
     return false;
 //    if (state.attached)
         // ;// pass, don't necesarily go back to start in case of faulty part
@@ -436,6 +518,7 @@ bool GantryControl::replaceFaultyPart(part part, std::string agv, std::string ar
 ////////////////////////////
 void GantryControl::goToPresetLocation(PresetLocation location)
 {
+    ROS_INFO_STREAM("goToPresetLocation Executed!!!============");
     //--gantry
     joint_group_positions_.at(0) = location.gantry.at(0);
     joint_group_positions_.at(1) = location.gantry.at(1);

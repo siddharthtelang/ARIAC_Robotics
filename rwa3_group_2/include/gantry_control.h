@@ -54,21 +54,29 @@ class GantryControl {
     void init();
 
     /**
-     * \brief: Returns true or false depending on whether part was successfully picked.
+     * \brief: Pick parts, down up, in single trajectory, then check if gripper is full.
      * \param: part to pick
-     * \result: true false success boolean
+     * \result: true false success boolean, reasons for failure: didn't grasp part (unattached), or gripper was not enabled at start.
      */
-    bool pickPart(part part, std::string arm);
-    
+    bool pickPart(part part);
+
+    /**
+     * \brief: Pick parts with TWO straight line trajectories (ie. segmented motion), move down, small pause as code executes, move back up.
+     * \param: part to pick
+     * \result: true false success boolean, reasons for failure: didn't grasp part (unattached), or gripper was not enabled at start.
+     */
+    bool pickPart_smooth(part part);
+
+
     /**
      * \brief: Returns true or false depending on whether part was successfully placed.
      * \param: part to place
      * \result: true false success boolean
      */
-    void placePart(part part, std::string agv, std::string arm);
+    void placePart(part part, std::string agv);
 
 
-    bool replaceFaultyPart(part part, std::string agv, std::string arm);
+    bool replaceFaultyPart(part part, std::string agv);
 
     
     /**

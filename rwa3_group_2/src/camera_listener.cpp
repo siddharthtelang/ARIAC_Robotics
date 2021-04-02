@@ -233,11 +233,3 @@ void CameraListener::quality_control_callback(
     }
     ROS_INFO_STREAM("faulty parts: " << faulty_parts);
 }
-
-void CameraListener::breakbeam_callback(const nist_gear::Proximity::ConstPtr &msg) {
-  if (msg->object_detected == true) {
-    ros::Time t_hit_breakbeam = ros::Time::now();
-    load_time_on_conveyor_.push(t_hit_breakbeam);
-    ROS_INFO_STREAM("\n=========================================\n" << "Objected detected from breakbeam! Time: " << t_hit_breakbeam << "\n=========================================\n");
-  }
-}
