@@ -52,6 +52,9 @@ private:
     CameraListener::ModelInfo current_part_on_conveyor_;
     std::deque<CameraListener::ModelInfo> parts_on_conveyor_; 
 
+    /* ===================== Misc Variables ===================== */
+    int prev_num_orders_{0};
+
 public:
     RWAImplementation(ros::NodeHandle& node, CameraListener& camera_listener, GantryControl& gantry, Competition& competition) : 
         node_{&node}, cam_listener_{&camera_listener}, gantry_{&gantry}, competition_{&competition}
