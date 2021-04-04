@@ -3,6 +3,7 @@
 /* ========= Std Libs ========= */
 #include <queue>
 #include <vector>
+#include <stack>
 
 /* ========= ARIAC Libs ========= */
 #include <nist_gear/Proximity.h>
@@ -28,7 +29,7 @@ private:
     CameraListener* cam_listener_;
     GantryControl* gantry_;
     Competition* competition_;
-    std::queue<std::vector<Product>> task_queue_;
+    std::stack<std::queue<std::vector<Product>>> task_queue_;
 
     /* ===================== Subscribers ===================== */
     ros::Subscriber breakbeam_sub_;

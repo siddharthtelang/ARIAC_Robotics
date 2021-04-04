@@ -47,6 +47,7 @@ void RWAImplementation::processOrder() {
     }
          
     std::queue<Product> needs_pair;
+    std::queue<std::vector<Product>> order_task_queue;
     for(auto color : cam_listener_->colors_) {
         for(auto type : cam_listener_->types_) {
             auto similar_parts = total_products[color][type];
@@ -56,7 +57,7 @@ void RWAImplementation::processOrder() {
                 similar_parts.pop();
                 task_pair.push_back(similar_parts.front());
                 similar_parts.pop();
-                task_queue_.push(task_pair);
+                order_task_queue.push(task_pair);
             }
             if(similar_parts.size() == 1) {
                 if(needs_pair.size() > 0) {
@@ -65,32 +66,34 @@ void RWAImplementation::processOrder() {
                     needs_pair.pop();
                     task_pair.push_back(similar_parts.front());
                     similar_parts.pop();
-                    task_queue_.push(task_pair);
+                    order_task_queue.push(task_pair);
                 } else needs_pair.push(similar_parts.front());
             }
         }
     }
 
     while(needs_pair.size() > 0) {
-        task_queue_.push(std::vector<Product>{needs_pair.front()});
+        order_task_queue.push(std::vector<Product>{needs_pair.front()});
         needs_pair.pop();
     }
-    ROS_INFO_STREAM("Completed order processing. All parts on queue.");
+    task_queue_.push(order_task_queue);
+    ROS_INFO_STREAM("Completed order processing. All parts on task queue.");
 
     // // CANNOT ITERATE OVER QUEUE. THIS PART IS JUST FOR TESTING. WILL NOT WORK IF UNCOMMENTED DURING EXECUTION
-    // ROS_INFO_STREAM("");
-    // while(!task_queue_.empty()) {
-    //     auto vec = task_queue_.front();
-    //     ROS_INFO_STREAM("Vector on queue.");
-    //     for(auto product : vec) {
-    //         ROS_INFO_STREAM("  Product on queue.");
-    //         ROS_INFO_STREAM("  Product type: " << product.type);
-    //         ROS_INFO_STREAM("  Product target AGV: " << product.agv_id);
-    //         ROS_INFO_STREAM("    Designated model id: " << product.designated_model.id);
-    //         ROS_INFO_STREAM("    Designated model type: " << product.designated_model.color << " " << product.designated_model.type << "\n");
-    //     }
-    //     task_queue_.pop();
-    // }
+    ROS_INFO_STREAM("");
+    auto task_queue = task_queue_.top();
+    while(!task_queue.empty()) {
+        auto vec = task_queue.front();
+        ROS_INFO_STREAM("Vector on queue.");
+        for(auto product : vec) {
+            ROS_INFO_STREAM("  Product on queue.");
+            ROS_INFO_STREAM("  Product type: " << product.type);
+            ROS_INFO_STREAM("  Product target AGV: " << product.agv_id);
+            ROS_INFO_STREAM("    Designated model id: " << product.designated_model.id);
+            ROS_INFO_STREAM("    Designated model type: " << product.designated_model.color << " " << product.designated_model.type << "\n");
+        }
+        task_queue.pop();
+    }
 }
 
 bool RWAImplementation::checkConveyor(bool part_wanted) {
