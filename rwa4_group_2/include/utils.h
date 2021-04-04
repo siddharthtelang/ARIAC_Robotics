@@ -5,6 +5,7 @@
 #include <geometry_msgs/Point.h>
 #include <unordered_map>
 #include <string>
+#include "camera_listener.h"
 
 #include <ros/ros.h>
 
@@ -108,7 +109,10 @@ typedef struct Product {
     std::string agv_id;
     std::string tray;
     std::string arm_name;
+    CameraListener::ModelInfo designated_model;
+    bool get_from_conveyor{false};
 } product;
+
 
 /**
  * @brief struct to parse and store orders published on /ariac/orders
@@ -118,7 +122,5 @@ typedef struct Order {
     std::string order_id;
     std::vector<Shipment> shipments;
 } order;
-
-
 
 #endif

@@ -1,3 +1,7 @@
+#ifndef CAMLISTEN_H
+#define CAMLISTEN_H
+
+#include <cmath>
 #include <algorithm>
 #include <vector>
 #include <string>
@@ -36,19 +40,29 @@ public:
 //       node_ = node;
 //   }
 
-struct ModelInfo
-{
+  struct ModelInfo
+  {
 
-  int cam_index;
-  geometry_msgs::Pose camera_pose;
+    int cam_index;
+    geometry_msgs::Pose camera_pose;
 
-  std::string color;
-  geometry_msgs::Pose model_pose;
-  geometry_msgs::Pose world_pose;
-  geometry_msgs:: TransformStamped transformStamped;
-  std::string type;
-  std::string id;
-};
+    std::string color;
+    geometry_msgs::Pose model_pose;
+    geometry_msgs::Pose world_pose;
+    geometry_msgs:: TransformStamped transformStamped;
+    std::string type;
+    std::string id;
+  };
+
+  // For priority queue sorting. I may have to swith the sign because priority queues sort by highest not lowest.
+  struct CompareDists {
+    bool operator()(const CameraListener::ModelInfo& lhs, const CameraListener::ModelInfo& rhs) {
+        // return "true" if "p1" is ordered before "p2", for example:
+        auto dist1 = std::sqrt(std::pow(lhs.world_pose.position.x, 2) + std::pow(lhs.world_pose.position.y, 2));
+        auto dist2 = std::sqrt(std::pow(rhs.world_pose.position.x, 2) + std::pow(rhs.world_pose.position.y, 2));
+        return dist1 < dist2;
+    }
+  };
 
    /**
   * \brief: Defines camera subscriber callback
@@ -70,6 +84,8 @@ struct ModelInfo
   * \result: Updates hash map with ordered parts
   */
   void sort_camera_parts_list();
+
+  std::unordered_map<std::string, std::unordered_map<std::string, std::priority_queue<CameraListener::ModelInfo, std::vector<CameraListener::ModelInfo>, CameraListener::CompareDists>>> sortPartsByDist();
 
   /**
   * \brief: Checks AGV for faulty parts
@@ -123,6 +139,10 @@ struct ModelInfo
   std::unordered_map<std::string, std::unordered_map<std::string, std::vector<ModelInfo>>> ordered_color_type;
   const float conveyor_spd_{0.2}; // m/s
   std::queue<ros::Time> load_time_on_conveyor_;
+  std::array<std::string, 3> colors_{"red", "blue", "green"};
+  std::array<std::string, 4> types_{"disk", "pulley", "gasket", "piston"};
   //ros::Subscriber logical_camera_subscriber;
 
 };
+
+#endif

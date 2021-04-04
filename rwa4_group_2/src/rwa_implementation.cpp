@@ -1,22 +1,25 @@
-#include "include/rwa_implementation.h"
+#include "rwa_implementation.h"
+#include <unordered_map>
 
-void RWAImplementation::processOrder(Order order) {
-    std::vector<Product> total_products;
+void RWAImplementation::processOrder() {
+    auto order_list = competition_->get_orders_list();
+    if (order_list.empty()) return;
+    ROS_INFO_STREAM("Processing Order...");
+
+    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<Product>>> total_products;
     std::vector<Product> products;
-    std::vector<std::string> total_products_agv_id;
-    product product;
-    CameraListener::ModelInfo pickPart;
-    std::vector<Order> orders;
-    std::vector<Shipment> shipments;
     std::string shipment_type;
-    std::string agv_id;
-    std::string kit_id;
-    bool partFound = false;
-    bool isPartFaulty = true; // assume part is faulty (repeat while loop) until we see otherwise
 
+    std::string delimiter = "_";
+
+    cam_listener_->fetchParts(*node_);
+    cam_listener_->sort_camera_parts_list();
+    auto sorted_map = cam_listener_->sortPartsByDist();
+
+    auto order = order_list.front();
     for(const auto& shipment : order.shipments) {
         shipment_type = shipment.shipment_type;
-        agv_id = shipment.agv_id;
+        std::string agv_id = shipment.agv_id;
         products = shipment.products;
 
         ROS_INFO_STREAM("Shipment type = " << shipment_type);
@@ -24,37 +27,50 @@ void RWAImplementation::processOrder(Order order) {
 
         ROS_INFO_STREAM("Shipment size = " << order.shipments.size());
 
-        for (auto product : products) { ////////// FOR PRODUCT IN PRODUCTS
-            partFound = false;
-            isPartFaulty = true;
+        for (auto& product : products) { ////////// FOR PRODUCT IN PRODUCTS
             ROS_INFO_STREAM("Product type = " << product.type);
-            total_products.push_back(product);
-            total_products_agv_id.push_back(agv_id);
+            product.agv_id = agv_id;
+            std::string color = product.type;
+            std::string type = color.substr(0, color.find(delimiter));
+            int pos{};
+            while ((pos = color.find(delimiter)) != std::string::npos) {
+                color.erase(0,pos+delimiter.length());
+            }
+            if(!sorted_map[color][type].empty()) {
+                product.designated_model = sorted_map[color][type].top();
+                sorted_map[color][type].pop();
+            } else product.get_from_conveyor = true;
+            total_products[color][type].push_back(product);
         }
     }
-    cam_listener_.fetchParts(node_);
-    cam_listener_.sort_camera_parts_list();
-    auto sorted_map = cam_listener_.ordered_color_type;
+
+    competition_->clear_orders_list();   
+
+
+          
 
     // Choose parts closest to AGV
+
 
     // Find part regions
 
     // Match two parts in a given region
-    std::vector<CameraListener::ModelInfo> task_pair{};
+    // std::vector<CameraListener::ModelInfo> task_pair{};
 
     // Add parts to FIFO queue
-    task_queue_.push(task_pair);
+    // task_queue_.push(task_pair);
 
 }
 
-void RWAImplementation::checkConveyor(bool part_wanted) {
+bool RWAImplementation::checkConveyor(bool part_wanted) {
+    bool continue_ = false;
 
-    if (!waiting_for_part_ && !cam_listener_.load_time_on_conveyor_.empty()) {
-        auto cam_parts = cam_listener_.fetchParts(node_)[5];
+    if (!waiting_for_part_ && !cam_listener_->load_time_on_conveyor_.empty()) {
+        // auto cam_parts = cam_listener_->fetchPartsFromCamera(*node_, 5);
+        auto cam_parts = cam_listener_->fetchParts(*node_)[5];
         for (const auto& found_part : cam_parts) {
             bool part_in_queue{false};
-            for (const auto& part: parts_on_conveyor_) {
+            for (const auto& part : parts_on_conveyor_) {
                 if (part.id == found_part.id) {
                     part_in_queue = true;
                     break;
@@ -63,12 +79,12 @@ void RWAImplementation::checkConveyor(bool part_wanted) {
             if (!part_in_queue) parts_on_conveyor_.push_back(found_part);
         }
         waiting_for_part_ = true;
-        current_part_load_time_ = cam_listener_.load_time_on_conveyor_.front();
+        current_part_load_time_ = cam_listener_->load_time_on_conveyor_.front();
         current_part_on_conveyor_ = parts_on_conveyor_.front();
-        cam_listener_.load_time_on_conveyor_.pop();
+        cam_listener_->load_time_on_conveyor_.pop();
         parts_on_conveyor_.pop_front();
-        gantry_.goToPresetLocation(conveyor_belt);
-    } else if (part_wanted && waiting_for_part_ && (ros::Time::now()-current_part_load_time_).toSec() > dx_/cam_listener_.conveyor_spd_) {
+        gantry_->goToPresetLocation(conveyor_belt);
+    } else if (part_wanted && waiting_for_part_ && (ros::Time::now()-current_part_load_time_).toSec() > dx_/cam_listener_->conveyor_spd_) {
         ROS_INFO_STREAM("Pick up part now!");
         part temp_part;
         temp_part.type = current_part_on_conveyor_.type;
@@ -77,8 +93,10 @@ void RWAImplementation::checkConveyor(bool part_wanted) {
         ROS_INFO_STREAM("x: " << temp_part.pose.position.x << ", y: " << temp_part.pose.position.y << ", z: " << temp_part.pose.position.z);
         // current_part_on_conveyor.world_pose
         waiting_for_part_ = false;
-        gantry_.pickPart(temp_part, "left_arm");
+        gantry_->pickPart(temp_part, "left_arm");
+        continue_ = true;
     }
+    return continue_;
 }
 
 

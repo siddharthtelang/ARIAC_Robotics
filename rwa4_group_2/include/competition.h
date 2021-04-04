@@ -88,6 +88,10 @@ public:
         return order_list_;
     }
 
+    void clear_orders_list() {
+        order_list_.clear();
+    }
+
 private:
     ros::NodeHandle node_;/*!< node handle for this class */
     std::string competition_state_;/*!< state of the competition */

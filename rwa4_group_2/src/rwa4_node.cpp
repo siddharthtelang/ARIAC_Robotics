@@ -138,26 +138,32 @@ int main(int argc, char ** argv) {
     gantry.goToPresetLocation(gantry.start_);
 
     CameraListener cam_listener(node);
+    RWAImplementation rwa(node, cam_listener, gantry, comp);
+    
+    while(ros::ok()) {
+        rwa.processOrder();
+        // rwa.checkConveyor(true);
+        ros::Duration(0.5).sleep();
+    }
+    // //--1-Read order
+    // std::vector<Product> total_products;
+    // std::vector<Product> products;
+    // product product;
+    // CameraListener::ModelInfo pickPart;
+    // std::vector<Order> orders;
+    // std::vector<Shipment> shipments;
+    // std::string shipment_type;
+    // std::string agv_id;
+    // std::string kit_id;
+    // bool partFound = false;
 
-    //--1-Read order
-    std::vector<Product> total_products;
-    std::vector<Product> products;
-    product product;
-    CameraListener::ModelInfo pickPart;
-    std::vector<Order> orders;
-    std::vector<Shipment> shipments;
-    std::string shipment_type;
-    std::string agv_id;
-    std::string kit_id;
-    bool partFound = false;
-
-    bool isPartFaulty = true; // assume part is faulty (repeat while loop) until we see otherwise
-    std::map<int, PresetLocation> cam_to_presetlocation = {
-        {0, bin3_a},
-        {7, bin3_a},
-        {9, shelf5_a},
-        {12, shelf5_a}
-    };
+    // bool isPartFaulty = true; // assume part is faulty (repeat while loop) until we see otherwise
+    // std::map<int, PresetLocation> cam_to_presetlocation = {
+    //     {0, bin3_a},
+    //     {7, bin3_a},
+    //     {9, shelf5_a},
+    //     {12, shelf5_a}
+    // };
 
     // THIS SECTION WILL EVENTUALLY BE IT'S OWN FUNCTION. JUST HERE FOR TESTING.
     // PresetLocation conveyor_belt;

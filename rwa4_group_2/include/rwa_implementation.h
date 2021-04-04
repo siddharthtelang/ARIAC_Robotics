@@ -4,6 +4,9 @@
 #include <queue>
 #include <vector>
 
+/* ========= ARIAC Libs ========= */
+#include <nist_gear/Proximity.h>
+
 /* ========= ROS Libs ========= */
 #include <ros/ros.h>
 
@@ -19,12 +22,13 @@
 class RWAImplementation
 {
 private:
-    ros::NodeHandle& node_;
+    ros::NodeHandle* node_;
 
     /* ===================== Gazebo Control ===================== */
-    CameraListener& cam_listener_;
-    GantryControl& gantry_;
-    std::queue<std::vector<CameraListener::ModelInfo>> task_queue_;
+    CameraListener* cam_listener_;
+    GantryControl* gantry_;
+    Competition* competition_;
+    std::queue<std::vector<Product>> task_queue_;
 
     /* ===================== Subscribers ===================== */
     ros::Subscriber breakbeam_sub_;
@@ -49,16 +53,16 @@ private:
     std::deque<CameraListener::ModelInfo> parts_on_conveyor_; 
 
 public:
-    RWAImplementation(ros::NodeHandle& node, CameraListener& camera_listener, GantryControl& gantry) : 
-        node_{node}, cam_listener_{camera_listener}, gantry_{gantry}
+    RWAImplementation(ros::NodeHandle& node, CameraListener& camera_listener, GantryControl& gantry, Competition& competition) : 
+        node_{&node}, cam_listener_{&camera_listener}, gantry_{&gantry}, competition_{&competition}
     {
         initPresetLocs();
-        breakbeam_sub_ = node.subscribe<nist_gear::Proximity>("/ariac/breakbeam_0_change", 10, &CameraListener::breakbeam_callback, &cam_listener_);
+        breakbeam_sub_ = node_->subscribe<nist_gear::Proximity>("/ariac/breakbeam_0_change", 10, &CameraListener::breakbeam_callback, cam_listener_);
     };
 
     bool checkConveyor(bool part_wanted);
     void initPresetLocs();
-    void processOrder(Order order);
+    void processOrder();
 
 
 
