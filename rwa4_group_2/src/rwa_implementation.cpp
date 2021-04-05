@@ -212,6 +212,10 @@ void RWAImplementation::initPresetLocs() {
 
 
 void RWAImplementation::buildKit() {
+    if (task_queue_.top().empty()) {
+        ROS_INFO("Task queue is empty. Return");
+        return;
+    }
     Product product = task_queue_.top().front()[0];
     part my_part;
     my_part.type = product.type;
@@ -239,7 +243,7 @@ void RWAImplementation::buildKit() {
         // gantry.goToPresetLocation(gantry.start_);
         // spinner.stop();
         // ros::shutdown();
-        ;//pass
+        //pass
     }
 
     // go back to start
@@ -248,7 +252,8 @@ void RWAImplementation::buildKit() {
 
     //place the part
     gantry_->placePart(part_in_tray, product.agv_id, "left_arm");
-    task_queue_.pop();
+    task_queue_.top().pop();
+    ROS_INFO("Popped element");
 //    gantry_->goToPresetLocation(start_a);
 }
 
