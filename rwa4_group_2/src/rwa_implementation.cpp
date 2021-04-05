@@ -133,6 +133,20 @@ bool RWAImplementation::checkConveyor(bool part_wanted) {
     return continue_;
 }
 
+/**
+ * \brief: Main for rwa3 node
+ * \param: argc
+ * \param: argv
+ * \result: Applies control of gantry robot
+ */
+PresetLocation Bump(PresetLocation location_to_modify, double small_rail, double large_rail, double torso ) {
+    location_to_modify.gantry.at(0) = location_to_modify.gantry.at(0) + small_rail;
+    location_to_modify.gantry.at(1) = location_to_modify.gantry.at(1) - large_rail; // Minus now, does simulation switch?
+    location_to_modify.gantry.at(2) = location_to_modify.gantry.at(2) + torso;
+
+    return location_to_modify;
+}
+
 
 void RWAImplementation::initPresetLocs() {
     conveyor_belt.gantry = {0, 3, PI/2};
@@ -185,4 +199,59 @@ void RWAImplementation::initPresetLocs() {
     shelf5_spun_a.gantry = {-15.42, -4.30, 3.14};
     shelf5_spun_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
     shelf5_spun_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same except for joint 0
+
+    cam_to_presetlocation = {
+        {0, bin3_a},
+        {7, bin3_a},
+        {9, shelf5_a},
+        {12, shelf5_a}
+    };
+}
+
+
+void RWAImplementation::buildKit() {
+    Product product = task_queue_.top().front()[0];
+    part my_part;
+    my_part.type = product.type;
+    my_part.pose = product.designated_model.world_pose;
+
+    part part_in_tray;
+    part_in_tray.type = task_queue_.top().front()[0].type;
+    part_in_tray.pose = task_queue_.top().front()[0].pose;
+
+    double add_to_x = my_part.pose.position.x - 4.365789 - 0.1; // constant is perfect bin red pulley x
+    double add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
+    // double add_to_x = my_part.pose.position.x - 4.665789; // constant is perfect bin red pulley x
+    // double add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
+
+    ROS_INFO_STREAM(" x " << add_to_x << " y " << add_to_y);
+
+    /********************   Hard Coded     ****************/
+    gantry_->goToPresetLocation(bin3_a);
+//    gantry_->goToPresetLocation(Bump(bin3_a, add_to_x, add_to_y, 0));
+//    gantry_->goToPresetLocation(Bump(cam_to_presetlocation[discovered_cam_idx], add_to_x, add_to_y, 0));
+    /********************   Hard Coded     ****************/
+
+    //--Go pick the part
+    if (!gantry_->pickPart(my_part, "left_arm")){
+        // gantry.goToPresetLocation(gantry.start_);
+        // spinner.stop();
+        // ros::shutdown();
+        ;//pass
+    }
+
+    // go back to start
+    gantry_->goToPresetLocation(start_a);
+    ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
+
+    //place the part
+    gantry_->placePart(part_in_tray, product.agv_id, "left_arm");
+    task_queue_.pop();
+//    gantry_->goToPresetLocation(start_a);
+}
+
+
+void RWAImplementation::checkAgvErrors() {
+    /************** Check for Faulty Parts *****************/
+
 }

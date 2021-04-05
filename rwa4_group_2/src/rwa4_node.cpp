@@ -40,19 +40,6 @@
 
 #include <tf2/LinearMath/Quaternion.h>
 
-/**
- * \brief: Main for rwa3 node
- * \param: argc
- * \param: argv
- * \result: Applies control of gantry robot
- */
-PresetLocation Bump(PresetLocation location_to_modify, double small_rail, double large_rail, double torso ) {
-    location_to_modify.gantry.at(0) = location_to_modify.gantry.at(0) + small_rail;
-    location_to_modify.gantry.at(1) = location_to_modify.gantry.at(1) - large_rail; // Minus now, does simulation switch?
-    location_to_modify.gantry.at(2) = location_to_modify.gantry.at(2) + torso;
-
-    return location_to_modify;
-}
 
 int main(int argc, char ** argv) {
     /////////////////////////////////////////////////////////////////////////////
@@ -142,7 +129,9 @@ int main(int argc, char ** argv) {
     
     while(ros::ok()) {
         rwa.processOrder();
-        // rwa.checkConveyor(true);
+//        rwa.checkConveyor(true);
+        rwa.buildKit();
+        rwa.checkAgvErrors();
         ros::Duration(0.5).sleep();
     }
     // //--1-Read order

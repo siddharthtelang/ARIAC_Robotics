@@ -56,6 +56,8 @@ private:
     /* ===================== Misc Variables ===================== */
     int prev_num_orders_{0};
 
+    std::map<int, PresetLocation> cam_to_presetlocation;
+
 public:
     RWAImplementation(ros::NodeHandle& node, CameraListener& camera_listener, GantryControl& gantry, Competition& competition) : 
         node_{&node}, cam_listener_{&camera_listener}, gantry_{&gantry}, competition_{&competition}
@@ -67,6 +69,8 @@ public:
     bool checkConveyor(bool part_wanted);
     void initPresetLocs();
     void processOrder();
+    void buildKit();
+    void checkAgvErrors();
 
 
 
