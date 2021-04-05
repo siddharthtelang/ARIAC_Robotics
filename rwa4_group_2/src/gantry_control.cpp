@@ -460,6 +460,7 @@ void GantryControl::goToPresetLocation(PresetLocation location)
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
     bool success = (full_robot_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
     if (success)
+        ros::Duration(1.0).sleep();
         full_robot_group_.move();
 }
 
