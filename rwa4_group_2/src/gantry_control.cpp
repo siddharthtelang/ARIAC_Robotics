@@ -319,13 +319,26 @@ void GantryControl::placePart(part part, std::string agv, std::string arm)
         goToPresetLocation(agv1_);
     target_pose_in_tray.position.z += (ABOVE_TARGET + 1.5 * model_height[part.type]);
 
-    temp_arm_group->setPoseTarget(target_pose_in_tray);
-    temp_arm_group->move();
-
-    deactivateGripper(arm);
+    /* Start: Fix Bug - When there is a faulty gripper, gantry tries to place part on tray without any part on it */
     auto state = getGripperState(arm);
-//    if (state.attached)
-        // ;// pass, don't necesarily go back to start in case of faulty part
+    if (state.attached)
+    {
+        temp_arm_group->setPoseTarget(target_pose_in_tray);
+        temp_arm_group->move();
+        state = getGripperState(arm);
+        if (state.attached){
+            deactivateGripper(arm);
+        }
+    }
+    else
+    {
+        ROS_INFO("Object is not attached to gripper, do not move");
+    }
+    /* End: Fix Bug - When there is a faulty gripper, gantry tries to place part on tray without any part on it */
+
+    //auto state = getGripperState(arm);
+    //if (state.attached)
+        // pass, don't necesarily go back to start in case of faulty part
         //goToPresetLocation(start_);
 }
 
