@@ -224,6 +224,7 @@ void RWAImplementation::buildKit() {
     part part_in_tray;
     part_in_tray.type = task_queue_.top().front()[0].type;
     part_in_tray.pose = task_queue_.top().front()[0].pose;
+    part_in_tray.initial_pose = product.designated_model.world_pose; // save the initial pose
 
     double add_to_x = my_part.pose.position.x - 4.365789 - 0.1; // constant is perfect bin red pulley x
     double add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
@@ -232,11 +233,9 @@ void RWAImplementation::buildKit() {
 
     ROS_INFO_STREAM(" x " << add_to_x << " y " << add_to_y);
 
-    /********************   Hard Coded     ****************/
-    gantry_->goToPresetLocation(bin3_a);
-//    gantry_->goToPresetLocation(Bump(bin3_a, add_to_x, add_to_y, 0));
-//    gantry_->goToPresetLocation(Bump(cam_to_presetlocation[discovered_cam_idx], add_to_x, add_to_y, 0));
-    /********************   Hard Coded     ****************/
+    int discovered_cam_idx = product.designated_model.cam_index;
+
+    gantry_->goToPresetLocation(Bump(cam_to_presetlocation[discovered_cam_idx], add_to_x, add_to_y, 0));
 
     //--Go pick the part
     if (!gantry_->pickPart(my_part, "left_arm")){
@@ -262,3 +261,7 @@ void RWAImplementation::checkAgvErrors() {
     /************** Check for Faulty Parts *****************/
 
 }
+
+// bool RWAImplementation::checkAndCorrectPose(){
+
+// }

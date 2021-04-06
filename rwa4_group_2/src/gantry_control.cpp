@@ -124,10 +124,7 @@ void GantryControl::init()
 
 
 ////////////////////////////
-geometry_msgs::Pose GantryControl::getTargetWorldPose(geometry_msgs::Pose target,
-                                                      std::string agv)
-{
-    
+geometry_msgs::Pose GantryControl::getTargetWorldPose(geometry_msgs::Pose target, std::string agv){
     static tf2_ros::StaticTransformBroadcaster br;
     geometry_msgs::TransformStamped transformStamped;
 
@@ -147,25 +144,26 @@ geometry_msgs::Pose GantryControl::getTargetWorldPose(geometry_msgs::Pose target
     transformStamped.transform.rotation.z = target.orientation.z;
     transformStamped.transform.rotation.w = target.orientation.w;
 
-    
-    for (int i{0}; i < 15; ++i)
+    for (int i = 0; i < 15; ++i)
+    {
         br.sendTransform(transformStamped);
+    }
 
     tf2_ros::Buffer tfBuffer;
     tf2_ros::TransformListener tfListener(tfBuffer);
-    // ros::Rate rate(10);
-    ros::Duration timeout(5.0);
+    ros::Rate rate(10);
+    ros::Duration timeout(1.0);
+
 
     geometry_msgs::TransformStamped world_target_tf;
     geometry_msgs::TransformStamped ee_target_tf;
-    for (int i = 0; i < 10; i++)
+
+    for (int i=0; i< 10; i++)
     {
         try
         {
             world_target_tf = tfBuffer.lookupTransform("world", "target_frame",
-                                                       ros::Time(0), timeout);
-            // ROS_WARN_STREAM("target in world frame: " << world_target_tf.transform.rotation.x <<" "<<world_target_tf.transform.rotation.y<<" "<<world_target_tf.transform.rotation.z<<" "<<world_target_tf.transform.rotation.w);
-
+                                                        ros::Time(0), timeout);
         }
         catch (tf2::TransformException &ex)
         {
@@ -174,54 +172,24 @@ geometry_msgs::Pose GantryControl::getTargetWorldPose(geometry_msgs::Pose target
             continue;
         }
     }
-
-    for (int i = 0; i < 10; i++)
-    {
-        try
-        {
-            ee_target_tf = tfBuffer.lookupTransform("world", "left_ee_link",
-                                                    ros::Time(0), timeout);
-            // ROS_WARN_STREAM("left_ee_link in target frame: " << ee_target_tf.transform.rotation.x <<" "<<ee_target_tf.transform.rotation.y<<" "<<ee_target_tf.transform.rotation.z<<" "<<ee_target_tf.transform.rotation.w);
-
-        }
-        catch (tf2::TransformException &ex)
-        {
-            ROS_WARN("%s", ex.what());
-            ros::Duration(1.0).sleep();
-            continue;
-        }
-    }
-
-/**
- *ee_target_tf and  world_target_tf are expressed in the same frame: "world"
- We want to find the relative rotation, q_r, to go from ee_target_tf to world_target_tf
- q_r = world_target_tf*ee_target_tf_inverse
- * 
- */
-    tf2::Quaternion ee_target_tf_inverse(
-        ee_target_tf.transform.rotation.x,
-        ee_target_tf.transform.rotation.y,
-        ee_target_tf.transform.rotation.z,
-        -ee_target_tf.transform.rotation.w);
-
-    tf2::Quaternion part_in_tray(world_target_tf.transform.rotation.x,
-                                 world_target_tf.transform.rotation.y,
-                                 world_target_tf.transform.rotation.z,
-                                 world_target_tf.transform.rotation.w);
-
-    tf2::Quaternion qr = part_in_tray * ee_target_tf_inverse;
-    qr.normalize();
 
     geometry_msgs::Pose world_target{target};
+    // world_target.position.x = world_target_tf.transform.translation.x;
+    // world_target.position.y = world_target_tf.transform.translation.y;
+    // world_target.position.z = world_target_tf.transform.translation.z;
+    // world_target.orientation.x = ee_target_tf.transform.rotation.x;
+    // world_target.orientation.y = ee_target_tf.transform.rotation.y;
+    // world_target.orientation.z = ee_target_tf.transform.rotation.z;
+    // world_target.orientation.w = ee_target_tf.transform.rotation.w;
+
     world_target.position.x = world_target_tf.transform.translation.x;
     world_target.position.y = world_target_tf.transform.translation.y;
     world_target.position.z = world_target_tf.transform.translation.z;
-    world_target.orientation.x = ee_target_tf.transform.rotation.x;
-    world_target.orientation.y = ee_target_tf.transform.rotation.y;
-    world_target.orientation.z = ee_target_tf.transform.rotation.z;
-    world_target.orientation.w = ee_target_tf.transform.rotation.w;
+    world_target.orientation.x = world_target_tf.transform.rotation.x;
+    world_target.orientation.y = world_target_tf.transform.rotation.y;
+    world_target.orientation.z = world_target_tf.transform.rotation.z;
+    world_target.orientation.w = world_target_tf.transform.rotation.w;
 
-    // ros::Duration(10).sleep();
     return world_target;
 }
 
@@ -312,12 +280,35 @@ void GantryControl::placePart(part part, std::string agv, std::string arm)
     auto target_pose_in_tray = getTargetWorldPose(part.pose, agv);
 
     ros::Duration(2.0).sleep();
-    //--TODO: Consider agv1 too
+
     if (agv == "agv2")
         goToPresetLocation(agv2_);
     else if (agv == "agv1")
         goToPresetLocation(agv1_);
     target_pose_in_tray.position.z += (ABOVE_TARGET + 1.5 * model_height[part.type]);
+
+    /* Start: Set the correct orientation */
+
+    tf2::Quaternion q_pitch(0, 0.7071068, 0, 0.7071068); // Gantry has pi/2 in its end effector
+    tf2::Quaternion q_pi(0, 0, 1, 0); // Gantry always moves by 180 degrees from start to agv
+    //set the initial pose
+    tf2::Quaternion q_init_part(part.initial_pose.orientation.x,
+                                part.initial_pose.orientation.y,
+                                part.initial_pose.orientation.z,
+                                part.initial_pose.orientation.w);
+    //set the final pose
+    tf2::Quaternion q_final_part(target_pose_in_tray.orientation.x,
+                                target_pose_in_tray.orientation.y,
+                                target_pose_in_tray.orientation.z,
+                                target_pose_in_tray.orientation.w);
+    //calculate the resultant rotation
+    tf2::Quaternion q_rslt = q_init_part.inverse()*q_final_part*q_pi*q_pitch;
+    target_pose_in_tray.orientation.x = q_rslt.x();
+    target_pose_in_tray.orientation.y = q_rslt.y();
+    target_pose_in_tray.orientation.z = q_rslt.z();
+    target_pose_in_tray.orientation.w = q_rslt.w();
+
+    /* End: Set the correct orientation */
 
     /* Start: Fix Bug - When there is a faulty gripper, gantry tries to place part on tray without any part on it */
     auto state = getGripperState(arm);
@@ -340,6 +331,7 @@ void GantryControl::placePart(part part, std::string agv, std::string arm)
     //if (state.attached)
         // pass, don't necesarily go back to start in case of faulty part
         //goToPresetLocation(start_);
+    ROS_INFO("Place OK");
 }
 
 bool GantryControl::replaceFaultyPart(part part, std::string agv, std::string arm)
