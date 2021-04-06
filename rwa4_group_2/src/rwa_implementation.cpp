@@ -196,17 +196,48 @@ void RWAImplementation::initPresetLocs() {
     // shelf5_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // higher up
     // shelf5_a.left_arm = {-1.64, -0.99, 1.84, -.85, -.08, -.26};
     shelf5_a.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, -.26};
-    shelf5_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same except for joint 0
+    shelf5_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same as left except for joint 0
 
     shelf5_spun_a.gantry = {-15.42, -4.30, 3.14};
     shelf5_spun_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
-    shelf5_spun_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same except for joint 0
+    shelf5_spun_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same as left except for joint 0
+
+    mid_5_8_staging_a.gantry = {0.0, -1.5, 0.00};
+    mid_5_8_staging_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
+    mid_5_8_staging_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
+
+    mid_8_11_staging_a.gantry = {0.0, 1.5, 0.00};
+    mid_8_11_staging_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
+    mid_8_11_staging_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
+
+    shelf8_a.gantry = {-14.22, -1.5, 0.00};
+    shelf8_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
+    shelf8_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same as left except for joint 0
+
+    shelf11_a.gantry = {-14.22, 1.5, 0.00};
+    shelf11_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
+    shelf11_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same as left except for joint 0
+
+    // joint positions to go to bin11 (and all 8 bins in the entire grouping)
+    bin11_a.gantry = {4.0, 1.1, PI};
+    bin11_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    bin11_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+
 
     cam_to_presetlocation = {
         {0, bin3_a},
         {7, bin3_a},
-        {9, shelf5_a},
-        {12, shelf5_a}
+        {9, bottom_left_staging_a},
+        {12, bottom_left_staging_a},
+
+        {6, shelf8_a},
+        {16, shelf8_a},
+
+        {8, shelf11_a},
+        {11, shelf11_a},
+
+        {1, bin11_a},
+        {2, bin11_a}
     };
 }
 
@@ -235,7 +266,11 @@ void RWAImplementation::buildKit() {
 
     int discovered_cam_idx = product.designated_model.cam_index;
 
+    ROS_INFO_STREAM("discovered_cam_idx ==== " << discovered_cam_idx);
+
     gantry_->goToPresetLocation(Bump(cam_to_presetlocation[discovered_cam_idx], add_to_x, add_to_y, 0));
+
+    ROS_INFO_STREAM("hello3");
 
     //--Go pick the part
     if (!gantry_->pickPart(my_part, "left_arm")){

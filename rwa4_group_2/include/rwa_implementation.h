@@ -37,7 +37,7 @@ private:
     /* ===================== Preset Locations ===================== */
     PresetLocation conveyor_belt;
     PresetLocation start_a;
-    PresetLocation bin3_a;
+    PresetLocation bin3_a; // for bin3 (and all 8 bins in that entire grouping)
     PresetLocation bingreen_a;
     PresetLocation binblue_a;
     PresetLocation agv2_a;
@@ -45,6 +45,15 @@ private:
     PresetLocation bottom_left_staging_a;
     PresetLocation shelf5_a;
     PresetLocation shelf5_spun_a;
+
+    PresetLocation mid_5_8_staging_a;
+    PresetLocation mid_8_11_staging_a;
+
+    PresetLocation shelf8_a;
+    PresetLocation shelf11_a;
+
+    PresetLocation bin11_a; // for bin11 (and all 8 bins in that entire grouping)
+
 
     /* ===================== Conveyor Variables ===================== */
     const float dx_ = 3+4.492549-1;
