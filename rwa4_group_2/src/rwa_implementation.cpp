@@ -300,7 +300,23 @@ void RWAImplementation::initPresetLocs() {
         { {"bottom_left_staging_a", "start_a"} , std::vector<PresetLocation>{bottom_left_staging_a, agv1_staging_a, start_a} },
         { {"shelf8_a", "start_a"} , std::vector<PresetLocation>{shelf8_a, mid_5_8_staging_a, start_a} },
         { {"shelf11_a", "start_a"} , std::vector<PresetLocation>{shelf11_a, mid_8_11_staging_a, start_a} },
-        { {"bin11_a", "start_a"} , std::vector<PresetLocation>{bin11_a, start_a} }
+        { {"bin11_a", "start_a"} , std::vector<PresetLocation>{bin11_a, start_a} },
+
+        { {"agv1_staging_a", "bin3_a"} , std::vector<PresetLocation>{start_a, bin3_a} }, // go to start_a first /////////// this block: do not go to first point first
+        { {"agv1_staging_a", "agv2_a"} , std::vector<PresetLocation>{agv2_a} },
+        { {"agv1_staging_a", "agv1_staging_a"} , std::vector<PresetLocation>{agv1_staging_a} }, // go to itself
+        { {"agv1_staging_a", "bottom_left_staging_a"} , std::vector<PresetLocation>{agv1_staging_a, bottom_left_staging_a} },
+        { {"agv1_staging_a", "shelf8_a"} , std::vector<PresetLocation>{mid_5_8_staging_a, shelf8_a} },
+        { {"agv1_staging_a", "shelf11_a"} , std::vector<PresetLocation>{mid_8_11_staging_a, shelf11_a} },
+        { {"agv1_staging_a", "bin11_a"} , std::vector<PresetLocation>{start_a, bin11_a} }, // go to start_a first
+
+        { {"agv2_a", "bin3_a"} , std::vector<PresetLocation>{start_a, bin3_a} }, // go to start_a first /////////////// this block: do not go to first point first
+        { {"agv2_a", "agv2_a"} , std::vector<PresetLocation>{agv2_a} }, // go to itself
+        { {"agv2_a", "agv1_staging_a"} , std::vector<PresetLocation>{agv1_staging_a} },
+        { {"agv2_a", "bottom_left_staging_a"} , std::vector<PresetLocation>{agv1_staging_a, bottom_left_staging_a} },
+        { {"agv2_a", "shelf8_a"} , std::vector<PresetLocation>{mid_5_8_staging_a, shelf8_a} },
+        { {"agv2_a", "shelf11_a"} , std::vector<PresetLocation>{mid_8_11_staging_a, shelf11_a} },
+        { {"agv2_a", "bin11_a"} , std::vector<PresetLocation>{start_a, bin11_a} }, // go to start_a first
 
     };
 
