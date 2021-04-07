@@ -42,7 +42,10 @@ void RWAImplementation::processOrder() {
             if(!sorted_map[color][type].empty()) {
                 product.designated_model = sorted_map[color][type].top();
                 sorted_map[color][type].pop();
-            } else product.get_from_conveyor = true;
+            } else product.get_from_conveyor = true;  // red pulleys (or any other parts in order which are not in map)
+                                                      // are not getting filled out with product.designated_model, hence they have product.designated_model.cam_idx = large number
+            
+            ROS_INFO_STREAM("hope the right cam_idx is here ===" << product.designated_model.cam_index);
             order_task_queue.push(std::vector<Product>{product});
             // total_products[color][type].push(product);
         }
