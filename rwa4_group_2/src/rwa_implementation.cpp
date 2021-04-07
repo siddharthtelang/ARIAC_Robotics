@@ -360,7 +360,7 @@ void RWAImplementation::buildKit() {
         executeVectorOfPresetLocations(path);
         ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
 
-        gantry_->goToPresetLocation(Bump(cam_to_presetlocation[discovered_cam_idx], add_to_x_shelf, add_to_y_shelf, 0));
+        gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, 0));
         ROS_INFO_STREAM("goToPresetLocation with bump executed!");
 
         ROS_INFO_STREAM("hello3");
