@@ -1,6 +1,9 @@
 #include "rwa_implementation.h"
 #include <unordered_map>
 
+#define GET_VARIABLE_NAME(Variable) (#Variable)
+
+
 void RWAImplementation::processOrder() {
     auto order_list = competition_->get_orders_list();
     if (order_list.size() == prev_num_orders_) return;
@@ -42,12 +45,18 @@ void RWAImplementation::processOrder() {
             if(!sorted_map[color][type].empty()) {
                 product.designated_model = sorted_map[color][type].top();
                 sorted_map[color][type].pop();
-            } else product.get_from_conveyor = true;  // red pulleys (or any other parts in order which are not in map)
-                                                      // are not getting filled out with product.designated_model, hence they have product.designated_model.cam_idx = large number
+
+                order_task_queue.push(std::vector<Product>{product});
+
+            } else {
+                product.get_from_conveyor = true;  // red pulleys (or any other parts in order which are not in map)
+                                                    // are not getting filled out with product.designated_model, hence they have product.designated_model.cam_idx = large number
+                // order_task_queue.push_to_the_very_back(std::vector<Product>{product}) ; // need a new data structure, cannot push to very back of C++ queue
+            }
             
             ROS_INFO_STREAM("hope the right cam_idx is here ===" << product.designated_model.cam_index);
-            order_task_queue.push(std::vector<Product>{product});
-            // total_products[color][type].push(product);
+            // order_task_queue.push(std::vector<Product>{product});
+            // total_products[color][type].push(product); // do not uncomment
         }
     }
          
@@ -157,39 +166,55 @@ void RWAImplementation::initPresetLocs() {
     conveyor_belt.gantry = {0, 3, PI/2};
     conveyor_belt.left_arm = {-0.2, -PI / 4, PI / 2, -PI / 4, PI / 2 - 0.2, 0};
     conveyor_belt.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    conveyor_belt.name = GET_VARIABLE_NAME(conveyor_belt);
+
     // joint positions to go to start location
     start_a.gantry = {0, 0, 0};
     start_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     start_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    start_a.name = GET_VARIABLE_NAME(start_a);
+
 
     // joint positions to go to bin3
     bin3_a.gantry = {4.0, -1.1, 0.};
     bin3_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     bin3_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    bin3_a.name = GET_VARIABLE_NAME(bin3_a);
+
 
     // joint positions to go to bingreen
     bingreen_a.gantry = {4.0, -1.1, 0.};
     bingreen_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     bingreen_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    bingreen_a.name = GET_VARIABLE_NAME(bingreen_a);
+
 
     // joint positions to go to binblue
     binblue_a.gantry = {2.96, -1.1, 0.};
     binblue_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     binblue_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    binblue_a.name = GET_VARIABLE_NAME(binblue_a);
+
 
     // joint positions to go to agv2
     agv2_a.gantry = {0.6, 6.9, PI};
     agv2_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     agv2_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    agv2_a.name = GET_VARIABLE_NAME(agv2_a);
+
 
     // joint positions to go to agv1
     agv1_staging_a.gantry = {0.6, -6.9, 0.00};
     agv1_staging_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
     agv1_staging_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same except for joint 0
+    agv1_staging_a.name = GET_VARIABLE_NAME(agv1_staging_a);
+
 
     bottom_left_staging_a.gantry = {-14.22, -6.75, 0.00};
     bottom_left_staging_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
     bottom_left_staging_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same except for joint 0
+    bottom_left_staging_a.name = GET_VARIABLE_NAME(bottom_left_staging_a);
+
 
     // shelf5_a.gantry = {-14.22, -4.15, 0.00};
     shelf5_a.gantry = {-14.42, -4.30, 0.00}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT
@@ -200,31 +225,45 @@ void RWAImplementation::initPresetLocs() {
     // shelf5_a.left_arm = {-1.64, -0.99, 1.84, -.85, -.08, -.26};
     shelf5_a.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, -.26};
     shelf5_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf5_a.name = GET_VARIABLE_NAME(shelf5_a);
+
 
     shelf5_spun_a.gantry = {-15.42, -4.30, 3.14};
     shelf5_spun_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
     shelf5_spun_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf5_spun_a.name = GET_VARIABLE_NAME(shelf5_spun_a);
+
 
     mid_5_8_staging_a.gantry = {0.0, -1.5, 0.00};
     mid_5_8_staging_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
     mid_5_8_staging_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
+    mid_5_8_staging_a.name = GET_VARIABLE_NAME(mid_5_8_staging_a);
+
 
     mid_8_11_staging_a.gantry = {0.0, 1.5, 0.00};
     mid_8_11_staging_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
     mid_8_11_staging_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
+    mid_8_11_staging_a.name = GET_VARIABLE_NAME(mid_8_11_staging_a);
+
 
     shelf8_a.gantry = {-14.22, -1.5, 0.00};
     shelf8_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
     shelf8_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf8_a.name = GET_VARIABLE_NAME(shelf8_a);
+
 
     shelf11_a.gantry = {-14.22, 1.5, 0.00};
     shelf11_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
     shelf11_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf11_a.name = GET_VARIABLE_NAME(shelf11_a);
+
 
     // joint positions to go to bin11 (and all 8 bins in the entire grouping)
     bin11_a.gantry = {4.0, 1.1, PI};
     bin11_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     bin11_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    bin11_a.name = GET_VARIABLE_NAME(bin11_a);
+
 
 
     cam_to_presetlocation = {
@@ -242,6 +281,32 @@ void RWAImplementation::initPresetLocs() {
         {1, bin11_a},
         {2, bin11_a}
     };
+
+    preset_locations_list_ = {start_a, bin3_a, agv2_a, agv1_staging_a,
+    bottom_left_staging_a, mid_5_8_staging_a, mid_8_11_staging_a, shelf8_a, shelf11_a, bin11_a};
+
+        PathingLookupDictionary = {
+        { {"start_a", "bin3_a"} , std::vector<PresetLocation>{start_a, bin3_a} },
+        { {"start_a", "agv2_a"} , std::vector<PresetLocation>{start_a, agv2_a} },
+        { {"start_a", "agv1_staging_a"} , std::vector<PresetLocation>{start_a, agv1_staging_a} },
+        { {"start_a", "bottom_left_staging_a"} , std::vector<PresetLocation>{start_a, agv1_staging_a, bottom_left_staging_a} },
+        { {"start_a", "shelf8_a"} , std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a} },
+        { {"start_a", "shelf11_a"} , std::vector<PresetLocation>{start_a, mid_8_11_staging_a, shelf11_a} },
+        { {"start_a", "bin11_a"} , std::vector<PresetLocation>{start_a, bin11_a} },
+
+        { {"bin3_a", "start_a"} , std::vector<PresetLocation>{bin3_a, start_a} },
+        { {"agv2_a", "start_a"} , std::vector<PresetLocation>{agv2_a, start_a} },
+        { {"agv1_staging_a", "start_a"} , std::vector<PresetLocation>{agv1_staging_a, start_a} },
+        { {"bottom_left_staging_a", "start_a"} , std::vector<PresetLocation>{bottom_left_staging_a, agv1_staging_a, start_a} },
+        { {"shelf8_a", "start_a"} , std::vector<PresetLocation>{shelf8_a, mid_5_8_staging_a, start_a} },
+        { {"shelf11_a", "start_a"} , std::vector<PresetLocation>{shelf11_a, mid_8_11_staging_a, start_a} },
+        { {"bin11_a", "start_a"} , std::vector<PresetLocation>{bin11_a, start_a} }
+
+    };
+
+
+
+    ROS_INFO_STREAM("init() inside rwa implementation.cpp ran");
 }
 
 
@@ -260,20 +325,48 @@ void RWAImplementation::buildKit() {
     part_in_tray.pose = task_queue_.top().front()[0].pose;
     part_in_tray.initial_pose = product.designated_model.world_pose; // save the initial pose
 
-    double add_to_x = my_part.pose.position.x - 4.365789 - 0.1; // constant is perfect bin red pulley x
-    double add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
-    // double add_to_x = my_part.pose.position.x - 4.665789; // constant is perfect bin red pulley x
-    // double add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
 
-    ROS_INFO_STREAM(" x " << add_to_x << " y " << add_to_y);
 
     int discovered_cam_idx = product.designated_model.cam_index;
 
-    ROS_INFO_STREAM("discovered_cam_idx ==== " << discovered_cam_idx);
+    if (discovered_cam_idx == 0 || discovered_cam_idx == 7 || discovered_cam_idx == 1 || discovered_cam_idx == 2 ) {
 
-    gantry_->goToPresetLocation(Bump(cam_to_presetlocation[discovered_cam_idx], add_to_x, add_to_y, 0));
+        double add_to_x = my_part.pose.position.x - 4.365789 - 0.1; // constant is perfect bin red pulley x
+        double add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
+        // double add_to_x = my_part.pose.position.x - 4.665789; // constant is perfect bin red pulley x
+        // double add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
+        ROS_INFO_STREAM(" x " << add_to_x << " y " << add_to_y);
 
-    ROS_INFO_STREAM("hello3");
+        std::vector<PresetLocation> path = getPresetLocationVector( cam_to_presetlocation[discovered_cam_idx] );
+        ROS_INFO_STREAM("getPresetLocationVector executed!");
+
+        executeVectorOfPresetLocations(path);
+        ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
+
+        gantry_->goToPresetLocation(Bump(cam_to_presetlocation[discovered_cam_idx], add_to_x, add_to_y, 0));
+        ROS_INFO_STREAM("goToPresetLocation with bump executed!");
+
+        ROS_INFO_STREAM("hello3");
+    }
+    else { // any other camera 
+        double add_to_x_shelf = my_part.pose.position.x - -13.522081; // constant is perfect bin red pulley x
+        double add_to_y_shelf = my_part.pose.position.y - 3.446263;
+
+        ROS_INFO_STREAM(" x " << add_to_x_shelf << " y " << add_to_y_shelf);
+
+        std::vector<PresetLocation> path = getPresetLocationVector( cam_to_presetlocation[discovered_cam_idx] );
+        ROS_INFO_STREAM("getPresetLocationVector executed!");
+
+        executeVectorOfPresetLocations(path);
+        ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
+
+        gantry_->goToPresetLocation(Bump(cam_to_presetlocation[discovered_cam_idx], add_to_x_shelf, add_to_y_shelf, 0));
+        ROS_INFO_STREAM("goToPresetLocation with bump executed!");
+
+        ROS_INFO_STREAM("hello3");
+        ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
+
+    }
 
     //--Go pick the part
     if (!gantry_->pickPart(my_part, "left_arm")){
@@ -284,8 +377,14 @@ void RWAImplementation::buildKit() {
     }
 
     // go back to start
-    gantry_->goToPresetLocation(start_a);
-    ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
+    // gantry_->goToPresetLocation(start_a);
+    if (true) { // if any camera
+        std::vector<PresetLocation> path = getPresetLocationVector( cam_to_presetlocation[discovered_cam_idx] );
+        executeVectorOfPresetLocations(path);
+        ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
+
+    }
+
 
     //place the part
     gantry_->placePart(part_in_tray, product.agv_id, "left_arm");

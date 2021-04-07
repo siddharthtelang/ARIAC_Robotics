@@ -40,9 +40,114 @@
 
 #include <tf2/LinearMath/Quaternion.h>
 
+#include <unordered_map>
+#include <vector>
+#define GET_VARIABLE_NAME(Variable) (#Variable)
+
+
+template <typename Container> // we can make this generic for any container [1]
+struct container_hash {
+    std::size_t operator()(Container const& c) const {
+        return boost::hash_range(c.begin(), c.end());
+    }
+};
+
 
 int main(int argc, char ** argv) {
     /////////////////////////////////////////////////////////////////////////////
+
+
+    // // preset locations
+    // PresetLocation start_a;
+    // PresetLocation bin3_a;
+    // PresetLocation bingreen_a;
+    // PresetLocation binblue_a;
+    // PresetLocation agv2_a;
+    // PresetLocation agv1_staging_a;
+    // PresetLocation bottom_left_staging_a;
+    // PresetLocation shelf5_a;
+    // PresetLocation shelf5_spun_a;
+
+
+    // // joint positions to go to start location
+    // start_a.gantry = {0, 0, 0};
+    // start_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    // start_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    // start_a.name = GET_VARIABLE_NAME(start_a);
+
+    // // joint positions to go to bin3
+    // bin3_a.gantry = {4.0, -1.1, 0.};
+    // bin3_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    // bin3_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    // bin3_a.name = GET_VARIABLE_NAME(bin3_a);
+
+    //     // joint positions to go to bingreen
+    // bingreen_a.gantry = {4.0, -1.1, 0.};
+    // bingreen_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    // bingreen_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    // bingreen_a.name = GET_VARIABLE_NAME(bingreen_a);
+
+    //     // joint positions to go to binblue
+    // binblue_a.gantry = {2.96, -1.1, 0.};
+    // binblue_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    // binblue_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    // binblue_a.name = GET_VARIABLE_NAME(binblue_a);
+
+    // // joint positions to go to agv2
+    // agv2_a.gantry = {0.6, 6.9, PI};
+    // agv2_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    // agv2_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    // agv2_a.name = GET_VARIABLE_NAME(agv2_a);
+
+    // // joint positions to go to agv1
+    // agv1_staging_a.gantry = {0.6, -6.9, 0.00};
+    // agv1_staging_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
+    // agv1_staging_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same except for joint 0
+    // agv1_staging_a.name = GET_VARIABLE_NAME(agv1_staging_a);
+
+    // bottom_left_staging_a.gantry = {-14.22, -6.75, 0.00};
+    // bottom_left_staging_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
+    // bottom_left_staging_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same except for joint 0
+    // bottom_left_staging_a.name = GET_VARIABLE_NAME(bottom_left_staging_a);
+
+    // // shelf5_a.gantry = {-14.22, -4.15, 0.00};
+    // shelf5_a.gantry = {-14.42, -4.30, 0.00}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT
+    // // shelf5_a.gantry = {-14.72, -4.30, 0.00};
+    // // shelf5_a.gantry = {-14.42 - .897919, -4.30 - .853737, 0.00};
+    // // shelf5_a.gantry = {-15.42, -4.30, 0.00}; // WORKS FOR RIGHT SHELF PULLEY
+    // // shelf5_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // higher up
+    // // shelf5_a.left_arm = {-1.64, -0.99, 1.84, -.85, -.08, -.26};
+    // shelf5_a.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, -.26};
+    // shelf5_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same except for joint 0
+    // shelf5_a.name = GET_VARIABLE_NAME(shelf5_a);
+
+    // shelf5_spun_a.gantry = {-15.42, -4.30, 3.14};
+    // shelf5_spun_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
+    // shelf5_spun_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same except for joint 0
+    // shelf5_spun_a.name = GET_VARIABLE_NAME(shelf5_spun_a);
+
+    /////////////////////////////////////////////////////////////////////////////
+
+
+
+    // std::unordered_map<std::vector<std::string>, std::vector<PresetLocation>, container_hash<std::vector<std::string>>> PathingLookupDictionary;
+    // std::unordered_map<std::vector<double>, std::vector<double>> PathingLookupDictionary;
+    // std::unordered_map<std::vector<double>, std::vector<double>> PathingLookupDictionary = {
+    // { {10.0, 11.3} , {11.2, 11.44, 11.556} }
+
+    // };
+    // std::vector<double> myvect = {11.111, 11.333};
+    // PathingLookupDictionary[{10.1, 10.2}] = {11.111, 11.333};
+
+    // Initialize an unordered_map through initializer_list
+    // std::unordered_map<std::string, int> wordMap;
+    // std::unordered_map<std::string, int> wordMap({
+    //                                                 { "First", 1 },
+    //                                                 { "Second", 2 },
+    //                                                 { "Third", 3 }
+    //                                                                         });
+
+    // PathingLookupDictionary(PathingLookupDictionary)
 
     ros::init(argc, argv, "rwa3_node");
     ros::NodeHandle node;
@@ -61,6 +166,7 @@ int main(int argc, char ** argv) {
 
     CameraListener cam_listener(node);
     RWAImplementation rwa(node, cam_listener, gantry, comp);
+        // ROS_INFO_STREAM('asdf');
     
     while(ros::ok()) {
         rwa.processOrder();

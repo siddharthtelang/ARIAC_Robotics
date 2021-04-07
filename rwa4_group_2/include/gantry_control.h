@@ -119,6 +119,12 @@ class GantryControl {
     agv2 agv2_; // given
     agv1 agv1_; // the one closer to us
 
+    geometry_msgs::Pose getGantryPose() {
+      ROS_INFO_STREAM("insde getGantryPose !");
+      // return full_robot_group_.getCurrentPose().pose;
+      return left_arm_group_.getCurrentPose().pose; // for some reason cannot get full robot group's current pose, no end effector specified
+    }
+
   private:
     std::vector<double> joint_group_positions_;
     ros::NodeHandle node_;

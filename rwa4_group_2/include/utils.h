@@ -59,6 +59,7 @@ typedef struct PresetLocation {
     std::vector<double> gantry;
     std::vector<double> left_arm;
     std::vector<double> right_arm;
+    std::string name; // a string, the exact same as the struct's variable name itself.
 } start, bin3, agv2, agv1;
 
 /**
