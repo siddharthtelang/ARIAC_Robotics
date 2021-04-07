@@ -35,7 +35,8 @@ const double BELT_SPEED = 0.2; // m/s
 const double GRIPPER_HEIGHT = 0.01;
 // const double EPSILON = 0.008; // for the gripper to firmly touch
 const double EPSILON = 0.005; // for the gripper to firmly touch
-const double EPSILON_ONE_MOTION_GRASP = 0.008; // for the gripper to firmly touch
+// const double EPSILON_ONE_MOTION_GRASP = 0.008; // for the gripper to firmly touch
+const double EPSILON_ONE_MOTION_GRASP = 0.007; // for the gripper to firmly touch
 
 const double BIN_HEIGHT = 0.724;
 const double TRAY_HEIGHT = 0.755;

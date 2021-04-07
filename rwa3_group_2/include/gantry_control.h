@@ -53,6 +53,24 @@ class GantryControl {
     */
     void init();
 
+
+    bool moveGantryIK();
+
+
+    /**
+     * \brief: Just calls moveit function, cannot call directly because of private attribute.
+     * \param: moveit trajectory
+     * \result: true false success boolean
+     */
+    double computePath(std::vector<geometry_msgs::Pose> waypoints, const double eef_step, const double jump_threshold, moveit_msgs::RobotTrajectory trajectory);
+
+    /**
+     * \brief: Execute trajectory
+     * \param: moveit trajectory
+     * \result: true false success boolean
+     */
+    bool executeTrajectory(moveit_msgs::RobotTrajectory trajectory);
+
     /**
      * \brief: Pick parts, down up, in single trajectory, then check if gripper is full.
      * \param: part to pick

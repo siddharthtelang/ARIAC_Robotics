@@ -142,10 +142,10 @@ CameraListener::CameraListener(ros::NodeHandle & node)
 
 
 //int main(int argc, char **argv)
-std::array<std::vector<CameraListener::ModelInfo>,16> CameraListener::fetchParts(ros::NodeHandle &node)
+std::array<std::vector<CameraListener::ModelInfo>,17> CameraListener::fetchParts(ros::NodeHandle &node)
 {
 
-  const int num_cams = 16; // ADD NUM CAMS
+  const int num_cams = 17; // ADD NUM CAMS
   ROS_INFO("Subscribing for camera");
 
   std::array<ros::Subscriber, num_cams> logical_camera_subscriber{};

@@ -87,11 +87,13 @@ int main(int argc, char ** argv) {
     agv2_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
 
     // joint positions to go to agv1
-    agv1_staging_a.gantry = {0.6, -6.9, 0.00};
+    // agv1_staging_a.gantry = {0.6, -6.9, 0.00}; // rwa3
+    agv1_staging_a.gantry = {0.0, -1.5, 0.00}; // rwa4
     agv1_staging_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
     agv1_staging_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same except for joint 0
 
-    bottom_left_staging_a.gantry = {-14.22, -6.75, 0.00};
+    // bottom_left_staging_a.gantry = {-14.22, -6.75, 0.00}; // rwa3
+    bottom_left_staging_a.gantry = {-14.22, -1.5, 0.00}; // rwa4
     bottom_left_staging_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
     bottom_left_staging_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same except for joint 0
 
@@ -102,7 +104,8 @@ int main(int argc, char ** argv) {
     // shelf5_a.gantry = {-15.42, -4.30, 0.00}; // WORKS FOR RIGHT SHELF PULLEY
     // shelf5_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // higher up
     // shelf5_a.left_arm = {-1.64, -0.99, 1.84, -.85, -.08, -.26};
-    shelf5_a.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, -.26};
+    shelf5_a.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, -.26}; // why use a different pose here?? rwa3 submission. see next line
+    // shelf5_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
     shelf5_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same except for joint 0
 
     shelf5_spun_a.gantry = {-15.42, -4.30, 3.14};
@@ -149,6 +152,9 @@ int main(int argc, char ** argv) {
         {9, shelf5_a},
         {12, shelf5_a}
     };
+
+    gantry.moveGantryIK();
+    ROS_INFO_STREAM("moveGantryIK Called");
 
 
     do{
@@ -296,7 +302,7 @@ int main(int argc, char ** argv) {
                             gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
 
                         }
-                        else if (discovered_cam_idx == 9 || discovered_cam_idx == 12) { // 9 and 12 are shelf cameras
+                        else if (discovered_cam_idx == 9 || discovered_cam_idx == 12 || discovered_cam_idx == 6 || discovered_cam_idx == 16) { // 9 and 12 are shelf cameras
                             // part to pick
                             part my_part;
                             my_part.type = product.type;
@@ -309,7 +315,8 @@ int main(int argc, char ** argv) {
                             gantry.goToPresetLocation(agv1_staging_a);
                             gantry.goToPresetLocation(bottom_left_staging_a);
                             double add_to_x_shelf = my_part.pose.position.x - -13.522081;
-                            gantry.goToPresetLocation( Bump(shelf5_a, add_to_x_shelf, 0, 0) ); // offset gantry from pulley by some units in x direction
+                            double add_to_y_shelf = my_part.pose.position.y - 3.446263;
+                            gantry.goToPresetLocation( Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, 0) ); // offset gantry from pulley by some units in x direction
 
                             //--Go pick the part
                             if (!gantry.pickPart(my_part)){
@@ -319,10 +326,26 @@ int main(int argc, char ** argv) {
                                 ;//pass
                             }
 
-                            gantry.goToPresetLocation(shelf5_a); // keep part from sliding across table
                             gantry.goToPresetLocation(bottom_left_staging_a);
                             gantry.goToPresetLocation(agv1_staging_a);
                             gantry.goToPresetLocation(start_a);
+                            // std::vector<geometry_msgs::Pose> waypoints;
+                            // waypoints.push_back(bottom_left_staging_a); // add waypoint, want straight line
+                            // waypoints.push_back(agv1_staging_a); // add waypoint, want straight line
+                            // waypoints.push_back(start_a); // add waypoint, want straight line
+
+                            // moveit_msgs::RobotTrajectory trajectory;
+                            // const double jump_threshold = 0.0;
+                            // const double eef_step = 0.1; // changed from 0.01 to 0.1, fixed some errors
+                            // double fraction = gantry.computePath(waypoints, eef_step, jump_threshold, trajectory);
+                            // ROS_INFO_STREAM("trajectory computed!");
+                            // gantry.executeTrajectory(trajectory);
+                            // left_arm_group_.execute(trajectory);
+
+
+
+
+
                             //place the part
                             gantry.placePart(part_in_tray, agv_id);
                             cam_listener.checkFaulty(node, agv_id);
