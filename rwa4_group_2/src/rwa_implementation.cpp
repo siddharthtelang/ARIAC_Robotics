@@ -379,7 +379,7 @@ void RWAImplementation::buildKit() {
     // go back to start
     // gantry_->goToPresetLocation(start_a);
     if (true) { // if any camera
-        std::vector<PresetLocation> path = getPresetLocationVector( cam_to_presetlocation[discovered_cam_idx] );
+        std::vector<PresetLocation> path = getPresetLocationVector( start_a );
         executeVectorOfPresetLocations(path);
         ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
 
@@ -387,7 +387,8 @@ void RWAImplementation::buildKit() {
 
 
     //place the part
-    gantry_->placePart(part_in_tray, product.agv_id, "left_arm");
+    // gantry_->placePart(part_in_tray, product.agv_id, "left_arm"); // problem when placing green gaskets, part is upsidedown
+    gantry_->placePart_old(part_in_tray, product.agv_id, "left_arm");
     task_queue_.top().pop();
     ROS_INFO("Popped element");
 //    gantry_->goToPresetLocation(start_a);

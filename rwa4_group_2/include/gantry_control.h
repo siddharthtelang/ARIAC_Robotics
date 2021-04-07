@@ -68,6 +68,9 @@ class GantryControl {
     void placePart(part part, std::string agv, std::string arm);
 
 
+    void placePart_old(part part, std::string agv, std::string arm);
+
+
     bool replaceFaultyPart(part part, std::string agv, std::string arm);
 
     

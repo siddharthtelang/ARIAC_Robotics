@@ -203,8 +203,14 @@ public:
     std::vector<PresetLocation> getPresetLocationVector(PresetLocation target_preset_location) {
         ROS_INFO_STREAM("inside get Preset Location Vector function executed!");
         PresetLocation approximate_current_position = getNearesetPresetLocation();
+        ROS_INFO_STREAM("getNearesetPresetLocation executed! =====");
         std::vector<std::string> key = {{approximate_current_position.name, target_preset_location.name}};
+        ROS_INFO_STREAM("key executed! ");
+
+        ROS_INFO_STREAM("key executed! =====" << key[0] << " " << key[1]);
+
         std::vector<PresetLocation> path_to_execute = PathingLookupDictionary.at(key);
+        ROS_INFO_STREAM("path_to_execute lookup executed! =====");
         return path_to_execute;
     }
 

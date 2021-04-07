@@ -267,6 +267,29 @@ bool GantryControl::pickPart(part part, std::string arm)
 }
 
 ////////////////////////////
+void GantryControl::placePart_old(part part, std::string agv, std::string arm)
+{
+    auto target_pose_in_tray = getTargetWorldPose(part.pose, agv);
+
+    ros::Duration(2.0).sleep();
+    //--TODO: Consider agv1 too
+    if (agv == "agv2")
+        goToPresetLocation(agv2_);
+    else if (agv == "agv1")
+        goToPresetLocation(agv1_);
+    target_pose_in_tray.position.z += (ABOVE_TARGET + 1.5 * model_height[part.type]);
+
+    left_arm_group_.setPoseTarget(target_pose_in_tray);
+    left_arm_group_.move();
+
+    deactivateGripper("left_arm");
+    auto state = getGripperState("left_arm");
+//    if (state.attached)
+        // ;// pass, don't necesarily go back to start in case of faulty part
+        //goToPresetLocation(start_);
+}
+
+////////////////////////////
 void GantryControl::placePart(part part, std::string agv, std::string arm)
 {
     moveit::planning_interface::MoveGroupInterface* temp_arm_group;
