@@ -102,9 +102,9 @@ void GantryControl::init()
     right_arm_controller_state_subscriber_ = node_.subscribe(
         "/ariac/gantry/right_arm_controller/state", 10, &GantryControl::right_arm_controller_state_callback, this);
 
-    while ((current_gantry_controller_state_.joint_names.size() == 0) || 
-    (current_left_arm_controller_state_.joint_names.size() == 0) || 
-    (current_right_arm_controller_state_.joint_names.size() == 0))
+    while ((current_gantry_controller_state_.joint_names.size() == 0) ||
+           (current_left_arm_controller_state_.joint_names.size() == 0) ||
+           (current_right_arm_controller_state_.joint_names.size() == 0))
     {
         ROS_WARN("[GantryControl::init] Waiting for first controller_state callbacks...");
         ros::Duration(0.1).sleep();
@@ -122,9 +122,9 @@ void GantryControl::init()
     ROS_INFO("[GantryControl::init] Init position ready)...");
 }
 
-
 ////////////////////////////
-geometry_msgs::Pose GantryControl::getTargetWorldPose(geometry_msgs::Pose target, std::string agv){
+geometry_msgs::Pose GantryControl::getTargetWorldPose(geometry_msgs::Pose target, std::string agv)
+{
     static tf2_ros::StaticTransformBroadcaster br;
     geometry_msgs::TransformStamped transformStamped;
 
@@ -154,16 +154,15 @@ geometry_msgs::Pose GantryControl::getTargetWorldPose(geometry_msgs::Pose target
     ros::Rate rate(10);
     ros::Duration timeout(1.0);
 
-
     geometry_msgs::TransformStamped world_target_tf;
     geometry_msgs::TransformStamped ee_target_tf;
 
-    for (int i=0; i< 10; i++)
+    for (int i = 0; i < 10; i++)
     {
         try
         {
             world_target_tf = tfBuffer.lookupTransform("world", "target_frame",
-                                                        ros::Time(0), timeout);
+                                                       ros::Time(0), timeout);
         }
         catch (tf2::TransformException &ex)
         {
@@ -233,8 +232,7 @@ bool GantryControl::pickPart(part part, std::string arm)
 
             // goToPresetLocation(start_); // having this line here is great, but does not work for shelf, since path is impeded
             // move this to main code, but maybe let's keep the delay below?
-            ros::Duration(1.0).sleep(); // try to get it to actually go to start....
-
+            // ros::Duration(1.0).sleep(); // try to get it to actually go to start....
             return true;
         }
         else
@@ -269,17 +267,20 @@ bool GantryControl::pickPart(part part, std::string arm)
 ////////////////////////////
 void GantryControl::placePart(part part, std::string agv, std::string arm)
 {
-    moveit::planning_interface::MoveGroupInterface* temp_arm_group;
-    if (arm == "left_arm") temp_arm_group = &left_arm_group_;
-    else if (arm == "right_arm") temp_arm_group = &right_arm_group_;
-    else {
+    moveit::planning_interface::MoveGroupInterface *temp_arm_group;
+    if (arm == "left_arm")
+        temp_arm_group = &left_arm_group_;
+    else if (arm == "right_arm")
+        temp_arm_group = &right_arm_group_;
+    else
+    {
         ROS_INFO_STREAM("Please select arm to use.");
         throw 1;
     }
 
     auto target_pose_in_tray = getTargetWorldPose(part.pose, agv);
 
-    ros::Duration(2.0).sleep();
+    ros::Duration(.5).sleep();
 
     if (agv == "agv2")
         goToPresetLocation(agv2_);
@@ -290,7 +291,7 @@ void GantryControl::placePart(part part, std::string agv, std::string arm)
     /* Start: Set the correct orientation */
 
     tf2::Quaternion q_pitch(0, 0.7071068, 0, 0.7071068); // Gantry has pi/2 in its end effector
-    tf2::Quaternion q_pi(0, 0, 1, 0); // Gantry always moves by 180 degrees from start to agv
+    tf2::Quaternion q_pi(0, 0, 1, 0);                    // Gantry always moves by 180 degrees from start to agv
     //set the initial pose
     tf2::Quaternion q_init_part(part.initial_pose.orientation.x,
                                 part.initial_pose.orientation.y,
@@ -298,11 +299,11 @@ void GantryControl::placePart(part part, std::string agv, std::string arm)
                                 part.initial_pose.orientation.w);
     //set the final pose
     tf2::Quaternion q_final_part(target_pose_in_tray.orientation.x,
-                                target_pose_in_tray.orientation.y,
-                                target_pose_in_tray.orientation.z,
-                                target_pose_in_tray.orientation.w);
+                                 target_pose_in_tray.orientation.y,
+                                 target_pose_in_tray.orientation.z,
+                                 target_pose_in_tray.orientation.w);
     //calculate the resultant rotation
-    tf2::Quaternion q_rslt = q_init_part.inverse()*q_final_part*q_pi*q_pitch;
+    tf2::Quaternion q_rslt = q_init_part.inverse() * q_final_part * q_pi * q_pitch;
     target_pose_in_tray.orientation.x = q_rslt.x();
     target_pose_in_tray.orientation.y = q_rslt.y();
     target_pose_in_tray.orientation.z = q_rslt.z();
@@ -317,7 +318,8 @@ void GantryControl::placePart(part part, std::string agv, std::string arm)
         temp_arm_group->setPoseTarget(target_pose_in_tray);
         temp_arm_group->move();
         state = getGripperState(arm);
-        if (state.attached){
+        if (state.attached)
+        {
             deactivateGripper(arm);
         }
     }
@@ -329,17 +331,20 @@ void GantryControl::placePart(part part, std::string agv, std::string arm)
 
     //auto state = getGripperState(arm);
     //if (state.attached)
-        // pass, don't necesarily go back to start in case of faulty part
-        //goToPresetLocation(start_);
+    // pass, don't necesarily go back to start in case of faulty part
+    //goToPresetLocation(start_);
     ROS_INFO("Place OK");
 }
 
 bool GantryControl::replaceFaultyPart(part part, std::string agv, std::string arm)
 {
-    moveit::planning_interface::MoveGroupInterface* temp_arm_group;
-    if (arm == "left_arm") temp_arm_group = &left_arm_group_;
-    else if (arm == "right_arm") temp_arm_group = &right_arm_group_;
-    else {
+    moveit::planning_interface::MoveGroupInterface *temp_arm_group;
+    if (arm == "left_arm")
+        temp_arm_group = &left_arm_group_;
+    else if (arm == "right_arm")
+        temp_arm_group = &right_arm_group_;
+    else
+    {
         ROS_INFO_STREAM("Please select arm to use.");
         throw 1;
     }
@@ -348,30 +353,30 @@ bool GantryControl::replaceFaultyPart(part part, std::string agv, std::string ar
     auto target_pose_in_tray = getTargetWorldPose(part.pose, agv);
     ros::Duration(2.0).sleep();
     //--TODO: Consider agv1 too
-/*    if (agv == "agv2")
+    /*    if (agv == "agv2")
         goToPresetLocation(agv2_);
     else if (agv == "agv1")
         goToPresetLocation(agv1_);*/
-//    target_pose_in_tray.position.z += (ABOVE_TARGET + 1.5 * model_height[part.type]);
+    //    target_pose_in_tray.position.z += (ABOVE_TARGET + 1.5 * model_height[part.type]);
     target_pose_in_tray.position.z += model_height.at(part.type) + GRIPPER_HEIGHT - EPSILON;
     temp_arm_group->setPoseTarget(target_pose_in_tray);
     temp_arm_group->move();
     activateGripper(arm);
     auto state = getGripperState(arm);
 
-//    auto state = getGripperState(arm);
+    //    auto state = getGripperState(arm);
     if (state.enabled)
     {
         ROS_INFO_STREAM("[Gripper] = enabled");
         //--Move arm to part
-//        temp_arm_group->setPoseTarget(part.pose);
-//        temp_arm_group->move();
-//        auto state = getGripperState(arm);
+        //        temp_arm_group->setPoseTarget(part.pose);
+        //        temp_arm_group->move();
+        //        auto state = getGripperState(arm);
         if (state.attached)
         {
             ROS_INFO_STREAM("[Gripper] = object attached");
             //--Move arm to previous position
-//            currentPose.position.z =
+            //            currentPose.position.z =
             temp_arm_group->setPoseTarget(currentPose);
             temp_arm_group->move();
             ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else!
@@ -400,7 +405,7 @@ bool GantryControl::replaceFaultyPart(part part, std::string agv, std::string ar
             int max_attempts{5};
             int current_attempt{0};
             //--try to pick up the part 5 times
-            while (current_attempt<max_attempts)
+            while (current_attempt < max_attempts)
             {
                 temp_arm_group->setPoseTarget(currentPose);
                 temp_arm_group->move();
@@ -430,13 +435,12 @@ bool GantryControl::replaceFaultyPart(part part, std::string agv, std::string ar
     goToPresetLocation(start_a);
     deactivateGripper(arm);
     ros::Duration(1.0).sleep();
-//    auto state = getGripperState(arm);
+    //    auto state = getGripperState(arm);
     return false;
-//    if (state.attached)
-        // ;// pass, don't necesarily go back to start in case of faulty part
-        //goToPresetLocation(start_);
+    //    if (state.attached)
+    // ;// pass, don't necesarily go back to start in case of faulty part
+    //goToPresetLocation(start_);
 }
-
 
 ////////////////////////////
 void GantryControl::goToPresetLocation(PresetLocation location)
@@ -466,7 +470,7 @@ void GantryControl::goToPresetLocation(PresetLocation location)
     bool success = (full_robot_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
     if (success)
         ros::Duration(1.0).sleep();
-        full_robot_group_.move();
+    full_robot_group_.move();
 }
 
 ////////////////////////////

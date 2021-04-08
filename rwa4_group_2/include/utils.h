@@ -109,6 +109,7 @@ typedef struct Product {
     std::string agv_id;
     std::string tray;
     std::string arm_name;
+    std::string shipment_type;
     CameraListener::ModelInfo designated_model;
     bool get_from_conveyor{false};
 } product;

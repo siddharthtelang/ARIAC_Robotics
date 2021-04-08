@@ -47,8 +47,11 @@ private:
     PresetLocation shelf5_spun_a;
 
     /* ===================== Conveyor Variables ===================== */
-    const float dx_ = 3+4.492549-1;
+    const float dx_ = 6.6;
+    const int buffer_parts_{1};
+    int buffer_parts_collected{0};
     bool waiting_for_part_{false};
+    std::string conveyor_type_{""};
     ros::Time current_part_load_time_;
     CameraListener::ModelInfo current_part_on_conveyor_;
     std::deque<CameraListener::ModelInfo> parts_on_conveyor_; 
@@ -66,7 +69,7 @@ public:
         breakbeam_sub_ = node_->subscribe<nist_gear::Proximity>("/ariac/breakbeam_0_change", 10, &CameraListener::breakbeam_callback, cam_listener_);
     };
 
-    bool checkConveyor(bool part_wanted);
+    bool checkConveyor();
     void initPresetLocs();
     void processOrder();
     void buildKit();

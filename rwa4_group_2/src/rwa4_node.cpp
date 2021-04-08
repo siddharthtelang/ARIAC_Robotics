@@ -128,8 +128,9 @@ int main(int argc, char ** argv) {
     RWAImplementation rwa(node, cam_listener, gantry, comp);
     
     while(ros::ok()) {
+        ROS_INFO_STREAM("Starting while loop...");
         rwa.processOrder();
-//        rwa.checkConveyor(true);
+        if (rwa.checkConveyor()) continue;       
         rwa.buildKit();
         rwa.checkAgvErrors();
         ros::Duration(0.5).sleep();
