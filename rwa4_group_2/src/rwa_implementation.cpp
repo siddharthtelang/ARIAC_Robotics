@@ -18,7 +18,7 @@ void RWAImplementation::processOrder()
 
     cam_listener_->fetchParts(*node_);
     cam_listener_->sort_camera_parts_list();
-    auto sorted_map = cam_listener_->sortPartsByDist();
+    sorted_map = cam_listener_->sortPartsByDist();
 
     auto order = order_list.back();
     std::queue<std::vector<Product>> order_task_queue;
@@ -27,6 +27,7 @@ void RWAImplementation::processOrder()
         shipment_type = shipment.shipment_type;
         std::string agv_id = shipment.agv_id;
         products = shipment.products;
+        std::queue<std::string> current_shipment;
 
         ROS_INFO_STREAM("Shipment type = " << shipment_type);
         ROS_INFO_STREAM("AGV ID = " << agv_id);
@@ -64,7 +65,9 @@ void RWAImplementation::processOrder()
                 conveyor_parts.push(product);
             }
             // total_products[color][type].push(product);
+            current_shipment.push(product.type);
         }
+        current_shipments.push(current_shipment);
         while(!conveyor_parts.empty()) {
             auto product = conveyor_parts.front();
             order_task_queue.push(std::vector<Product>{product});
@@ -275,12 +278,12 @@ void RWAImplementation::buildKit()
     my_part.pose = product.designated_model.world_pose;
 
     part part_in_tray;
-    part_in_tray.type = task_queue_.top().front()[0].type;
-    part_in_tray.pose = task_queue_.top().front()[0].pose;
+    part_in_tray.type = product.type;
+    part_in_tray.pose = product.pose;
     part_in_tray.initial_pose = product.designated_model.world_pose; // save the initial pose
 
-    double add_to_x = my_part.pose.position.x - 4.365789 - 0.1; // constant is perfect bin red pulley x
-    double add_to_y = my_part.pose.position.y - 1.173381;       // constant is perfect bin red pulley y
+    double add_to_x = my_part.pose.position.x - 4.465789; // constant is perfect bin red pulley x
+    double add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
     // double add_to_x = my_part.pose.position.x - 4.665789; // constant is perfect bin red pulley x
     // double add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
 
@@ -305,14 +308,72 @@ void RWAImplementation::buildKit()
 
     //place the part
     gantry_->placePart(part_in_tray, product.agv_id, "left_arm");
-    task_queue_.top().pop();
-    ROS_INFO("Popped element");
-    //    gantry_->goToPresetLocation(start_a);
+//    task_queue_.top().pop();
+//    ROS_INFO("Popped element");
+//    gantry_->goToPresetLocation(start_a);
 }
 
 void RWAImplementation::checkAgvErrors()
 {
     /************** Check for Faulty Parts *****************/
+    if (task_queue_.top().empty()) {
+        std::cout << "[Faulty Parts]: No parts to check" << std::endl;
+        return;
+    }
+    Product product = task_queue_.top().front()[0];
+    cam_listener_->checkFaulty(*node_, product.agv_id);
+    ros::Duration(5.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
+
+    if (cam_listener_->faulty_parts) {
+        ROS_INFO("Detected Faulty Part");
+        for (int f_p = 0; f_p < cam_listener_->faulty_parts_list.size(); ++f_p) {
+            CameraListener::ModelInfo faulty = cam_listener_->faulty_parts_list.at(2);
+            Part faulty_part;
+            faulty_part.pose = faulty.model_pose;
+            ROS_INFO_STREAM("Faulty product pose:" << faulty_part.pose);
+            faulty_part.type = product.type;
+            faulty_part.pose = product.pose;
+            ROS_INFO_STREAM("Faulty Part:" << faulty_part.type);
+            cam_listener_->faulty_parts_list.clear();
+            bool success = gantry_->replaceFaultyPart(faulty_part, product.agv_id, "left_arm");
+            if (success) {
+                cam_listener_->faulty_parts_list.clear();
+                // look for the new part
+                if(!sorted_map[product.designated_model.color][product.designated_model.type].empty()) {
+                    product.designated_model = sorted_map[product.designated_model.color][product.designated_model.type].top();
+                    sorted_map[product.designated_model.color][product.designated_model.type].pop();
+                } else product.get_from_conveyor = true;
+                // remove the faulty product
+                task_queue_.top().pop();
+                // look for the replacement product
+                task_queue_.top().push(std::vector<Product>{product});
+                // go back to start
+                gantry_->goToPresetLocation(start_a);
+            }
+        }
+    }
+
+    /************** Check for Flipped Parts *****************/
+    else if (product.pose.orientation.x * product.designated_model.world_pose.orientation.x <= 0) {
+        // flip the part
+        Part part_in_tray;
+        part_in_tray.pose = product.pose;
+        part_in_tray.type = product.type;
+        part_in_tray.initial_pose = product.designated_model.world_pose; // save the initial pose
+        gantry_->flipPart(part_in_tray, product.agv_id);
+    }
+
+    // TODO: if no faulty part, check for poses, if correctly placed then pop from task_queue_.top(), pop the products from current shipment list [current_shipments.top().pop()]
+
+   if (current_shipments.top().empty()) {
+       // one shipment completed. Send to AGV
+       AGVControl agv_control(*node_);
+       std::string kit_id = (product.agv_id == "agv1" ? "kit_tray_1" : "kit_tray_2");
+       agv_control.sendAGV(product.shipment_type, kit_id);
+       current_shipments.pop();
+       task_queue_.top().empty();
+   }
+    gantry_->goToPresetLocation(start_a);
 }
 
 // bool RWAImplementation::checkAndCorrectPose(){
