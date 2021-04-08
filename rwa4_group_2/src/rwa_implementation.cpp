@@ -287,7 +287,7 @@ void RWAImplementation::initPresetLocs() {
     // vector of some of the locations, when gantry moves anywhere, it first searches through these possible locations,
     // and tries to find the closest one to it. That approximate location then serves as the beginning location for any move lookup.
     preset_locations_list_ = {start_a, bin3_a, agv2_a, agv1_staging_a,
-    bottom_left_staging_a, shelf8_a, shelf11_a, bin11_a}; // do not have mid_xyz anything here for now
+    bottom_left_staging_a, shelf8_a, shelf11_a, bin11_a, shelf5_a}; // do not have mid_xyz anything here for now
 
         PathingLookupDictionary = {
         { {"start_a", "bin3_a"} , std::vector<PresetLocation>{start_a, bin3_a} },
@@ -302,6 +302,7 @@ void RWAImplementation::initPresetLocs() {
         { {"agv2_a", "start_a"} , std::vector<PresetLocation>{agv2_a, start_a} },
         { {"agv1_staging_a", "start_a"} , std::vector<PresetLocation>{agv1_staging_a, start_a} },
         { {"bottom_left_staging_a", "start_a"} , std::vector<PresetLocation>{bottom_left_staging_a, agv1_staging_a, start_a} },
+        { {"shelf5_a", "start_a"} , std::vector<PresetLocation>{bottom_left_staging_a, agv1_staging_a, start_a} }, // added for shelf 5 bumping into shelves, go direct
         { {"shelf8_a", "start_a"} , std::vector<PresetLocation>{shelf8_a, mid_5_8_staging_a, start_a} },
         { {"shelf11_a", "start_a"} , std::vector<PresetLocation>{shelf11_a, shelf11_a, shelf11_a, mid_8_11_staging_a, start_a} }, //GO to shelf 11a!
         { {"bin11_a", "start_a"} , std::vector<PresetLocation>{bin11_a, start_a} },
