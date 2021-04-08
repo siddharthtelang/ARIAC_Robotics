@@ -205,14 +205,14 @@ void RWAImplementation::initPresetLocs() {
 
     // joint positions to go to agv1
     agv1_staging_a.gantry = {0.6, -6.9, 0.00};
-    agv1_staging_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
-    agv1_staging_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same except for joint 0
+    agv1_staging_a.left_arm = {-PI/2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    agv1_staging_a.right_arm = {PI/2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same except for joint 0
     agv1_staging_a.name = GET_VARIABLE_NAME(agv1_staging_a);
 
 
     bottom_left_staging_a.gantry = {-14.22, -6.75, 0.00};
-    bottom_left_staging_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
-    bottom_left_staging_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same except for joint 0
+    bottom_left_staging_a.left_arm = {-PI/2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    bottom_left_staging_a.right_arm = {PI/2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same except for joint 0
     bottom_left_staging_a.name = GET_VARIABLE_NAME(bottom_left_staging_a);
 
 
@@ -221,41 +221,41 @@ void RWAImplementation::initPresetLocs() {
     // shelf5_a.gantry = {-14.72, -4.30, 0.00};
     // shelf5_a.gantry = {-14.42 - .897919, -4.30 - .853737, 0.00};
     // shelf5_a.gantry = {-15.42, -4.30, 0.00}; // WORKS FOR RIGHT SHELF PULLEY
-    // shelf5_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // higher up
+    // shelf5_a.left_arm = {-PI/2, -1.01, 2.09, -1.13, 0.00, 0.00}; // higher up
     // shelf5_a.left_arm = {-1.64, -0.99, 1.84, -.85, -.08, -.26};
     // shelf5_a.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, -.26}; // try fix
     shelf5_a.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, 0.0}; // try fix
-    shelf5_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf5_a.right_arm = {PI/2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
     shelf5_a.name = GET_VARIABLE_NAME(shelf5_a);
 
 
     shelf5_spun_a.gantry = {-15.42, -4.30, 3.14};
-    shelf5_spun_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
-    shelf5_spun_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf5_spun_a.left_arm = {-PI/2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    shelf5_spun_a.right_arm = {PI/2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
     shelf5_spun_a.name = GET_VARIABLE_NAME(shelf5_spun_a);
 
 
     mid_5_8_staging_a.gantry = {0.0, -1.5, 0.00};
-    mid_5_8_staging_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
-    mid_5_8_staging_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
+    mid_5_8_staging_a.left_arm = {-PI/2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    mid_5_8_staging_a.right_arm = {PI/2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_5_8_staging_a.name = GET_VARIABLE_NAME(mid_5_8_staging_a);
 
 
     mid_8_11_staging_a.gantry = {0.0, 1.5, 0.00};
-    mid_8_11_staging_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
-    mid_8_11_staging_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
+    mid_8_11_staging_a.left_arm = {-PI/2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    mid_8_11_staging_a.right_arm = {PI/2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_8_11_staging_a.name = GET_VARIABLE_NAME(mid_8_11_staging_a);
 
 
     shelf8_a.gantry = {-14.22, -1.5, 0.00};
-    shelf8_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
-    shelf8_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf8_a.left_arm = {-PI/2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    shelf8_a.right_arm = {PI/2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
     shelf8_a.name = GET_VARIABLE_NAME(shelf8_a);
 
 
     shelf11_a.gantry = {-14.22, 1.5, 0.00};
-    shelf11_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00};
-    shelf11_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf11_a.left_arm = {-PI/2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    shelf11_a.right_arm = {PI/2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
     shelf11_a.name = GET_VARIABLE_NAME(shelf11_a);
 
 
@@ -303,7 +303,7 @@ void RWAImplementation::initPresetLocs() {
         { {"agv1_staging_a", "start_a"} , std::vector<PresetLocation>{agv1_staging_a, start_a} },
         { {"bottom_left_staging_a", "start_a"} , std::vector<PresetLocation>{bottom_left_staging_a, agv1_staging_a, start_a} },
         { {"shelf8_a", "start_a"} , std::vector<PresetLocation>{shelf8_a, mid_5_8_staging_a, start_a} },
-        { {"shelf11_a", "start_a"} , std::vector<PresetLocation>{shelf11_a, mid_8_11_staging_a, start_a} },
+        { {"shelf11_a", "start_a"} , std::vector<PresetLocation>{shelf11_a, shelf11_a, shelf11_a, mid_8_11_staging_a, start_a} }, //GO to shelf 11a!
         { {"bin11_a", "start_a"} , std::vector<PresetLocation>{bin11_a, start_a} },
 
         { {"agv1_staging_a", "bin3_a"} , std::vector<PresetLocation>{start_a, bin3_a} }, // go to start_a first /////////// this block: do not go to first point first

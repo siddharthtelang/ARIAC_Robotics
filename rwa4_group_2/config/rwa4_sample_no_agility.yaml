@@ -49,6 +49,16 @@ orders:
         pose:
           xyz: [0.0, 0.0, 0]
           rpy: [0, 0, '-pi/4']
+      part_3:
+        type: pulley_part_red
+        pose:
+          xyz: [0.0, 0.0, 0]
+          rpy: [0, 0, '-pi/4']
+      part_4:
+        type: pulley_part_red
+        pose:
+          xyz: [0.0, 0.0, 0]
+          rpy: [0, 0, '-pi/4']
 
 models_over_bins:
   bin13:
@@ -61,6 +71,14 @@ models_over_bins:
         num_models_y: 3
 
 models_over_shelves:
+  shelf5:
+    models:
+      pulley_part_red:
+        xyz_start: [1, 0.4, 0.0]
+        xyz_end: [0., 0.4, 0.0]
+        rpy: [0, 0, 0]
+        num_models_x: 2
+        num_models_y: 1
   shelf8:
     models:
       gasket_part_green:
