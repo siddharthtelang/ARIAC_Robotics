@@ -260,7 +260,8 @@ void RWAImplementation::initPresetLocs() {
 
 
     // joint positions to go to bin11 (and all 8 bins in the entire grouping)
-    bin11_a.gantry = {4.0, 1.1, PI};
+    // bin11_a.gantry = {4.0, 1.1, PI};
+    bin11_a.gantry = {4.0, -1.1, 0.}; // the exact same as bin311_a
     bin11_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     bin11_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     bin11_a.name = GET_VARIABLE_NAME(bin11_a);
@@ -283,8 +284,10 @@ void RWAImplementation::initPresetLocs() {
         {2, bin11_a}
     };
 
+    // vector of some of the locations, when gantry moves anywhere, it first searches through these possible locations,
+    // and tries to find the closest one to it. That approximate location then serves as the beginning location for any move lookup.
     preset_locations_list_ = {start_a, bin3_a, agv2_a, agv1_staging_a,
-    bottom_left_staging_a, mid_5_8_staging_a, mid_8_11_staging_a, shelf8_a, shelf11_a, bin11_a};
+    bottom_left_staging_a, shelf8_a, shelf11_a, bin11_a}; // do not have mid_xyz anything here for now
 
         PathingLookupDictionary = {
         { {"start_a", "bin3_a"} , std::vector<PresetLocation>{start_a, bin3_a} },
@@ -357,8 +360,8 @@ void RWAImplementation::buildKit() {
 
         }
         else if (discovered_cam_idx == 1 || discovered_cam_idx == 2) {
-            add_to_x = my_part.pose.position.x - -4.365789 - 0.1; // note the --4.36 vs -+4.36
-            add_to_y = my_part.pose.position.y - -1.173381; // note the --1.173381 vs -+1.173381
+            add_to_x = my_part.pose.position.x - 4.365789 - 0.1; // Cancel note the --4.36 vs -+4.36
+            add_to_y = my_part.pose.position.y - 1.173381; // CANCEL: note the --1.173381 vs -+1.173381
             ROS_INFO_STREAM(" x " << add_to_x << " y " << add_to_y);
 
         }
