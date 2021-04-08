@@ -470,7 +470,7 @@ void GantryControl::goToPresetLocation(PresetLocation location)
     bool success = (full_robot_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
     if (success)
         ros::Duration(1.0).sleep();
-    full_robot_group_.move();
+        full_robot_group_.move();
 }
 
 ////////////////////////////
@@ -608,4 +608,110 @@ bool GantryControl::sendJointPosition(trajectory_msgs::JointTrajectory command_m
     {
         return false;
     }
+}
+
+
+bool GantryControl::flipPart(part part, std::string agv){
+    ROS_INFO("Entering flipPart method");
+//    pickPart(part,"left_arm");
+//    placePart(part, agv, "left_arm");
+
+//    moveit::planning_interface::MoveGroupInterface* temp_arm_group;
+
+    //--Activate gripper
+    activateGripper("left_arm");
+    geometry_msgs::Pose currentPose = left_arm_group_.getCurrentPose().pose;
+    geometry_msgs::Pose pickup_pose;
+
+    pickup_pose  = getTargetWorldPose(part.pose, agv);
+    pickup_pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - EPSILON;
+    pickup_pose.orientation.x = currentPose.orientation.x;
+    pickup_pose.orientation.y = currentPose.orientation.y;
+    pickup_pose.orientation.z = currentPose.orientation.z;
+    pickup_pose.orientation.w = currentPose.orientation.w;
+
+    auto state = getGripperState("left_arm");
+
+    if (state.enabled) {
+        ROS_INFO_STREAM("[Gripper] = enabled");
+        //--Move arm to part
+        bool success = left_arm_group_.setPoseTarget(pickup_pose);
+        left_arm_group_.move();
+        if (state.attached) {
+            ROS_INFO_STREAM("[Gripper] = object attached");
+            //--Move arm to previous position
+            left_arm_group_.setPoseTarget(currentPose);
+            left_arm_group_.move();
+            ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else!
+
+            if (agv == "agv2")
+                goToPresetLocation(agv2_);
+            else if (agv == "agv1")
+                goToPresetLocation(agv1_);
+            PresetLocation pose_change_1_agv1, pose_change_2_agv1, pose_change_1_agv2, pose_change_2_agv2;
+            pose_change_1_agv1.gantry = { 0.0, -6.9, PI };
+            pose_change_1_agv1.left_arm = { PI / 4, -0.2, 1.3, 0.5, PI / 2, 0.00 };
+            pose_change_1_agv1.right_arm = { -PI / 4, -3, -PI / 2, -0.1, PI / 2, -0.79 };
+
+            // switching waypoint
+            pose_change_2_agv1.gantry = { 0.0, -6.9, PI };
+            pose_change_2_agv1.left_arm = { 0.77, -0.2, 1.3, 0.49, 1.59, 0.00 };
+            pose_change_2_agv1.right_arm =
+                    { -PI / 4, -3.2, -1.5, -0.02, PI / 2, -PI / 4 };
+
+            // pose change waypoint
+            pose_change_1_agv2.gantry = { 0.0, 5, PI };
+            pose_change_1_agv2.left_arm = { PI / 4, -0.2, 1.3, 0.5, PI / 2, 0.00 };
+            pose_change_1_agv2.right_arm = { -PI / 4, -3, -PI / 2, -0.1, PI / 2, -0.79 };
+
+            // switching waypoint
+            pose_change_2_agv2.gantry = { 0.0, 5, PI };
+            pose_change_2_agv2.left_arm = { 0.77, -0.2, 1.3, 0.49, 1.59, 0.00 };
+            pose_change_2_agv2.right_arm =
+                    { -PI / 4, -3.2, -1.5, -0.02, PI / 2, -PI / 4 };
+
+            // set the arms target pose
+            geometry_msgs::Pose target_pose = getTargetWorldPose(part.pose, agv);
+            activateGripper("right_arm");
+            if (agv == "agv1") {
+                goToPresetLocation(pose_change_1_agv1);
+                goToPresetLocation(pose_change_2_agv1);
+            }
+            else {
+                ROS_INFO("Pose Change 1");
+                goToPresetLocation(pose_change_1_agv2);
+                ROS_INFO("Pose Change 2");
+                goToPresetLocation(pose_change_2_agv2);
+            }
+            deactivateGripper("left_arm");
+            ros::Duration(2).sleep();
+            auto state = getGripperState("right_arm");
+            while (!state.attached) {
+                state = getGripperState("right_arm");
+                ROS_DEBUG_STREAM_THROTTLE(1,
+                                          "Tring to activate right gripper " << state.attached << " " << state.enabled);
+            }
+            deactivateGripper("left_arm");
+            // goToPresetLocation(flipped_pulley_preset);
+//            goToPresetLocation(start_);
+            auto target_pose_in_tray = getTargetWorldPose(part.pose, agv);
+
+            ros::Duration(2.0).sleep();
+            //--TODO: Consider agv1 too
+            if (agv == "agv2")
+                goToPresetLocation(agv2_);
+            else if (agv == "agv1")
+                goToPresetLocation(agv1_);
+            target_pose_in_tray.position.z += (ABOVE_TARGET + 1.5 * model_height[part.type]);
+
+            right_arm_group_.setPoseTarget(target_pose_in_tray);
+            right_arm_group_.move();
+
+            deactivateGripper("right_arm");
+//            auto stathttps://github.com/AmanVirmani/ARIAC_Roboticse = getGripperState("right_arm");
+            return true;
+        }
+    }
+
+    ROS_INFO("Exiting flipPart method");
 }

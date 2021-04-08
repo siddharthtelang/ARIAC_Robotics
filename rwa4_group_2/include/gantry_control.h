@@ -70,6 +70,9 @@ class GantryControl {
 
     bool replaceFaultyPart(part part, std::string agv, std::string arm);
 
+
+    bool flipPart(part part, std::string agv);
+
     
     /**
      * \brief: Send command message to robot controller
