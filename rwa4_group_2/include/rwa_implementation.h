@@ -29,6 +29,7 @@ private:
     /* ===================== Gazebo Control ===================== */
     CameraListener* cam_listener_;
     GantryControl* gantry_;
+    AGVControl* agv_control_;
     Competition* competition_;
     std::stack<std::queue<std::vector<Product>>> task_queue_;
 
@@ -71,8 +72,8 @@ private:
     std::map<int, PresetLocation> cam_to_presetlocation;
 
 public:
-    RWAImplementation(ros::NodeHandle& node, CameraListener& camera_listener, GantryControl& gantry, Competition& competition) : 
-        node_{&node}, cam_listener_{&camera_listener}, gantry_{&gantry}, competition_{&competition}
+    RWAImplementation(ros::NodeHandle& node, CameraListener& camera_listener, GantryControl& gantry, Competition& competition, AGVControl& agv_control) : 
+        node_{&node}, cam_listener_{&camera_listener}, gantry_{&gantry}, competition_{&competition}, agv_control_{&agv_control}
     {
         initPresetLocs();
         breakbeam_sub_ = node_->subscribe<nist_gear::Proximity>("/ariac/breakbeam_0_change", 10, &CameraListener::breakbeam_callback, cam_listener_);

@@ -333,6 +333,7 @@ void RWAImplementation::initPresetLocs() {
 void RWAImplementation::buildKit() {
     if (task_queue_.top().empty()) {
         ROS_INFO("Task queue is empty. Return");
+        // agv_control_->sendAGV("order_0_shipment_0", "kit_tray_2");
         return;
     }
     Product product = task_queue_.top().front()[0];

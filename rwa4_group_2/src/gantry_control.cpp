@@ -193,20 +193,85 @@ geometry_msgs::Pose GantryControl::getTargetWorldPose(geometry_msgs::Pose target
     return world_target;
 }
 
+// //////////////////////////// pickPart rwa4-pick wednesday 9:48 pm
+// bool GantryControl::pickPart(part part, std::string arm)
+// {
+//     moveit::planning_interface::MoveGroupInterface* temp_arm_group;
+//     if (arm == "left_arm") temp_arm_group = &left_arm_group_;
+//     else if (arm == "right_arm") temp_arm_group = &right_arm_group_;
+//     else {
+//         ROS_INFO_STREAM("Please select arm to use.");
+//         throw 1;
+//     }
+
+//     //--Activate gripper
+//     activateGripper(arm);
+//     geometry_msgs::Pose currentPose = temp_arm_group->getCurrentPose().pose;
+
+//     part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - EPSILON;
+//     part.pose.orientation.x = currentPose.orientation.x;
+//     part.pose.orientation.y = currentPose.orientation.y;
+//     part.pose.orientation.z = currentPose.orientation.z;
+//     part.pose.orientation.w = currentPose.orientation.w;
+//     //    ROS_INFO_STREAM("["<< part.type<<"]= " << part.pose.position.x << ", " << part.pose.position.y << "," << part.pose.position.z << "," << part.pose.orientation.x << "," << part.pose.orientation.y << "," << part.pose.orientation.z << "," << part.pose.orientation.w);
+
+//     auto state = getGripperState(arm);
+//     if (state.enabled)
+//     {
+//         ROS_INFO_STREAM("[Gripper] = enabled");
+//         //--Move arm to part
+//         temp_arm_group->setPoseTarget(part.pose);
+//         temp_arm_group->move();
+//         auto state = getGripperState(arm);
+//         if (state.attached)
+//         {
+//             ROS_INFO_STREAM("[Gripper] = object attached");
+//             //--Move arm to previous position
+//             temp_arm_group->setPoseTarget(currentPose);
+//             temp_arm_group->move();
+//             ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else!
+
+//             // goToPresetLocation(start_); // having this line here is great, but does not work for shelf, since path is impeded
+//             // move this to main code, but maybe let's keep the delay below?
+//             ros::Duration(1.0).sleep(); // try to get it to actually go to start....
+
+//             return true;
+//         }
+//         else
+//         {
+//             ROS_INFO_STREAM("[Gripper] = object not attached");
+//             int max_attempts{5};
+//             int current_attempt{0};
+//             //--try to pick up the part 5 times
+//             while (current_attempt<max_attempts)
+//             {
+//                 temp_arm_group->setPoseTarget(currentPose);
+//                 temp_arm_group->move();
+//                 ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
+//                 temp_arm_group->setPoseTarget(part.pose);
+//                 temp_arm_group->move();
+//                 ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
+//                 activateGripper(arm);
+//                 current_attempt++;
+//             }
+//             temp_arm_group->setPoseTarget(currentPose);
+//             temp_arm_group->move();
+//             ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else! upped to 1.0 from 0.5
+//         }
+//     }
+//     else
+//     {
+//         ROS_INFO_STREAM("[Gripper] = not enabled");
+//     }
+//     return false;
+// }
 ////////////////////////////
+
 bool GantryControl::pickPart(part part, std::string arm)
 {
-    moveit::planning_interface::MoveGroupInterface* temp_arm_group;
-    if (arm == "left_arm") temp_arm_group = &left_arm_group_;
-    else if (arm == "right_arm") temp_arm_group = &right_arm_group_;
-    else {
-        ROS_INFO_STREAM("Please select arm to use.");
-        throw 1;
-    }
-
     //--Activate gripper
-    activateGripper(arm);
-    geometry_msgs::Pose currentPose = temp_arm_group->getCurrentPose().pose;
+    activateGripper("left_arm");
+    geometry_msgs::Pose currentPose = left_arm_group_.getCurrentPose().pose;
 
     part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - EPSILON;
     part.pose.orientation.x = currentPose.orientation.x;
@@ -215,49 +280,35 @@ bool GantryControl::pickPart(part part, std::string arm)
     part.pose.orientation.w = currentPose.orientation.w;
     //    ROS_INFO_STREAM("["<< part.type<<"]= " << part.pose.position.x << ", " << part.pose.position.y << "," << part.pose.position.z << "," << part.pose.orientation.x << "," << part.pose.orientation.y << "," << part.pose.orientation.z << "," << part.pose.orientation.w);
 
-    auto state = getGripperState(arm);
-    if (state.enabled)
-    {
+    auto state = getGripperState("left_arm");
+
+    if (state.enabled) {
+
         ROS_INFO_STREAM("[Gripper] = enabled");
-        //--Move arm to part
-        temp_arm_group->setPoseTarget(part.pose);
-        temp_arm_group->move();
-        auto state = getGripperState(arm);
-        if (state.attached)
-        {
-            ROS_INFO_STREAM("[Gripper] = object attached");
+
+        for (int i=1; i<=2; i++) { // Two tries: execute trajectory, try to pick up part.
+            //--Move arm to part
+            left_arm_group_.setPoseTarget(part.pose);
+            left_arm_group_.move();
+
             //--Move arm to previous position
-            temp_arm_group->setPoseTarget(currentPose);
-            temp_arm_group->move();
-            ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else!
+            left_arm_group_.setPoseTarget(currentPose);
+            left_arm_group_.move();
+            ros::Duration(0.15).sleep(); // try to get it to lift before doing anything else!
 
-            // goToPresetLocation(start_); // having this line here is great, but does not work for shelf, since path is impeded
-            // move this to main code, but maybe let's keep the delay below?
-            ros::Duration(1.0).sleep(); // try to get it to actually go to start....
 
-            return true;
-        }
-        else
-        {
-            ROS_INFO_STREAM("[Gripper] = object not attached");
-            int max_attempts{5};
-            int current_attempt{0};
-            //--try to pick up the part 5 times
-            while (current_attempt<max_attempts)
-            {
-                temp_arm_group->setPoseTarget(currentPose);
-                temp_arm_group->move();
-                ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
-                temp_arm_group->setPoseTarget(part.pose);
-                temp_arm_group->move();
-                ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
-                activateGripper(arm);
-                current_attempt++;
+            auto state = getGripperState("left_arm");
+            if (state.attached) {
+                ROS_INFO_STREAM("[Gripper] = object attached");
+                return true; // if success, do not try second attempt
+
             }
-            temp_arm_group->setPoseTarget(currentPose);
-            temp_arm_group->move();
-            ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else! upped to 1.0 from 0.5
+
+        
         }
+
+        return false;
+
     }
     else
     {
@@ -265,6 +316,80 @@ bool GantryControl::pickPart(part part, std::string arm)
     }
     return false;
 }
+
+
+
+// bool GantryControl::pickPart(part part, std::string arm) // had issue of scraping against floor with bins, with 0.56 real time factor
+// {
+//     moveit::planning_interface::MoveGroupInterface* temp_arm_group;
+//     if (arm == "left_arm") temp_arm_group = &left_arm_group_;
+//     else if (arm == "right_arm") temp_arm_group = &right_arm_group_;
+//     else {
+//         ROS_INFO_STREAM("Please select arm to use.");
+//         throw 1;
+//     }
+
+//     //--Activate gripper
+//     activateGripper(arm);
+//     geometry_msgs::Pose currentPose = temp_arm_group->getCurrentPose().pose;
+
+//     part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - EPSILON;
+//     part.pose.orientation.x = currentPose.orientation.x;
+//     part.pose.orientation.y = currentPose.orientation.y;
+//     part.pose.orientation.z = currentPose.orientation.z;
+//     part.pose.orientation.w = currentPose.orientation.w;
+//     //    ROS_INFO_STREAM("["<< part.type<<"]= " << part.pose.position.x << ", " << part.pose.position.y << "," << part.pose.position.z << "," << part.pose.orientation.x << "," << part.pose.orientation.y << "," << part.pose.orientation.z << "," << part.pose.orientation.w);
+
+//     auto state = getGripperState(arm);
+//     if (state.enabled)
+//     {
+//         ROS_INFO_STREAM("[Gripper] = enabled");
+//         //--Move arm to part
+//         temp_arm_group->setPoseTarget(part.pose);
+//         temp_arm_group->move();
+//         auto state = getGripperState(arm);
+//         if (state.attached)
+//         {
+//             ROS_INFO_STREAM("[Gripper] = object attached");
+//             //--Move arm to previous position
+//             temp_arm_group->setPoseTarget(currentPose);
+//             temp_arm_group->move();
+//             ros::Duration(0.25).sleep(); // try to get it to lift before doing anything else!
+
+//             // goToPresetLocation(start_); // having this line here is great, but does not work for shelf, since path is impeded
+//             // move this to main code, but maybe let's keep the delay below?
+//             // ros::Duration(1.0).sleep(); // try to get it to actually go to start....
+
+//             return true;
+//         }
+//         // else
+//         // {
+//         //     ROS_INFO_STREAM("[Gripper] = object not attached");
+//         //     int max_attempts{5};
+//         //     int current_attempt{0};
+//         //     //--try to pick up the part 5 times
+//         //     while (current_attempt<max_attempts)
+//         //     {
+//         //         temp_arm_group->setPoseTarget(currentPose);
+//         //         temp_arm_group->move();
+//         //         ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
+//         //         temp_arm_group->setPoseTarget(part.pose);
+//         //         temp_arm_group->move();
+//         //         ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
+//         //         activateGripper(arm);
+//         //         current_attempt++;
+//         //     }
+//         //     temp_arm_group->setPoseTarget(currentPose);
+//         //     temp_arm_group->move();
+//         //     ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else! upped to 1.0 from 0.5
+//         // }
+//     }
+//     else
+//     {
+//         ROS_INFO_STREAM("[Gripper] = not enabled");
+//     }
+//     return false;
+// }
 
 ////////////////////////////
 void GantryControl::placePart_old(part part, std::string agv, std::string arm)

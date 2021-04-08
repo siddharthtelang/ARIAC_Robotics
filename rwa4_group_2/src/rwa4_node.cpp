@@ -164,8 +164,11 @@ int main(int argc, char ** argv) {
     gantry.init();
     gantry.goToPresetLocation(gantry.start_);
 
+    AGVControl agv_control(node);
+
     CameraListener cam_listener(node);
-    RWAImplementation rwa(node, cam_listener, gantry, comp);
+    RWAImplementation rwa(node, cam_listener, gantry, comp, agv_control);
+    // RWAImplementation rwa(node, cam_listener, gantry, comp);
         // ROS_INFO_STREAM('asdf');
     
     while(ros::ok()) {

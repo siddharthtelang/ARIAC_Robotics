@@ -30,11 +30,11 @@
           $(find rwa4_group_2)/config/rwa3_sensor_group2.yaml
           " required="true" output="screen" />
 
- <!--<group ns='ariac/gantry'>
+ <group ns='ariac/gantry'>
    <include file="$(find gantry_moveit_config)/launch/moveit_rviz.launch">
      <arg name="rviz_config" value="$(find gantry_moveit_config)/launch/moveit.rviz"/>
    </include>
- </group> -->
+ </group>
   
   <!-- <node name="rwa3_node" pkg="rwa3_group_2" type="rwa3_node" output="screen"/> -->
 </launch>
