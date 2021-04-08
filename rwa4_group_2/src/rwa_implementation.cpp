@@ -338,7 +338,7 @@ void RWAImplementation::checkAgvErrors()
     }
     Product product = task_queue_.top().front()[0];
     cam_listener_->checkFaulty(*node_, product.agv_id);
-    ros::Duration(5.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
+    ros::Duration(0.5).sleep(); // make sure it actually goes back to start, instead of running into shelves
 
     int camera_index = product.agv_id == "agv1" ? 0: 1;
 
