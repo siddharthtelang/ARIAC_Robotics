@@ -69,6 +69,7 @@ typedef struct Part {
   std::string type; // model type
   geometry_msgs::Pose pose; // model pose (in frame)
   geometry_msgs::Pose initial_pose; // save the initial world pose on the bin/shelf/conveyor
+  geometry_msgs::Pose target_pose; // save the final target pose in tray in world frame
   std::string frame; // model frame (e.g., "logical_camera_1_frame")
   ros::Time time_stamp;
   std::string id;

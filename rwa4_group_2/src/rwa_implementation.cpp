@@ -263,6 +263,11 @@ void RWAImplementation::initPresetLocs()
         {7, bin3_a},
         {9, shelf5_a},
         {12, shelf5_a}};
+
+    agv_to_camera = {
+        {"agv1", 3},
+        {"agv2", 4}
+    };
 }
 
 void RWAImplementation::buildKit()
@@ -272,6 +277,8 @@ void RWAImplementation::buildKit()
         ROS_INFO("Task queue is empty. Return");
         return;
     }
+    gantry_->goToPresetLocation(start_a);
+
     Product product = task_queue_.top().front()[0];
     part my_part;
     my_part.type = product.type;
@@ -280,7 +287,10 @@ void RWAImplementation::buildKit()
     part part_in_tray;
     part_in_tray.type = product.type;
     part_in_tray.pose = product.pose;
-    part_in_tray.initial_pose = product.designated_model.world_pose; // save the initial pose
+    // save the initial pose in world frame
+    part_in_tray.initial_pose = product.designated_model.world_pose;
+    //save the final pose in tray in world frame
+    part_in_tray.target_pose = gantry_->getTargetWorldPose(part_in_tray.pose, product.agv_id);
 
     double add_to_x = my_part.pose.position.x - 4.465789; // constant is perfect bin red pulley x
     double add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
@@ -308,6 +318,12 @@ void RWAImplementation::buildKit()
 
     //place the part
     gantry_->placePart(part_in_tray, product.agv_id, "left_arm");
+
+    //assign camera an index based on its location on AGVs - either on agv1 or agv2
+    int camera = product.agv_id == "agv1" ? 0: 1;
+    //add the placed Product this to array of placed products - for now only consider one part is placed
+    parts_in_tray[camera].push_back(part_in_tray);
+
 //    task_queue_.top().pop();
 //    ROS_INFO("Popped element");
 //    gantry_->goToPresetLocation(start_a);
@@ -323,6 +339,8 @@ void RWAImplementation::checkAgvErrors()
     Product product = task_queue_.top().front()[0];
     cam_listener_->checkFaulty(*node_, product.agv_id);
     ros::Duration(5.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
+
+    int camera_index = product.agv_id == "agv1" ? 0: 1;
 
     if (cam_listener_->faulty_parts) {
         ROS_INFO("Detected Faulty Part");
@@ -340,13 +358,17 @@ void RWAImplementation::checkAgvErrors()
                 cam_listener_->faulty_parts_list.clear();
                 // look for the new part
                 if(!sorted_map[product.designated_model.color][product.designated_model.type].empty()) {
+                    //update the designated model
                     product.designated_model = sorted_map[product.designated_model.color][product.designated_model.type].top();
+                    //pick new model
                     sorted_map[product.designated_model.color][product.designated_model.type].pop();
                 } else product.get_from_conveyor = true;
                 // remove the faulty product
                 task_queue_.top().pop();
                 // look for the replacement product
                 task_queue_.top().push(std::vector<Product>{product});
+                //parts_in_tray[camera] needs to be popped if faulty
+                parts_in_tray[camera_index].pop_back();
                 // go back to start
                 gantry_->goToPresetLocation(start_a);
             }
@@ -363,7 +385,16 @@ void RWAImplementation::checkAgvErrors()
         gantry_->flipPart(part_in_tray, product.agv_id);
     }
 
-    // TODO: if no faulty part, check for poses, if correctly placed then pop from task_queue_.top(), pop the products from current shipment list [current_shipments.top().pop()]
+    bool poseUpdated = false;
+    if (!cam_listener_->faulty_parts)
+    {
+        /* if no faulty part, check for poses, if correctly placed then pop from task_queue_.top(),
+        pop the products from current shipment list [current_shipments.top().pop()] */
+        poseUpdated = checkAndCorrectPose(product.agv_id);
+        current_shipments.top().pop();
+        task_queue_.top().pop();
+
+    }
 
    if (current_shipments.top().empty()) {
        // one shipment completed. Send to AGV
@@ -376,6 +407,100 @@ void RWAImplementation::checkAgvErrors()
     gantry_->goToPresetLocation(start_a);
 }
 
-// bool RWAImplementation::checkAndCorrectPose(){
+bool RWAImplementation::checkAndCorrectPose(std::string agv_id)
+{
+    //part(s) part_to_check
+    auto placed_parts = parts_in_tray[agv_id == "agv1" ? 0 : 1];
+    //current list from camera corresponding to agv
+    ros::Duration(0.5).sleep();
+    auto list_from_camera = cam_listener_->fetchPartsFromCamera(*node_, agv_to_camera[agv_id]);
 
-// }
+    ROS_INFO("---------Check pose in tray------------");
+    float delta_x = 0.0, delta_y = 0.0, delta_z = 0.0;
+    bool incorrect_pose = false, match = false;
+
+    std::vector<CameraListener::ModelInfo> model_to_reorient;
+    std::vector<part> part_to_reorient;
+    part Part;
+    CameraListener::ModelInfo model;
+
+    ROS_INFO("========================================== COMPARE POSE START ==========================================");
+
+    //for each part reported by logical camera check if there is any part we placed on tray with the same target position
+    //if the target position of the part in tray do not match with that of reported by camera, re-orientation is required
+    for (auto model:list_from_camera)
+
+    {   for (int i = 0; i < placed_parts.size(); ++i)
+        {
+            auto part_to_check = placed_parts[i];
+            match = false;
+            if ((model.type + "_part_" + model.color) != part_to_check.type)
+                continue;
+            else
+            {
+                ROS_INFO_STREAM("\nCHECK FOR PART " << part_to_check.type);
+                //correct world pose in tray as per order
+                auto correct_world_pose = part_to_check.target_pose;
+                //check delta between the above and the actual position determined by camera
+                auto delta_x = std::abs(model.world_pose.position.x - correct_world_pose.position.x);
+                auto delta_y = std::abs(model.world_pose.position.y - correct_world_pose.position.y);
+                auto delta_z = std::abs(model.world_pose.position.z - correct_world_pose.position.z);
+                auto delta_deg = std::abs(model.world_pose.orientation.z - correct_world_pose.orientation.z); //---
+
+                ROS_INFO_STREAM("CURRENT WORLD POSE IN TRAY = " << model.world_pose);
+                ROS_INFO_STREAM("DESIRED WORLD POSE = " << correct_world_pose);
+                ROS_INFO_STREAM("Deltas = " << delta_x << " ; " << delta_y << " ; " << delta_z << " ; " << delta_deg);
+
+                if (delta_x <= 0.15 && delta_y <= 0.15 && delta_z <= 0.20 && delta_deg <= 0.02) //---
+                {
+                    match = true;
+                    ROS_INFO("Position is matched ; skip this and continue to next\n");
+                    //remove this part from list to be checked. The one remaining will be the part to be reoriented
+                    placed_parts.erase(placed_parts.begin()+i);
+                    --i;
+                    break;
+                }
+
+            }
+        }
+        if (match == false)
+        {   // no match found for this model reported by camera. This needs to be re-oriented
+            model_to_reorient.push_back(model);
+        }
+    }
+
+    ROS_INFO("GO TO PRESET LOCATION");
+    PresetLocation agv = agv_id == "agv1" ? gantry_->agv1_ : gantry_->agv2_;
+    gantry_->goToPresetLocation(agv);
+
+    ROS_INFO_STREAM("Size of final lists = " << model_to_reorient.size() << " and " << placed_parts.size());
+
+    for (int i = 0; i < model_to_reorient.size(); i++) { //----
+        gantry_->goToPresetLocation(agv);//----
+        for (int j = 0; j < placed_parts.size(); j++)
+        {   if (placed_parts[j].type == model_to_reorient[i].type + "_part_" + model_to_reorient[i].color)
+            {
+                ROS_INFO_STREAM(" PART AND POSE TO ORIENT = " << placed_parts[j].type << " ; " << model_to_reorient[i].world_pose);
+                //setup the part to be picked - update the pose as the current world pose in tray
+                Part = placed_parts[j];
+                Part.pose = model_to_reorient[i].world_pose;
+                ROS_INFO("PICKING NOW");
+                if (gantry_->pickPart(Part, "left_arm"))
+                {
+                    ROS_INFO("PICK SUCCESS, NOW PLACE");
+                    ROS_INFO_STREAM("World Orientation before = " << Part.pose.orientation);
+                    //setup the part to be placed - now the initial pose would be the current pose on the tray in world frame
+                    //previously initial_pose was the pose on bin/shelf/pulley, which needs to be updated
+                    part temp = placed_parts[j];
+                    temp.initial_pose.orientation = model_to_reorient[i].world_pose.orientation;
+                    ROS_INFO_STREAM("Desired Orientation = " << temp.pose.orientation);
+                    gantry_->placePartAtCorrectPose(temp, agv_id, "left_arm");
+                }
+            }
+        }
+    }
+
+    ROS_INFO("========================================== COMPARE POSE END ==========================================");
+
+    return true;
+}

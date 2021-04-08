@@ -29,11 +29,14 @@ private:
     CameraListener* cam_listener_;
     GantryControl* gantry_;
     Competition* competition_;
+    AGVControl *agv_control_;
     std::stack<std::queue<std::vector<Product>>> task_queue_;
     std::stack<std::queue<std::string>> current_shipments;
 
     std::unordered_map<std::string, std::unordered_map<std::string, std::priority_queue<CameraListener::ModelInfo,
     std::vector<CameraListener::ModelInfo>, CameraListener::CompareDists>>> sorted_map;
+    // track of parts in tray
+	std::array<std::vector <part>,2> parts_in_tray;
 
     /* ===================== Subscribers ===================== */
     ros::Subscriber breakbeam_sub_;
@@ -64,10 +67,12 @@ private:
     int prev_num_orders_{0};
 
     std::map<int, PresetLocation> cam_to_presetlocation;
+    std::map<std::string, int> agv_to_camera;
+
 
 public:
-    RWAImplementation(ros::NodeHandle& node, CameraListener& camera_listener, GantryControl& gantry, Competition& competition) : 
-        node_{&node}, cam_listener_{&camera_listener}, gantry_{&gantry}, competition_{&competition}
+    RWAImplementation(ros::NodeHandle& node, CameraListener& camera_listener, GantryControl& gantry, Competition& competition, AGVControl& agv_control) :
+        node_{&node}, cam_listener_{&camera_listener}, gantry_{&gantry}, competition_{&competition}, agv_control_{&agv_control}
     {
         initPresetLocs();
         breakbeam_sub_ = node_->subscribe<nist_gear::Proximity>("/ariac/breakbeam_0_change", 10, &CameraListener::breakbeam_callback, cam_listener_);
@@ -78,6 +83,7 @@ public:
     void processOrder();
     void buildKit();
     void checkAgvErrors();
+    bool checkAndCorrectPose(std::string agv_id);
 
 
 

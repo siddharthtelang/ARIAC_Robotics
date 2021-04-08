@@ -125,7 +125,8 @@ int main(int argc, char ** argv) {
     gantry.goToPresetLocation(gantry.start_);
 
     CameraListener cam_listener(node);
-    RWAImplementation rwa(node, cam_listener, gantry, comp);
+    AGVControl agv_control(node);
+    RWAImplementation rwa(node, cam_listener, gantry, comp, agv_control);
     
     while(ros::ok()) {
         ROS_INFO_STREAM("Starting while loop...");

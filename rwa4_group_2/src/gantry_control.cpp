@@ -336,6 +336,69 @@ void GantryControl::placePart(part part, std::string agv, std::string arm)
     ROS_INFO("Place OK");
 }
 
+////////////////////////////
+void GantryControl::placePartAtCorrectPose(part part, std::string agv, std::string arm)
+{
+    moveit::planning_interface::MoveGroupInterface* temp_arm_group;
+    if (arm == "left_arm") temp_arm_group = &left_arm_group_;
+    else if (arm == "right_arm") temp_arm_group = &right_arm_group_;
+    else {
+        ROS_INFO_STREAM("Please select arm to use.");
+        throw 1;
+    }
+
+    auto target_pose_in_tray = getTargetWorldPose(part.pose, agv);
+
+    ros::Duration(2.0).sleep();
+
+    if (agv == "agv2")
+        goToPresetLocation(agv2_);
+    else if (agv == "agv1")
+        goToPresetLocation(agv1_);
+    target_pose_in_tray.position.z += (ABOVE_TARGET + 1.5 * model_height[part.type]);
+
+    /* Start: Set the correct orientation */
+
+    tf2::Quaternion q_pitch(0, 0.7071068, 0, 0.7071068); // Gantry has pi/2 in its end effector
+    tf2::Quaternion q_pi(0, 0, 1, 0); // Gantry always moves by 180 degrees from start to agv
+    //set the initial pose
+    tf2::Quaternion q_init_part(part.initial_pose.orientation.x,
+                                part.initial_pose.orientation.y,
+                                part.initial_pose.orientation.z,
+                                part.initial_pose.orientation.w);
+    //set the final pose
+    tf2::Quaternion q_final_part(target_pose_in_tray.orientation.x,
+                                target_pose_in_tray.orientation.y,
+                                target_pose_in_tray.orientation.z,
+                                target_pose_in_tray.orientation.w);
+    //calculate the resultant rotation
+    tf2::Quaternion q_rslt = q_init_part.inverse() * q_final_part * q_pitch;
+    target_pose_in_tray.orientation.x = q_rslt.x();
+    target_pose_in_tray.orientation.y = q_rslt.y();
+    target_pose_in_tray.orientation.z = q_rslt.z();
+    target_pose_in_tray.orientation.w = q_rslt.w();
+
+    /* End: Set the correct orientation */
+
+    /* Start: Fix Bug - When there is a faulty gripper, gantry tries to place part on tray without any part on it */
+    auto state = getGripperState(arm);
+    if (state.attached)
+    {
+        temp_arm_group->setPoseTarget(target_pose_in_tray);
+        temp_arm_group->move();
+        state = getGripperState(arm);
+        if (state.attached){
+            deactivateGripper(arm);
+        }
+    }
+    else
+    {
+        ROS_INFO("Object is not attached to gripper, do not move");
+    }
+    /* End: Fix Bug - When there is a faulty gripper, gantry tries to place part on tray without any part on it */
+    ROS_INFO("Place OK");
+}
+
 bool GantryControl::replaceFaultyPart(part part, std::string agv, std::string arm)
 {
     moveit::planning_interface::MoveGroupInterface *temp_arm_group;
