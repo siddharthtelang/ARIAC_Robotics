@@ -223,7 +223,8 @@ void RWAImplementation::initPresetLocs() {
     // shelf5_a.gantry = {-15.42, -4.30, 0.00}; // WORKS FOR RIGHT SHELF PULLEY
     // shelf5_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // higher up
     // shelf5_a.left_arm = {-1.64, -0.99, 1.84, -.85, -.08, -.26};
-    shelf5_a.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, -.26};
+    // shelf5_a.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, -.26}; // try fix
+    shelf5_a.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, 0.0}; // try fix
     shelf5_a.right_arm = {PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // same as left except for joint 0
     shelf5_a.name = GET_VARIABLE_NAME(shelf5_a);
 
@@ -347,11 +348,24 @@ void RWAImplementation::buildKit() {
 
     if (discovered_cam_idx == 0 || discovered_cam_idx == 7 || discovered_cam_idx == 1 || discovered_cam_idx == 2 ) {
 
-        double add_to_x = my_part.pose.position.x - 4.365789 - 0.1; // constant is perfect bin red pulley x
-        double add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
-        // double add_to_x = my_part.pose.position.x - 4.665789; // constant is perfect bin red pulley x
+        double add_to_x = 0.0;
+        double add_to_y = 0.0;
+        if (discovered_cam_idx == 7 || discovered_cam_idx == 0) {
+            add_to_x = my_part.pose.position.x - 4.365789 - 0.1; // constant is perfect bin red pulley x
+            add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
+            ROS_INFO_STREAM(" x " << add_to_x << " y " << add_to_y);
+
+        }
+        else if (discovered_cam_idx == 1 || discovered_cam_idx == 2) {
+            add_to_x = my_part.pose.position.x - -4.365789 - 0.1; // note the --4.36 vs -+4.36
+            add_to_y = my_part.pose.position.y - -1.173381; // note the --1.173381 vs -+1.173381
+            ROS_INFO_STREAM(" x " << add_to_x << " y " << add_to_y);
+
+        }
+
+        // double add_to_x = my_part.pose.position.x - 4.365789 - 0.1; // constant is perfect bin red pulley x
         // double add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
-        ROS_INFO_STREAM(" x " << add_to_x << " y " << add_to_y);
+        // ROS_INFO_STREAM(" x " << add_to_x << " y " << add_to_y);
 
         std::vector<PresetLocation> path = getPresetLocationVector( cam_to_presetlocation[discovered_cam_idx] );
         ROS_INFO_STREAM("getPresetLocationVector executed!");
@@ -364,10 +378,9 @@ void RWAImplementation::buildKit() {
 
         ROS_INFO_STREAM("hello3");
     }
-    else { // any other camera 
+    else if ( (discovered_cam_idx != 0 || discovered_cam_idx != 7 || discovered_cam_idx != 1 || discovered_cam_idx != 2) && discovered_cam_idx >=0 && discovered_cam_idx <=16 ) { // any other camera
         double add_to_x_shelf = my_part.pose.position.x - -13.522081; // constant is perfect bin red pulley x
         double add_to_y_shelf = my_part.pose.position.y - 3.446263;
-
         ROS_INFO_STREAM(" x " << add_to_x_shelf << " y " << add_to_y_shelf);
 
         std::vector<PresetLocation> path = getPresetLocationVector( cam_to_presetlocation[discovered_cam_idx] );
@@ -382,6 +395,9 @@ void RWAImplementation::buildKit() {
         ROS_INFO_STREAM("hello3");
         ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
 
+    }
+    else {
+        ROS_INFO_STREAM("error, the camera idx is not equal to an expected number!!");
     }
 
     //--Go pick the part
@@ -404,7 +420,7 @@ void RWAImplementation::buildKit() {
 
     //place the part
     // gantry_->placePart(part_in_tray, product.agv_id, "left_arm"); // problem when placing green gaskets, part is upsidedown
-    gantry_->placePart_old(part_in_tray, product.agv_id, "left_arm");
+    gantry_->placePart(part_in_tray, product.agv_id, "left_arm");
     task_queue_.top().pop();
     ROS_INFO("Popped element");
 //    gantry_->goToPresetLocation(start_a);
