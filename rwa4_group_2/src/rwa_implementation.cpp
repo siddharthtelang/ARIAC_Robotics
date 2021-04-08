@@ -323,6 +323,8 @@ void RWAImplementation::initPresetLocs() {
         { {"agv2_a", "shelf11_a"} , std::vector<PresetLocation>{mid_8_11_staging_a, shelf11_a} },
         { {"agv2_a", "bin11_a"} , std::vector<PresetLocation>{start_a, bin11_a} }, // go to start_a first
 
+        { {"bin3_a", "bin11_a"} , std::vector<PresetLocation>{bin3_a, bin11_a} },
+
     };
 
 
@@ -423,12 +425,17 @@ void RWAImplementation::buildKit() {
     }
 
 
-    //place the part
-    // gantry_->placePart(part_in_tray, product.agv_id, "left_arm"); // problem when placing green gaskets, part is upsidedown
-    gantry_->placePart(part_in_tray, product.agv_id, "left_arm");
-    task_queue_.top().pop();
-    ROS_INFO("Popped element");
-//    gantry_->goToPresetLocation(start_a);
+    // testing drop parts into bins
+    PresetLocation drop_location = getNearestBinPresetLocation();
+    gantry_->goToPresetLocation( Bump( drop_location, 0.0, -0.8, 0) );
+    simpleDropPart();
+
+//     //place the part
+//     // gantry_->placePart(part_in_tray, product.agv_id, "left_arm"); // problem when placing green gaskets, part is upsidedown
+//     gantry_->placePart(part_in_tray, product.agv_id, "left_arm");
+//     task_queue_.top().pop();
+//     ROS_INFO("Popped element");
+// //    gantry_->goToPresetLocation(start_a);
 }
 
 
