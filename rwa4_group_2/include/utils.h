@@ -34,7 +34,9 @@ const double RETRIEVE_TIMEOUT = 2.0;
 const double BELT_SPEED = 0.2; // m/s
 
 const double GRIPPER_HEIGHT = 0.01;
-const double EPSILON = 0.008; // for the gripper to firmly touch
+// const double EPSILON = 0.008; // for the gripper to firmly touch
+// const double EPSILON = 0.007; // prevent mashing into and "deviated joint" error maybe
+const double EPSILON = 0.0065; // prevent mashing into and "deviated joint" error maybe
 
 const double BIN_HEIGHT = 0.724;
 const double TRAY_HEIGHT = 0.755;
@@ -59,6 +61,7 @@ typedef struct PresetLocation {
     std::vector<double> gantry;
     std::vector<double> left_arm;
     std::vector<double> right_arm;
+    std::string name; // a string, the exact same as the struct's variable name itself.
 } start, bin3, agv2, agv1;
 
 /**

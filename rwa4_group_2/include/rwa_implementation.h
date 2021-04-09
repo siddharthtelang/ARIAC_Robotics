@@ -44,7 +44,7 @@ private:
     /* ===================== Preset Locations ===================== */
     PresetLocation conveyor_belt;
     PresetLocation start_a;
-    PresetLocation bin3_a;
+    PresetLocation bin3_a; // for bin3 (and all 8 bins in that entire grouping)
     PresetLocation bingreen_a;
     PresetLocation binblue_a;
     PresetLocation agv2_a;
@@ -52,6 +52,16 @@ private:
     PresetLocation bottom_left_staging_a;
     PresetLocation shelf5_a;
     PresetLocation shelf5_spun_a;
+
+    PresetLocation mid_5_8_staging_a;
+    PresetLocation mid_8_11_staging_a;
+
+    PresetLocation shelf8_a;
+    PresetLocation shelf11_a;
+
+    PresetLocation bin11_a; // for bin11 (and all 8 bins in that entire grouping)
+
+    std::vector<PresetLocation> preset_locations_list_; // lookup list to compare distances with
 
     /* ===================== Conveyor Variables ===================== */
     const float dx_ = 6.6;
@@ -85,8 +95,34 @@ public:
     void checkAgvErrors();
     bool checkAndCorrectPose(std::string agv_id);
 
+    struct distance_and_PresetLocation_struct
+    {
+        double distance;
+        PresetLocation candidate_location;
+    };
+
+    template <typename Container> // we can make this generic for any container [1]
+    struct container_hash {
+        std::size_t operator()(Container const& c) const {
+            return boost::hash_range(c.begin(), c.end());
+        }
+    };
 
 
+    std::unordered_map<std::vector<std::string>, std::vector<PresetLocation>, container_hash<std::vector<std::string>> > PathingLookupDictionary;
+
+    double calcDistanceInXYPlane(geometry_msgs::Pose a, geometry_msgs::Pose b);
+    PresetLocation getNearesetPresetLocation();
+    std::vector<PresetLocation> getPresetLocationVector(PresetLocation target_preset_location);
+    bool executeVectorOfPresetLocations( std::vector<PresetLocation> path_to_execute );
+    geometry_msgs::Pose gantryXY2worldposeXY(PresetLocation preset_location_2_convert);
+
+    PresetLocation getNearestBinPresetLocation();
+
+
+
+    bool simpleDropPart() {
+        gantry_->deactivateGripper("left_arm");
+        return true;
+    }
 };
-
-

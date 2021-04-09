@@ -40,6 +40,18 @@
 
 #include <tf2/LinearMath/Quaternion.h>
 
+#include <unordered_map>
+#include <vector>
+#define GET_VARIABLE_NAME(Variable) (#Variable)
+
+
+template <typename Container> // we can make this generic for any container [1]
+struct container_hash {
+    std::size_t operator()(Container const& c) const {
+        return boost::hash_range(c.begin(), c.end());
+    }
+};
+
 
 int main(int argc, char ** argv) {
     /////////////////////////////////////////////////////////////////////////////
@@ -67,12 +79,12 @@ int main(int argc, char ** argv) {
     bin3_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     bin3_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
 
-        // joint positions to go to bingreen
+    // joint positions to go to bingreen
     bingreen_a.gantry = {4.0, -1.1, 0.};
     bingreen_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     bingreen_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
 
-        // joint positions to go to binblue
+    // joint positions to go to binblue
     binblue_a.gantry = {2.96, -1.1, 0.};
     binblue_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     binblue_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};

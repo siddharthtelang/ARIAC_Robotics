@@ -115,7 +115,7 @@ public:
   * \param: reference to ROS node handle
   * \result: returns camera part list
   */
-  std::array<std::vector<ModelInfo>,16> fetchParts(ros::NodeHandle &node);
+  std::array<std::vector<ModelInfo>,17> fetchParts(ros::NodeHandle &node);
 
   /**
   * \brief: Getter for parts from specific camera
@@ -133,7 +133,7 @@ public:
 
   std::vector<ModelInfo> faulty_parts_list;  // to check if there are faulty parts in either tray
   bool faulty_parts;  // to check if there are faulty parts in either tray
-  std::array<std::vector<ModelInfo>, 16> camera_parts_list_; // ADD NUM CAMS
+  std::array<std::vector<ModelInfo>, 17> camera_parts_list_; // ADD NUM CAMS
   tf2_ros::Buffer tfBuffer; // keep this in scope, buffer holds last 10 seconds of tf frames
   tf2_ros::TransformListener tfListener; // keep this in scope, and only create it once
   std::unordered_map<std::string, std::unordered_map<std::string, std::vector<ModelInfo>>> ordered_color_type;
