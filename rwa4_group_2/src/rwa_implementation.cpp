@@ -133,6 +133,24 @@ void RWAImplementation::processOrder()
     // }
 }
 
+
+/**
+ * \brief: Main for rwa3 node
+ * \param: argc
+ * \param: argv
+ * \result: Applies control of gantry robot
+ */
+PresetLocation Bump(PresetLocation location_to_modify, double small_rail, double large_rail, double torso)
+{
+    location_to_modify.gantry.at(0) = location_to_modify.gantry.at(0) + small_rail;
+    location_to_modify.gantry.at(1) = location_to_modify.gantry.at(1) - large_rail; // Minus now, does simulation switch?
+    location_to_modify.gantry.at(2) = location_to_modify.gantry.at(2) + torso;
+
+    return location_to_modify;
+}
+
+
+
 bool RWAImplementation::checkConveyor()
 {
     bool continue_ = false;
@@ -190,26 +208,16 @@ bool RWAImplementation::checkConveyor()
         // Place part on shelf
         // gantry_->goToPresetLocation(loc);
         temp_part.initial_pose = current_part_on_conveyor_.world_pose;
-        gantry_->placePart(temp_part, "agv1", "left_arm");
+        // gantry_->placePart(temp_part, "agv1", "left_arm"); // need to put in drop off part at bins here
+        // drop parts into bins, 
+        PresetLocation drop_location = getNearestBinPresetLocation();
+        gantry_->goToPresetLocation(Bump(drop_location, 0.0, -0.8, 0));
+        simpleDropPart();
+
         buffer_parts_collected++;
         continue_ = true;
     }
     return continue_;
-}
-
-/**
- * \brief: Main for rwa3 node
- * \param: argc
- * \param: argv
- * \result: Applies control of gantry robot
- */
-PresetLocation Bump(PresetLocation location_to_modify, double small_rail, double large_rail, double torso)
-{
-    location_to_modify.gantry.at(0) = location_to_modify.gantry.at(0) + small_rail;
-    location_to_modify.gantry.at(1) = location_to_modify.gantry.at(1) - large_rail; // Minus now, does simulation switch?
-    location_to_modify.gantry.at(2) = location_to_modify.gantry.at(2) + torso;
-
-    return location_to_modify;
 }
 
 void RWAImplementation::initPresetLocs()
@@ -725,7 +733,7 @@ void RWAImplementation::checkAgvErrors()
         part_in_tray.pose = product.pose;
         part_in_tray.type = product.type;
         part_in_tray.initial_pose = product.designated_model.world_pose; // save the initial pose
-        gantry_->flipPart(part_in_tray, product.agv_id);
+        // gantry_->flipPart(part_in_tray, product.agv_id);
     }
 
     bool poseUpdated = false;
@@ -740,6 +748,7 @@ void RWAImplementation::checkAgvErrors()
     }
 
    if (current_shipments.top().empty()) {
+       ros::Duration(1.0).sleep(); // add delay
        // one shipment completed. Send to AGV
        AGVControl agv_control(*node_);
        std::string kit_id = (product.agv_id == "agv1" ? "kit_tray_1" : "kit_tray_2");
@@ -785,10 +794,10 @@ bool RWAImplementation::checkAndCorrectPose(std::string agv_id)
                 //correct world pose in tray as per order
                 auto correct_world_pose = part_to_check.target_pose;
                 //check delta between the above and the actual position determined by camera
-                auto delta_x = std::abs(model.world_pose.position.x - correct_world_pose.position.x);
-                auto delta_y = std::abs(model.world_pose.position.y - correct_world_pose.position.y);
-                auto delta_z = std::abs(model.world_pose.position.z - correct_world_pose.position.z);
-                auto delta_deg = std::abs(model.world_pose.orientation.z - correct_world_pose.orientation.z); //---
+                auto delta_x = std::abs(model.world_pose.position.x) - std::abs(correct_world_pose.position.x);
+                auto delta_y = std::abs(model.world_pose.position.y) - std::abs(correct_world_pose.position.y);
+                auto delta_z = std::abs(model.world_pose.position.z) - std::abs(correct_world_pose.position.z);
+                auto delta_deg = std::abs(model.world_pose.orientation.z) - std::abs(correct_world_pose.orientation.z); //---
 
                 ROS_INFO_STREAM("CURRENT WORLD POSE IN TRAY = " << model.world_pose);
                 ROS_INFO_STREAM("DESIRED WORLD POSE = " << correct_world_pose);
