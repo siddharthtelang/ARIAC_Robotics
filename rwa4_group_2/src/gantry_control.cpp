@@ -215,6 +215,12 @@ bool GantryControl::pickPart(part part, std::string arm)
     //    ROS_INFO_STREAM("["<< part.type<<"]= " << part.pose.position.x << ", " << part.pose.position.y << "," << part.pose.position.z << "," << part.pose.orientation.x << "," << part.pose.orientation.y << "," << part.pose.orientation.z << "," << part.pose.orientation.w);
 
     auto state = getGripperState(arm);
+    //keep trying till state is enabled
+    while (!state.enabled)
+    {
+        activateGripper(arm);
+        state = getGripperState(arm);
+    }
     if (state.enabled)
     {
         ROS_INFO_STREAM("[Gripper] = enabled");
@@ -222,6 +228,7 @@ bool GantryControl::pickPart(part part, std::string arm)
         temp_arm_group->setPoseTarget(part.pose);
         temp_arm_group->move();
         auto state = getGripperState(arm);
+        ros::Duration(0.5).sleep();
         if (state.attached)
         {
             ROS_INFO_STREAM("[Gripper] = object attached");
@@ -238,7 +245,8 @@ bool GantryControl::pickPart(part part, std::string arm)
         else
         {
             ROS_INFO_STREAM("[Gripper] = object not attached");
-            int max_attempts{5};
+            //modify max attempts to 2 from 5
+            int max_attempts{2};
             int current_attempt{0};
             //--try to pick up the part 5 times
             while (current_attempt<max_attempts)
@@ -251,6 +259,8 @@ bool GantryControl::pickPart(part part, std::string arm)
                 ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
                 activateGripper(arm);
                 current_attempt++;
+                state = getGripperState(arm);
+                if (state.attached) return true;
             }
             temp_arm_group->setPoseTarget(currentPose);
             temp_arm_group->move();

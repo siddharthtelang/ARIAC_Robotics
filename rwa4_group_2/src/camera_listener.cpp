@@ -10,8 +10,8 @@ void CameraListener::logical_camera_callback(
   camera_parts_list_[cam_idx].clear();
   if (msg->models.size())
   {
-    ROS_INFO_STREAM("================== Logical camera " << cam_idx << " ==================");
-    ROS_INFO_STREAM("Logical camera: '" << msg->models.size());
+    // ROS_INFO_STREAM("================== Logical camera " << cam_idx << " ==================");
+    // ROS_INFO_STREAM("Logical camera: '" << msg->models.size());
 
     /* Start: Get TF of camera */
     geometry_msgs::TransformStamped transformStamped;
@@ -120,10 +120,10 @@ void CameraListener::sort_camera_parts_list()
   {
     for (auto type : types_)
     {
-      ROS_INFO_STREAM("\n====================== " << color << " " << type << " ======================");
+      // ROS_INFO_STREAM("\n====================== " << color << " " << type << " ======================");
       for (auto model : ordered_color_type[color][type])
       {
-        ROS_INFO_STREAM(model.id);
+        // ROS_INFO_STREAM(model.id);
 
         tf2::Quaternion q(
             model.world_pose.orientation.x,
@@ -133,13 +133,13 @@ void CameraListener::sort_camera_parts_list()
         tf2::Matrix3x3 m(q);
         double roll, pitch, yaw;
         m.getRPY(roll, pitch, yaw);
-        ROS_INFO("Position(XYZ): [%f,%f,%f] || Orientation(RPY): [%f,%f,%f]",
-                 model.world_pose.position.x,
-                 model.world_pose.position.y,
-                 model.world_pose.position.z,
-                 roll,
-                 pitch,
-                 yaw);
+        // ROS_INFO("Position(XYZ): [%f,%f,%f] || Orientation(RPY): [%f,%f,%f]",
+        //          model.world_pose.position.x,
+        //          model.world_pose.position.y,
+        //          model.world_pose.position.z,
+        //          roll,
+        //          pitch,
+        //          yaw);
       }
     }
   }
@@ -184,7 +184,7 @@ std::array<std::vector<CameraListener::ModelInfo>, 17> CameraListener::fetchPart
         boost::bind(&CameraListener::logical_camera_callback, this, _1, i));
   }
 
-  ROS_INFO("Param is set. Query the logical cameras");
+  // ROS_INFO("Param is set. Query the logical cameras");
   ros::Duration(0.2).sleep();
   //  CameraListener::sort_camera_parts_list();
 
@@ -273,8 +273,11 @@ void CameraListener::breakbeam_callback(const nist_gear::Proximity::ConstPtr &ms
   {
     ros::Time t_hit_breakbeam = ros::Time::now();
     load_time_on_conveyor_.push(t_hit_breakbeam);
-    ROS_INFO_STREAM("\n=========================================\n"
-                    << "Objected detected from breakbeam! Time: " << t_hit_breakbeam << "\n=========================================\n");
+    auto cam_parts = fetchPartsFromCamera(node_, 5);
+    parts_on_conveyor_.push_back(cam_parts[0]);
+
+    // ROS_INFO_STREAM("\n=========================================\n"
+    // << "Objected detected from breakbeam! Time: " << t_hit_breakbeam << "\n=========================================\n");
   }
 }
 

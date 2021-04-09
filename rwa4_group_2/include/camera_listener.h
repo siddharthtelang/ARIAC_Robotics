@@ -141,6 +141,7 @@ public:
   std::queue<ros::Time> load_time_on_conveyor_;
   std::array<std::string, 3> colors_{"red", "blue", "green"};
   std::array<std::string, 4> types_{"disk", "pulley", "gasket", "piston"};
+  std::deque<CameraListener::ModelInfo> parts_on_conveyor_;
   //ros::Subscriber logical_camera_subscriber;
 
 };
