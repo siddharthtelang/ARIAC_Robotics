@@ -372,6 +372,9 @@ void RWAImplementation::buildKit() {
         my_part.pose.orientation.y = model_info_conveyor_part.world_pose.orientation.y;
         my_part.pose.orientation.z = model_info_conveyor_part.world_pose.orientation.z;
         my_part.pose.orientation.w = model_info_conveyor_part.world_pose.orientation.w;
+        
+        part_in_tray.initial_pose = model_info_conveyor_part.world_pose; // save the initial pose
+
 
         my_part.type = model_info_conveyor_part.type + "_part_" + model_info_conveyor_part.color; // correct mismatch later
         double add_to_x = my_part.pose.position.x - 4.365789 - 0.1; // constant is perfect bin red pulley x
