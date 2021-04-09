@@ -147,6 +147,7 @@ int main(int argc, char ** argv) {
         rwa.buildKit();
         rwa.checkAgvErrors();
         ros::Duration(0.5).sleep();
+        if (rwa.competition_over()) break;
     }
     // //--1-Read order
     // std::vector<Product> total_products;

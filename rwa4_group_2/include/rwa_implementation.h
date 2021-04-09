@@ -78,6 +78,7 @@ private:
 
     std::map<int, PresetLocation> cam_to_presetlocation;
     std::map<std::string, int> agv_to_camera;
+    bool competition_started_{false};
 
 
 public:
@@ -97,6 +98,7 @@ public:
     void buildKit();
     void checkAgvErrors();
     bool checkAndCorrectPose(std::string agv_id);
+    bool competition_over();
 
     struct distance_and_PresetLocation_struct
     {

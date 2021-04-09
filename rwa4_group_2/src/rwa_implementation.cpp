@@ -5,6 +5,7 @@
 
 void RWAImplementation::processOrder()
 {
+    competition_started_ = true;
     auto order_list = competition_->get_orders_list();
     if (order_list.size() == prev_num_orders_)
         return;
@@ -822,4 +823,13 @@ bool RWAImplementation::checkAndCorrectPose(std::string agv_id)
     ROS_INFO("========================================== COMPARE POSE END ==========================================");
 
     return true;
+}
+
+
+bool RWAImplementation::competition_over() {
+    if (competition_started_ && task_queue_.empty()){
+        ROS_INFO_STREAM("Competition ending...");
+        return true;
+    }
+    return false;
 }
