@@ -353,7 +353,41 @@ void RWAImplementation::buildKit() {
 
     int discovered_cam_idx = product.designated_model.cam_index;
 
-    if (discovered_cam_idx == 0 || discovered_cam_idx == 7 || discovered_cam_idx == 1 || discovered_cam_idx == 2 ) {
+    if (true) { // if part was moved from conveyor to the bin
+    // if (product.get_from_conveyor == true) { // if part was moved from conveyor to the bin
+        ROS_INFO_STREAM("Deal with conveyor part _______________________");
+        std::vector<CameraListener::ModelInfo> cam_parts_repoll = cam_listener_->fetchPartsFromCamera(*node_, 7);
+
+        // if(!cam_parts_repoll.empty()) {
+            CameraListener::ModelInfo model_info_conveyor_part = cam_parts_repoll[0];
+        // }
+        // else {
+        //     ROS_INFO_STREAM("not enough saved up conveyor parts");
+        // }
+
+        my_part.pose.position.x = model_info_conveyor_part.world_pose.position.x; // seems very redundant to store in the modelInfo and part
+        my_part.pose.position.y = model_info_conveyor_part.world_pose.position.y;
+        my_part.pose.position.z = model_info_conveyor_part.world_pose.position.z;
+        my_part.pose.orientation.x = model_info_conveyor_part.world_pose.orientation.x;
+        my_part.pose.orientation.y = model_info_conveyor_part.world_pose.orientation.y;
+        my_part.pose.orientation.z = model_info_conveyor_part.world_pose.orientation.z;
+        my_part.pose.orientation.w = model_info_conveyor_part.world_pose.orientation.w;
+
+        my_part.type = model_info_conveyor_part.type + "_part_" + model_info_conveyor_part.color; // correct mismatch later
+        double add_to_x = my_part.pose.position.x - 4.365789 - 0.1; // constant is perfect bin red pulley x
+        double add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
+
+        std::vector<PresetLocation> path = getPresetLocationVector( cam_to_presetlocation[7] );
+        ROS_INFO_STREAM("getPresetLocationVector executed!");
+
+        executeVectorOfPresetLocations(path);
+        ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
+
+        gantry_->goToPresetLocation(Bump(cam_to_presetlocation[7], add_to_x, add_to_y, 0));
+        ROS_INFO_STREAM("goToPresetLocation with bump executed!");
+
+    }
+    else if (discovered_cam_idx == 0 || discovered_cam_idx == 7 || discovered_cam_idx == 1 || discovered_cam_idx == 2 ) {
 
         double add_to_x = 0.0;
         double add_to_y = 0.0;
@@ -406,6 +440,7 @@ void RWAImplementation::buildKit() {
     else {
         ROS_INFO_STREAM("error, the camera idx is not equal to an expected number!!");
     }
+        ROS_INFO_STREAM("Deal with conveyor part _______________________");
 
     //--Go pick the part
     if (!gantry_->pickPart(my_part, "left_arm")){
@@ -425,17 +460,17 @@ void RWAImplementation::buildKit() {
     }
 
 
-    // testing drop parts into bins
-    PresetLocation drop_location = getNearestBinPresetLocation();
-    gantry_->goToPresetLocation( Bump( drop_location, 0.0, -0.8, 0) );
-    simpleDropPart();
+    // // testing drop parts into bins, uncomment this whole block, comment out entire next block
+    // PresetLocation drop_location = getNearestBinPresetLocation();
+    // gantry_->goToPresetLocation( Bump( drop_location, 0.0, -0.8, 0) );
+    // simpleDropPart();
 
-//     //place the part
-//     // gantry_->placePart(part_in_tray, product.agv_id, "left_arm"); // problem when placing green gaskets, part is upsidedown
-//     gantry_->placePart(part_in_tray, product.agv_id, "left_arm");
-//     task_queue_.top().pop();
-//     ROS_INFO("Popped element");
-// //    gantry_->goToPresetLocation(start_a);
+    //place the part
+    // gantry_->placePart(part_in_tray, product.agv_id, "left_arm"); // problem when placing green gaskets, part is upsidedown
+    gantry_->placePart(part_in_tray, product.agv_id, "left_arm");
+    task_queue_.top().pop();
+    ROS_INFO("Popped element");
+//    gantry_->goToPresetLocation(start_a);
 }
 
 

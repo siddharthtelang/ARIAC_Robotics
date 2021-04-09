@@ -273,8 +273,12 @@ bool GantryControl::pickPart(part part, std::string arm)
     //--Activate gripper
     activateGripper("left_arm");
     geometry_msgs::Pose currentPose = left_arm_group_.getCurrentPose().pose;
+        ROS_INFO_STREAM("activateGripper with conveyor part _______________________");
+        ROS_INFO_STREAM("string indicating type: " << part.type);
 
     part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - EPSILON;
+        ROS_INFO_STREAM("model_height with conveyor part _______________________");
+
     part.pose.orientation.x = currentPose.orientation.x;
     part.pose.orientation.y = currentPose.orientation.y;
     part.pose.orientation.z = currentPose.orientation.z;

@@ -61,6 +61,14 @@ orders:
           rpy: [0, 0, '-pi/4']
 
 models_over_bins:
+  bin5:
+    models:
+      pulley_part_blue:
+        xyz_start: [0.1, 0.1, 0.0]
+        xyz_end: [0.5, 0.5, 0.0]
+        rpy: [0, 0, 0]
+        num_models_x: 1
+        num_models_y: 1
   bin13:
     models:
       disk_part_green:
