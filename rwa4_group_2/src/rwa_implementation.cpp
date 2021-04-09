@@ -754,7 +754,7 @@ void RWAImplementation::checkAgvErrors()
        std::string kit_id = (product.agv_id == "agv1" ? "kit_tray_1" : "kit_tray_2");
        agv_control.sendAGV(product.shipment_type, kit_id);
        current_shipments.pop();
-       task_queue_.top().empty();
+       task_queue_.pop();
    }
     gantry_->goToPresetLocation(start_a);
 }
