@@ -533,8 +533,8 @@ void RWAImplementation::buildKit()
     //place the part
     // gantry_->placePart(part_in_tray, product.agv_id, "left_arm"); // problem when placing green gaskets, part is upsidedown
     gantry_->placePart(part_in_tray, product.agv_id, "left_arm");
-    task_queue_.top().pop();
-    ROS_INFO("Popped element");
+//    task_queue_.top().pop();
+//    ROS_INFO("Popped element");
 
 
     //assign camera an index based on its location on AGVs - either on agv1 or agv2
