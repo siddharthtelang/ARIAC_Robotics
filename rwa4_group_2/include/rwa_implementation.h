@@ -18,7 +18,7 @@
 #include "agv_control.h"
 #include "camera_listener.h"
 
-
+#define pi 3.14159265895866
 
 class RWAImplementation
 {
@@ -30,6 +30,8 @@ private:
     GantryControl* gantry_;
     Competition* competition_;
     AGVControl *agv_control_;
+
+    // ORDERS < SHIPMENTS < PRODUCTS  
     std::stack<std::queue<std::vector<Product>>> task_queue_;
     std::stack<std::queue<std::string>> current_shipments;
 
