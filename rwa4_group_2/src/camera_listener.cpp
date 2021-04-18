@@ -274,7 +274,8 @@ void CameraListener::breakbeam_callback(const nist_gear::Proximity::ConstPtr &ms
     ros::Time t_hit_breakbeam = ros::Time::now();
     load_time_on_conveyor_.push(t_hit_breakbeam);
     auto cam_parts = fetchPartsFromCamera(node_, 5);
-    parts_on_conveyor_.push_back(cam_parts[0]);
+    if (!cam_parts.empty())
+        parts_on_conveyor_.push_back(cam_parts[0]);
 
     // ROS_INFO_STREAM("\n=========================================\n"
     // << "Objected detected from breakbeam! Time: " << t_hit_breakbeam << "\n=========================================\n");
