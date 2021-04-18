@@ -33,7 +33,6 @@ private:
 
     // ORDERS < SHIPMENTS < PRODUCTS  
     std::stack<std::queue<std::vector<Product>>> task_queue_;
-    std::stack<std::queue<std::string>> current_shipments;
 
     std::unordered_map<std::string, std::unordered_map<std::string, std::priority_queue<CameraListener::ModelInfo,
     std::vector<CameraListener::ModelInfo>, CameraListener::CompareDists>>> sorted_map;

@@ -71,9 +71,7 @@ void RWAImplementation::processOrder()
                 ROS_INFO_STREAM(" else case entered ");
             }
             // total_products[color][type].push(product);
-            current_shipment.push(product.type);
         }
-        current_shipments.push(current_shipment);
         while (!conveyor_parts.empty())
         {
             auto product = conveyor_parts.front();
@@ -717,21 +715,19 @@ void RWAImplementation::checkAgvErrors()
     if (!cam_listener_->faulty_parts)
     {
         /* if no faulty part, check for poses, if correctly placed then pop from task_queue_.top(),
-        pop the products from current shipment list [current_shipments.top().pop()] */
+        pop the products from current shipment list  */
         poseUpdated = checkAndCorrectPose(product.agv_id);
-        current_shipments.top().pop();
         task_queue_.top().front().erase(task_queue_.top().front().begin());
     }
 
-    if (current_shipments.top().empty())
+    if (task_queue_.top().front().empty())
     {
         ros::Duration(1.0).sleep(); // add delay
         // one shipment completed. Send to AGV
         AGVControl agv_control(*node_);
         std::string kit_id = (product.agv_id == "agv1" ? "kit_tray_1" : "kit_tray_2");
         agv_control.sendAGV(product.shipment_type, kit_id);
-        current_shipments.pop();
-        task_queue_.top().pop(); // COME BACK
+        task_queue_.top().pop();
 
         if(task_queue_.top().empty()) 
             task_queue_.top();
