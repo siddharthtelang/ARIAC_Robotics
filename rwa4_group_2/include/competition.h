@@ -80,10 +80,17 @@ public:
      * @return std::string 
      */
     std::string getCompetitionState();
+    /**
+     * \brief: get the product list
+     * \result: returns product list
+     */
     std::vector<Product> get_product_list(){
         return product_list_;
     }
-
+    /**
+     * \brief: get order list
+     * \result: returns orders list
+     */
     std::vector<Order> get_orders_list() {
         return order_list_;
     }

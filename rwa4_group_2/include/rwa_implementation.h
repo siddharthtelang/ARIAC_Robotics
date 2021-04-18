@@ -81,7 +81,10 @@ private:
     std::map<std::string, int> agv_to_camera;
     bool competition_started_{false};
 
-
+/**
+ * \brief :A separate RWAImplentation class to have all the functionalities
+ * \param :references of node, camera listener, gantry controller, and agv control classes
+ */
 public:
     RWAImplementation(ros::NodeHandle& node, CameraListener& camera_listener, GantryControl& gantry, Competition& competition, AGVControl& agv_control) :
         node_{&node}, cam_listener_{&camera_listener}, gantry_{&gantry}, competition_{&competition}, agv_control_{&agv_control}
@@ -93,13 +96,49 @@ public:
         sorted_map = cam_listener_->sortPartsByDist();
     };
 
+    /**
+     * \brief: check for conveyor items
+     * \result: void
+     */
     bool checkConveyor();
+
+    /**
+     * \brief: do an init of all preset locations
+     * \result: void
+     */
     void initPresetLocs();
+
+    /**
+     * \brief: process new incoming order
+     * \result: void
+     */
     void processOrder();
+
+    /**
+     * \brief: build kit functionality
+     * \result: void
+     */
     void buildKit();
+
+    /**
+     * \brief: check for agv errors: faulty part, call check pose
+     * \result: void
+     */
     void checkAgvErrors();
+
+    /**
+     * \brief: check pose of part and correct if incorrect
+     * \param: agv id
+     * \result: void
+     */
     bool checkAndCorrectPose(std::string agv_id);
+
+    /**
+     * \brief: competition end trigger function
+     * \result: true/false
+     */
     bool competition_over();
+
 
     struct distance_and_PresetLocation_struct
     {
@@ -125,8 +164,10 @@ public:
 
     PresetLocation getNearestBinPresetLocation();
 
-
-
+    /**
+     * \brief: simple drop functionlity
+     * \result: true
+     */
     bool simpleDropPart() {
         gantry_->deactivateGripper("left_arm");
         return true;

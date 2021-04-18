@@ -67,11 +67,25 @@ class GantryControl {
      */
     void placePart(part part, std::string agv, std::string arm);
 
+    /**
+     * \brief: places the part at correct pose when dropped anywhere in tray due to faulty fripper
+     * \param: part to pick, agv and arm
+     * \result: void
+     */
     void placePartAtCorrectPose(part part, std::string agv, std::string arm);
 
+    /**
+     * \brief: Replacement of faulty part
+     * \param: part to pick, agv and arm
+     * \result: true false success boolean
+     */
     bool replaceFaultyPart(part part, std::string agv, std::string arm);
 
-
+    /**
+     * \brief: To flip a part
+     * \param: part to pick, agv id
+     * \result: true false success boolean
+     */
     bool flipPart(part part, std::string agv);
 
     
