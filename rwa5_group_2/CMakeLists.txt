@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(rwa4_group_2)
+project(rwa5_group_2)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -162,8 +162,8 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(rwa4_node
-        src/rwa4_node.cpp
+add_executable(rwa5_node
+        src/rwa5_node.cpp
         src/competition.cpp
         src/gantry_control.cpp
         src/utils.cpp
@@ -181,9 +181,9 @@ add_executable(rwa4_node
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(rwa4_node  ${catkin_EXPORTED_TARGETS})
+add_dependencies(rwa5_node  ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
-target_link_libraries(rwa4_node ${catkin_LIBRARIES})
+target_link_libraries(rwa5_node ${catkin_LIBRARIES})
 # target_link_libraries(robot_controller_node ${catkin_LIBRARIES})
 
 #############
@@ -206,7 +206,7 @@ target_link_libraries(rwa4_node ${catkin_LIBRARIES})
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
 
-install(TARGETS rwa4_node
+install(TARGETS rwa5_node
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -229,9 +229,9 @@ install(TARGETS rwa4_node
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 install(FILES
-        config/rwa4_sensor_group2.yaml
+        config/rwa5_sensor_group2.yaml
         config/rwa4-sample.yaml
-        launch/rwa4.launch
+        launch/rwa5.launch
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config
         )
 
