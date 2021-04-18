@@ -139,6 +139,11 @@ public:
      */
     bool competition_over();
 
+    /**
+     * \brief: check if the part needs to be flipped and flip if required
+     * \result: true/false
+     */
+    bool checkForFlip(part &part_in_tray, Product product);
 
     struct distance_and_PresetLocation_struct
     {

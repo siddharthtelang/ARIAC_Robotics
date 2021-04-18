@@ -500,7 +500,14 @@ void RWAImplementation::buildKit()
 
     //place the part
     // gantry_->placePart(part_in_tray, product.agv_id, "left_arm"); // problem when placing green gaskets, part is upsidedown
-    gantry_->placePart(part_in_tray, product.agv_id, "left_arm");
+
+    // check if part needs to be flipped and if yes, go to the agv and flip if before placing
+    bool success = checkForFlip(part_in_tray, product);
+    if (success)
+        gantry_->placePart(part_in_tray, product.agv_id, "right_arm");
+    else
+        gantry_->placePart(part_in_tray, product.agv_id, "left_arm");
+
     //    task_queue_.top().front().erase(task_queue_.top().front().begin());
     //    ROS_INFO("Popped element");
 
@@ -694,6 +701,7 @@ void RWAImplementation::checkAgvErrors()
     }
 
     /************** Check for Flipped Parts *****************/
+    /* Comment this for now. Implement another versio of flip part. Delete this commented part later
     tf2::Quaternion q(
             product.pose.orientation.x,
             product.pose.orientation.y,
@@ -710,6 +718,7 @@ void RWAImplementation::checkAgvErrors()
         part_in_tray.initial_pose = product.designated_model.world_pose; // save the initial pose
         gantry_->flipPart(part_in_tray, product.agv_id);
     }
+    */
 
     bool poseUpdated = false;
     if (!cam_listener_->faulty_parts)
@@ -768,20 +777,44 @@ bool RWAImplementation::checkAndCorrectPose(std::string agv_id)
                 continue;
             else
             {
+                double roll, roll_, pitch, pitch_, yaw_desired, yaw_current;
+                tf2::Quaternion q_current(
+                     model.world_pose.orientation.x,
+                     model.world_pose.orientation.y,
+                     model.world_pose.orientation.z,
+                     model.world_pose.orientation.w);
+                tf2::Matrix3x3 m(q_current);
+                m.getRPY(roll, pitch, yaw_current);
+                //ROS_INFO_STREAM("YAW CURRENT = "<< yaw_current);
+                //Desired yaw
+                tf2::Quaternion q_desired(
+                     part_to_check.target_pose.orientation.x,
+                     part_to_check.target_pose.orientation.y,
+                     part_to_check.target_pose.orientation.z,
+                     part_to_check.target_pose.orientation.w);
+                tf2::Matrix3x3 m_(q_desired);
+                m_.getRPY(roll_, pitch_, yaw_desired);
+                //ROS_INFO_STREAM("YAW DESIRED = "<< yaw_desired);
+
                 ROS_INFO_STREAM("\nCHECK FOR PART " << part_to_check.type);
                 //correct world pose in tray as per order
                 auto correct_world_pose = part_to_check.target_pose;
                 //check delta between the above and the actual position determined by camera
-                auto delta_x = std::abs(model.world_pose.position.x) - std::abs(correct_world_pose.position.x);
-                auto delta_y = std::abs(model.world_pose.position.y) - std::abs(correct_world_pose.position.y);
-                auto delta_z = std::abs(model.world_pose.position.z) - std::abs(correct_world_pose.position.z);
-                auto delta_deg = std::abs(model.world_pose.orientation.z) - std::abs(correct_world_pose.orientation.z); //---
+
+                auto delta_x = std::abs(std::abs(model.world_pose.position.x) - std::abs(correct_world_pose.position.x));
+                auto delta_y = std::abs(std::abs(model.world_pose.position.y) - std::abs(correct_world_pose.position.y));
+                auto delta_z = std::abs(std::abs(model.world_pose.position.z) - std::abs(correct_world_pose.position.z));
+                //auto delta_deg = std::abs(model.world_pose.orientation.z) - std::abs(correct_world_pose.orientation.z);
+                auto delta_deg = std::abs(std::abs(yaw_desired) - std::abs(yaw_current));
 
                 ROS_INFO_STREAM("CURRENT WORLD POSE IN TRAY = " << model.world_pose);
                 ROS_INFO_STREAM("DESIRED WORLD POSE = " << correct_world_pose);
                 ROS_INFO_STREAM("Deltas = " << delta_x << " ; " << delta_y << " ; " << delta_z << " ; " << delta_deg);
 
-                if (delta_x <= 0.15 && delta_y <= 0.15 && delta_z <= 0.20 && delta_deg <= 0.02) //---
+                /* if (delta_x <= 0.15 && delta_y <= 0.15 && delta_z <= 0.20 && delta_deg <= 0.02)  */
+                // update this to previous version of x,y,z delta conditions if regression fails
+                // As per competition, the max delta can be 3cm and 5 degrees to get pose score
+                if (delta_x <= 0.03 && delta_y <= 0.03 && delta_z <= 0.20 && delta_deg <= 0.1) // 0.1 radians = 5 degrees
                 {
                     match = true;
                     ROS_INFO("Position is matched ; skip this and continue to next\n");
@@ -842,4 +875,62 @@ bool RWAImplementation::competition_over() {
         return true;
     }
     return false;
+}
+
+bool RWAImplementation::checkForFlip(part &part_in_tray, Product product)
+{
+    bool success = false;
+    if (product.type == "pulley_part_red")
+    {
+        double roll, pitch, yaw, roll_desired;
+        tf2::Quaternion q_current(
+            product.designated_model.world_pose.orientation.x,
+            product.designated_model.world_pose.orientation.y,
+            product.designated_model.world_pose.orientation.z,
+            product.designated_model.world_pose.orientation.w);
+        tf2::Matrix3x3 m(q_current);
+        m.getRPY(roll, pitch, yaw);
+
+        tf2::Quaternion q_desired(
+            product.pose.orientation.x,
+            product.pose.orientation.y,
+            product.pose.orientation.z,
+            product.pose.orientation.w);
+        tf2::Matrix3x3 m_(q_desired);
+        m_.getRPY(roll_desired, pitch, yaw);
+
+        tf2::Quaternion final_orientation;
+
+        if (std::abs(roll - roll_desired) > 3.0)
+        {
+            ROS_INFO("Flip Part needed");
+            double roll_zero = 0.0;
+            final_orientation.setRPY(roll_zero, pitch, yaw);
+            final_orientation.normalize();
+
+            if (roll > 3.0)
+            {
+                ROS_INFO("Part was flipped at origin, need to correct at destination");
+                product.designated_model.world_pose.orientation.x = final_orientation[0];
+                product.designated_model.world_pose.orientation.y = final_orientation[1];
+                product.designated_model.world_pose.orientation.z = final_orientation[2];
+                product.designated_model.world_pose.orientation.w = final_orientation[3];
+            }
+            else
+            {
+                ROS_INFO("Part is to be flipped at destination");
+                product.pose.orientation.x = final_orientation[0];
+                product.pose.orientation.y = final_orientation[1];
+                product.pose.orientation.z = final_orientation[2];
+                product.pose.orientation.w = final_orientation[3];
+            }
+            part_in_tray.pose = product.pose;
+            part_in_tray.type = product.type;
+            part_in_tray.initial_pose = product.designated_model.world_pose;
+            gantry_->flipPart(part_in_tray, product.agv_id);
+
+            success = true;
+        }
+    }
+    return success;
 }
