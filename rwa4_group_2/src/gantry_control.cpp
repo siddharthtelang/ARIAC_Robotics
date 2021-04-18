@@ -432,6 +432,11 @@ bool GantryControl::replaceFaultyPart(part part, std::string agv, std::string ar
         goToPresetLocation(agv1_);*/
     //    target_pose_in_tray.position.z += (ABOVE_TARGET + 1.5 * model_height[part.type]);
     target_pose_in_tray.position.z += model_height.at(part.type) + GRIPPER_HEIGHT - EPSILON;
+    target_pose_in_tray.orientation.x = currentPose.orientation.x;
+    target_pose_in_tray.orientation.y = currentPose.orientation.y;
+    target_pose_in_tray.orientation.z = currentPose.orientation.z;
+    target_pose_in_tray.orientation.w = currentPose.orientation.w;
+
     temp_arm_group->setPoseTarget(target_pose_in_tray);
     temp_arm_group->move();
     activateGripper(arm);
