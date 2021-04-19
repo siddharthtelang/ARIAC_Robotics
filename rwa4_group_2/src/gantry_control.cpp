@@ -260,11 +260,19 @@ bool GantryControl::pickPart(part part, std::string arm)
                 activateGripper(arm);
                 current_attempt++;
                 state = getGripperState(arm);
-                if (state.attached) return true;
+                if (state.attached) {
+                    temp_arm_group->setPoseTarget(currentPose); // need to lift arm back up before returning true
+                    temp_arm_group->move();
+                    ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else! upped to 1.0 from 0.5
+                    return true;
+                }
             }
-            temp_arm_group->setPoseTarget(currentPose);
+            temp_arm_group->setPoseTarget(currentPose); // picking part failed, return to last pose
             temp_arm_group->move();
             ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else! upped to 1.0 from 0.5
+            // todo: error handling if failed to attach after two attempts
+            ROS_INFO_STREAM("Gripper failed to attach an object after two attempts!!....proceeding as if part was grasped as usual, code should never reach here.");
+
         }
     }
     else

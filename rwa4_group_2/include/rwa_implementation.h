@@ -53,6 +53,8 @@ private:
     PresetLocation shelf5_a;
     PresetLocation shelf5_spun_a;
 
+    PresetLocation shelf11_south_far;
+
     PresetLocation shelf5_a_south;
 
     PresetLocation mid_5_8_staging_a;

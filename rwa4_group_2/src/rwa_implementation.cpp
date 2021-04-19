@@ -247,7 +247,7 @@ void RWAImplementation::initPresetLocs()
     bottom_left_staging_a.name = GET_VARIABLE_NAME(bottom_left_staging_a);
 
     // shelf5_a.gantry = {-14.22, -4.15, 0.00};
-    shelf5_a.gantry = {-14.42, -4.30, 0.00}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT
+    shelf5_a.gantry = {-14.42, -4.30, PI}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT
     // shelf5_a.gantry = {-14.72, -4.30, 0.00};
     // shelf5_a.gantry = {-14.42 - .897919, -4.30 - .853737, 0.00};
     // shelf5_a.gantry = {-15.42, -4.30, 0.00}; // WORKS FOR RIGHT SHELF PULLEY
@@ -256,6 +256,20 @@ void RWAImplementation::initPresetLocs()
     shelf5_a.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, 0.0};     // try fix
     shelf5_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
     shelf5_a.name = GET_VARIABLE_NAME(shelf5_a);
+
+    // shelf5_a.gantry = {-14.42, -4.30, -PI/2}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT
+    // shelf5_a.left_arm = {0.00, -3.02, 2.26, -1.13, 0.00, 0.0};     // try fix
+    // shelf5_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    // shelf5_a.name = GET_VARIABLE_NAME(shelf5_a);
+
+    shelf11_south_far.gantry = {-13.52-0.172656, 1.96, -PI/2}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT
+    // shelf11_south_far.left_arm = {0.00, -3.02, 2.26, -2.44, -1.51, 0.0};     // works, but blue pulley bumps on shelf during re-store of arms
+    // shelf11_south_far.left_arm = {0.00, -3.25, 2.09, -2.02, -1.54, 0.0};     // try to raise arm a little to prevent bumping on shelf////////////////////////////////////////////
+    shelf11_south_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    // shelf11_south_far.left_arm = {0.00, -3.25, 2.09, -2.26, -1.54, 0.0};     // try to raise arm a little to prevent bumping on shelf angling (canceled)
+    // shelf11_south_far.left_arm = {0.00, -3.33, 1.86, -1.69, -PI/2, 0.0};     // raise arm more (too much)
+    shelf11_south_far.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf11_south_far.name = GET_VARIABLE_NAME(shelf11_south_far);
 
     shelf5_a_south.gantry = {-14.42, -4.30, PI}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT, test southern pick
     shelf5_a_south.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, 0.0};     // try fix
@@ -272,7 +286,8 @@ void RWAImplementation::initPresetLocs()
     mid_5_8_staging_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_5_8_staging_a.name = GET_VARIABLE_NAME(mid_5_8_staging_a);
 
-    mid_8_11_staging_a.gantry = {0.0, 1.5, PI}; // test southern pick
+    mid_8_11_staging_a.gantry = {0.0, 1.5, 0.00}; // test southern pick (cancel for now, do north pick far reach test)
+    // mid_8_11_staging_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_8_11_staging_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_8_11_staging_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_8_11_staging_a.name = GET_VARIABLE_NAME(mid_8_11_staging_a);
@@ -288,7 +303,8 @@ void RWAImplementation::initPresetLocs()
     shelf8_a_south.name = GET_VARIABLE_NAME(shelf8_a_south); // remember to change this line to update string!
 
     shelf11_a.gantry = {-14.22, 1.5, 0.00};
-    shelf11_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    // shelf11_a.left_arm = {-PI / 2, -1.01, 2.66, -1.13, 0.00, 0.00}; // great!!! but narrow miss
+    shelf11_a.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00};
     shelf11_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
     shelf11_a.name = GET_VARIABLE_NAME(shelf11_a);
 
@@ -308,7 +324,7 @@ void RWAImplementation::initPresetLocs()
         {6, shelf8_a_south},
         {16, shelf8_a_south},
 
-        {8, shelf11_a},
+        {8, shelf11_south_far}, // testing south far
         {11, shelf11_a},
 
         {1, bin11_a},
@@ -388,6 +404,9 @@ void RWAImplementation::initPresetLocs()
         {{"bin3_a", "bin11_a"}, std::vector<PresetLocation>{bin3_a, bin11_a}},
 
         {{"start_a", "shelf8_a_south"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_a, shelf8_a_south}},
+
+        {{"start_a", "shelf11_south_far"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_a, shelf11_a, shelf11_south_far}}, // test south far
+
 
 
     };
@@ -505,8 +524,10 @@ void RWAImplementation::buildKit()
         executeVectorOfPresetLocations(path);
         ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
 
-        gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf + 1.795838, add_to_y_shelf - 1.707474, PI)); // test southern pick
-        ROS_INFO_STREAM("goToPresetLocation with bump executed!");
+        // gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf + 1.795838, add_to_y_shelf - 1.707474, PI)); // test southern pick
+        // gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, 0.0)); // test south far pick (by commenting this line)
+        // ROS_INFO_STREAM("goToPresetLocation with bump executed!");
+
 
         ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
     }
@@ -516,6 +537,7 @@ void RWAImplementation::buildKit()
     }
 
     //--Go pick the part
+    ROS_INFO_STREAM("picking part of type === " << my_part.type);
     if (!gantry_->pickPart(my_part, "left_arm"))
     {
         // gantry.goToPresetLocation(gantry.start_);
