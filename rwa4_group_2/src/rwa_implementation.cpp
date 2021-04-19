@@ -348,6 +348,8 @@ void RWAImplementation::initPresetLocs()
         {{"start_a", "shelf11_a"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_a, shelf11_a}},
         {{"start_a", "bin11_a"}, std::vector<PresetLocation>{start_a, bin11_a}},
 
+        {{"start_a", "start_a"}, std::vector<PresetLocation>{start_a, start_a}}, // go to itself, improved realtime factor makes this occur? 0.8-0.84 real time factor
+
         {{"bin3_a", "start_a"}, std::vector<PresetLocation>{bin3_a, start_a}},
         {{"agv2_a", "start_a"}, std::vector<PresetLocation>{agv2_a, start_a}},
         {{"agv1_staging_a", "start_a"}, std::vector<PresetLocation>{agv1_staging_a, start_a}},
