@@ -53,10 +53,13 @@ private:
     PresetLocation shelf5_a;
     PresetLocation shelf5_spun_a;
 
+    PresetLocation shelf5_a_south;
+
     PresetLocation mid_5_8_staging_a;
     PresetLocation mid_8_11_staging_a;
 
     PresetLocation shelf8_a;
+    PresetLocation shelf8_a_south; // test southern pick
     PresetLocation shelf11_a;
 
     PresetLocation bin11_a; // for bin11 (and all 8 bins in that entire grouping)

@@ -257,6 +257,11 @@ void RWAImplementation::initPresetLocs()
     shelf5_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
     shelf5_a.name = GET_VARIABLE_NAME(shelf5_a);
 
+    shelf5_a_south.gantry = {-14.42, -4.30, PI}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT, test southern pick
+    shelf5_a_south.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, 0.0};     // try fix
+    shelf5_a_south.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf5_a_south.name = GET_VARIABLE_NAME(shelf5_a_south);
+
     shelf5_spun_a.gantry = {-15.42, -4.30, 3.14};
     shelf5_spun_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     shelf5_spun_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
@@ -267,7 +272,7 @@ void RWAImplementation::initPresetLocs()
     mid_5_8_staging_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_5_8_staging_a.name = GET_VARIABLE_NAME(mid_5_8_staging_a);
 
-    mid_8_11_staging_a.gantry = {0.0, 1.5, 0.00};
+    mid_8_11_staging_a.gantry = {0.0, 1.5, PI}; // test southern pick
     mid_8_11_staging_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_8_11_staging_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_8_11_staging_a.name = GET_VARIABLE_NAME(mid_8_11_staging_a);
@@ -276,6 +281,11 @@ void RWAImplementation::initPresetLocs()
     shelf8_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     shelf8_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
     shelf8_a.name = GET_VARIABLE_NAME(shelf8_a);
+
+    shelf8_a_south.gantry = {-14.22, 1.5, PI}; // test southern pick, note PI / 2
+    shelf8_a_south.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    shelf8_a_south.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf8_a_south.name = GET_VARIABLE_NAME(shelf8_a_south); // remember to change this line to update string!
 
     shelf11_a.gantry = {-14.22, 1.5, 0.00};
     shelf11_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
@@ -295,8 +305,8 @@ void RWAImplementation::initPresetLocs()
         {9, shelf5_a},
         {12, shelf5_a},
 
-        {6, shelf8_a},
-        {16, shelf8_a},
+        {6, shelf8_a_south},
+        {16, shelf8_a_south},
 
         {8, shelf11_a},
         {11, shelf11_a},
@@ -337,7 +347,7 @@ void RWAImplementation::initPresetLocs()
     // vector of some of the locations, when gantry moves anywhere, it first searches through these possible locations,
     // and tries to find the closest one to it. That approximate location then serves as the beginning location for any move lookup.
     preset_locations_list_ = {start_a, bin3_a, agv2_a, agv1_staging_a,
-                              bottom_left_staging_a, shelf8_a, shelf11_a, bin11_a, shelf5_a}; // do not have mid_xyz anything here for now
+                              bottom_left_staging_a, shelf8_a, shelf8_a_south, shelf11_a, bin11_a, shelf5_a}; // do not have mid_xyz anything here for now
 
     PathingLookupDictionary = {
         {{"start_a", "bin3_a"}, std::vector<PresetLocation>{start_a, bin3_a}},
@@ -376,6 +386,9 @@ void RWAImplementation::initPresetLocs()
         {{"agv2_a", "bin11_a"}, std::vector<PresetLocation>{start_a, bin11_a}}, // go to start_a first
 
         {{"bin3_a", "bin11_a"}, std::vector<PresetLocation>{bin3_a, bin11_a}},
+
+        {{"start_a", "shelf8_a_south"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_a, shelf8_a_south}},
+
 
     };
 }
@@ -484,13 +497,15 @@ void RWAImplementation::buildKit()
         double add_to_y_shelf = my_part.pose.position.y - 3.446263;
         ROS_INFO_STREAM(" x " << add_to_x_shelf << " y " << add_to_y_shelf);
 
+        ROS_INFO_STREAM("discovered_cam_idx is camera number " << discovered_cam_idx);
+        ROS_INFO_STREAM("cam_to_presetlocation lookup yields " << cam_to_presetlocation[discovered_cam_idx].name);
         std::vector<PresetLocation> path = getPresetLocationVector(cam_to_presetlocation[discovered_cam_idx]);
         ROS_INFO_STREAM("getPresetLocationVector executed!");
 
         executeVectorOfPresetLocations(path);
         ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
 
-        gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, 0));
+        gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf + 1.795838, add_to_y_shelf - 1.707474, PI)); // test southern pick
         ROS_INFO_STREAM("goToPresetLocation with bump executed!");
 
         ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
