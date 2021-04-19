@@ -130,6 +130,23 @@ class GantryControl {
       return left_arm_group_.getCurrentPose().pose; // for some reason cannot get full robot group's current pose, no end effector specified
     }
 
+    std::vector<double> getGantryJointPositionsDoubleVector()
+    {
+
+      //--Raw pointers are frequently used to refer to the planning group for improved performance.
+      //--To start, we will create a pointer that references the current robot’s state.
+      const moveit::core::JointModelGroup *joint_model_group =
+          full_robot_group_.getCurrentState()->getJointModelGroup("Full_Robot");
+
+      //--Let’s set a joint space goal and move towards it.
+      moveit::core::RobotStatePtr current_state_a = full_robot_group_.getCurrentState();
+
+      std::vector<double> joint_group_positions;
+      current_state_a->copyJointGroupPositions(joint_model_group, joint_group_positions);
+
+      return joint_group_positions;
+    }
+
   private:
     std::vector<double> joint_group_positions_;
     ros::NodeHandle node_;

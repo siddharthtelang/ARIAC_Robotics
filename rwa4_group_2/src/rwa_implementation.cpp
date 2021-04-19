@@ -305,6 +305,31 @@ void RWAImplementation::initPresetLocs()
         {2, bin11_a},
     };
 
+    cam_to_y_coordinate = {
+        {0, 1.750927},
+        {7, 1.698910},
+        {9, 3.006604},
+        {12, 3.006604},
+
+        {6, 0.000000},
+        {16, 0.000000},
+
+        {8, -3.024268},
+        {11, -3.024268},
+
+        {1, -1.794935},
+        {2, -1.806997},
+
+        {3, 6.582773},
+        {4, -7.175601},
+        {5, 4.2},
+        {10, -3.024268},
+        {13, 3.78},
+        {14, -3.024268},
+        {15, 3.78},
+        {16, 0.000000},
+    };
+
     agv_to_camera = {
         {"agv1", 3},
         {"agv2", 4}};
@@ -518,11 +543,19 @@ double RWAImplementation::calcDistanceInXYPlane(geometry_msgs::Pose a, geometry_
     return std::sqrt(std::pow(a.position.x - b.position.x, 2) + std::pow(a.position.y - b.position.y, 2)); // euclidean distance
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+double RWAImplementation::calcDistanceInXYTorso(PresetLocation pLocation, std::vector<double> joint_positions)
+{
+    return std::sqrt(std::pow(pLocation.gantry[0] - joint_positions[0], 2) + std::pow(pLocation.gantry[1] - joint_positions[1], 2) + std::pow(pLocation.gantry[2] - joint_positions[2], 2) ); // euclidean distance
+}
+
+
 //////////////////////////////// Get nearest preset location to current gantry position
 PresetLocation RWAImplementation::getNearesetPresetLocation()
 {
     ////// Get current gantry position
-    geometry_msgs::Pose current_position = gantry_->getGantryPose();
+    // geometry_msgs::Pose current_position = gantry_->getGantryPose();
+    std::vector<double> joint_positions = gantry_->getGantryJointPositionsDoubleVector(); // instead of converting to Pose, use joint values directly
 
     ////// Define custom struct (distance, PresetLocation), see https://www.cplusplus.com/articles/NhA0RXSz/
 
@@ -531,8 +564,9 @@ PresetLocation RWAImplementation::getNearesetPresetLocation()
 
     for (PresetLocation pset_location : preset_locations_list_)
     {
-        geometry_msgs::Pose location_converted_to_pose = gantryXY2worldposeXY(pset_location);    // convert preset location to pose
-        double distance_i = calcDistanceInXYPlane(current_position, location_converted_to_pose); // euclidean dist in xy plane
+        // geometry_msgs::Pose location_converted_to_pose = gantryXY2worldposeXY(pset_location);    // convert preset location to pose
+        // double distance_i = calcDistanceInXYPlane(current_position, location_converted_to_pose); // euclidean dist in xy plane
+        double distance_i = calcDistanceInXYTorso(pset_location, joint_positions);              // "score", aka distance, in gantry's joint 0, 1, 2 space
         distance_and_PresetLocation_struct candidate_struct{distance_i, pset_location};          // make a struct
         vector_of_structs.push_back(candidate_struct);                                           // put struct in list of structs
     }

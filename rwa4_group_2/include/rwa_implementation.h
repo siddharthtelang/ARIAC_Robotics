@@ -77,6 +77,7 @@ private:
     int prev_num_orders_{0};
 
     std::map<int, PresetLocation> cam_to_presetlocation;
+    std::map<int, double> cam_to_y_coordinate;
     std::map<std::string, int> agv_to_camera;
     bool competition_started_{false};
 
@@ -117,6 +118,7 @@ public:
     std::unordered_map<std::vector<std::string>, std::vector<PresetLocation>, container_hash<std::vector<std::string>> > PathingLookupDictionary;
 
     double calcDistanceInXYPlane(geometry_msgs::Pose a, geometry_msgs::Pose b);
+    double calcDistanceInXYTorso(PresetLocation pLocation, std::vector<double> joint_positions);
     PresetLocation getNearesetPresetLocation();
     std::vector<PresetLocation> getPresetLocationVector(PresetLocation target_preset_location);
     bool executeVectorOfPresetLocations( std::vector<PresetLocation> path_to_execute );
@@ -124,10 +126,10 @@ public:
 
     PresetLocation getNearestBinPresetLocation();
 
-
-
     bool simpleDropPart() {
         gantry_->deactivateGripper("left_arm");
         return true;
     }
+
+
 };
