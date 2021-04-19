@@ -87,7 +87,8 @@ private:
  */
 public:
     RWAImplementation(ros::NodeHandle& node, CameraListener& camera_listener, GantryControl& gantry, Competition& competition, AGVControl& agv_control) :
-        node_{&node}, cam_listener_{&camera_listener}, gantry_{&gantry}, competition_{&competition}, agv_control_{&agv_control}
+        node_{&node}, cam_listener_{&camera_listener}, gantry_{&gantry}, competition_{&competition}, agv_control_{&agv_control},
+        right_lane(node,1,2), mid_right_lane(node,3,4), mid_left_lane(node,5,6), left_lane(node, 7,8)
     {
         initPresetLocs();
         breakbeam_sub_ = node_->subscribe<nist_gear::Proximity>("/ariac/breakbeam_0_change", 10, &CameraListener::breakbeam_callback, cam_listener_);
@@ -172,4 +173,11 @@ public:
         gantry_->deactivateGripper("left_arm");
         return true;
     }
+
+    /* ===================== Human Obstacle Variables ===================== */
+    LaneBreakbeamPair left_lane;
+    LaneBreakbeamPair mid_left_lane;
+    LaneBreakbeamPair mid_right_lane;
+    LaneBreakbeamPair right_lane;
+
 };

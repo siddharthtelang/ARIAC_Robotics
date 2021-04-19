@@ -148,6 +148,12 @@ int main(int argc, char ** argv) {
         rwa.checkAgvErrors();
         ros::Duration(0.5).sleep();
         if (rwa.competition_over()) break;
+        
+        // ROS_INFO_STREAM("----------------------------");
+        // ROS_INFO_STREAM("left lane: " << rwa.left_lane.queryPair());
+        // ROS_INFO_STREAM("mid left lane: " << rwa.mid_left_lane.queryPair());
+        // ROS_INFO_STREAM("mid right lane: " << rwa.mid_right_lane.queryPair());
+        // ROS_INFO_STREAM("right lane: " << rwa.right_lane.queryPair());
     }
     // //--1-Read order
     // std::vector<Product> total_products;

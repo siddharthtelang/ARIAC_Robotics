@@ -5,11 +5,15 @@
 #include <geometry_msgs/Point.h>
 #include <unordered_map>
 #include <string>
+#include <boost/bind.hpp>
+#include <array>
+
 #include "camera_listener.h"
 
 #include <ros/ros.h>
 
 #include <nist_gear/VacuumGripperState.h>
+#include <nist_gear/Proximity.h>
 
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
@@ -127,5 +131,33 @@ typedef struct Order {
     std::string order_id;
     std::vector<Shipment> shipments;
 } order;
+
+class LaneBreakbeamPair {
+
+public:
+    explicit LaneBreakbeamPair(ros::NodeHandle& node, int br_closer, int br_further) : node_{&node}
+    {
+        br_topic_closer_ += std::to_string(br_closer) + "_change";
+        br_topic_further_ += std::to_string(br_further) + "_change";
+    };
+
+    /**
+     * @brief query pair of breakbeam sensors in a given lane
+     * 
+     */
+    int queryPair();
+    void breakbeam_callback(const nist_gear::Proximity::ConstPtr &msg, const int breakbeam);
+
+
+private:
+    ros::NodeHandle* node_;
+    std::string br_topic_closer_ = "/ariac/breakbeam_";
+    std::string br_topic_further_ = "/ariac/breakbeam_";
+
+    int prev_hit_ = -1;
+    std::array<double, 2> time_hit_{}; 
+    int towards_conveyor_{-1}; 
+    const int breakbeam_rate_{1};
+};
 
 #endif
