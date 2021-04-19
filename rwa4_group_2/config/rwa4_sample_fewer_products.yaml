@@ -23,7 +23,7 @@ options:
   gazebo_state_logging: true
   insert_models_over_bins: true
   insert_models_over_shelves: true
-  belt_population_cycles: 10
+  belt_population_cycles: 0
   spawn_extra_models: true
 
 shelf_layout:
