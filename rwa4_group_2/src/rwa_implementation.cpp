@@ -350,6 +350,7 @@ void RWAImplementation::initPresetLocs()
         {{"agv2_a", "bin11_a"}, std::vector<PresetLocation>{start_a, bin11_a}}, // go to start_a first
 
         {{"bin3_a", "bin11_a"}, std::vector<PresetLocation>{bin3_a, bin11_a}},
+        
         {{"bin3_a", "bin3_a"}, std::vector<PresetLocation>{bin3_a, bin3_a}},
 
     };
