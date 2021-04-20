@@ -139,9 +139,15 @@ int main(int argc, char ** argv) {
     CameraListener cam_listener(node);
     AGVControl agv_control(node);
     RWAImplementation rwa(node, cam_listener, gantry, comp, agv_control);
+
+    bool gaps_found = false;
     
     while(ros::ok()) {
         ROS_INFO_STREAM("Starting while loop...");
+        if (!gaps_found)
+        {
+            gaps_found = rwa.detectGaps();
+        }
         rwa.processOrder();
         if (rwa.checkConveyor()) continue;       
         rwa.buildKit();

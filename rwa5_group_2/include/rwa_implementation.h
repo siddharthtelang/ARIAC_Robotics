@@ -140,6 +140,8 @@ public:
      */
     bool competition_over();
 
+    bool detectGaps();
+
 
     struct distance_and_PresetLocation_struct
     {
@@ -162,6 +164,9 @@ public:
     std::vector<PresetLocation> getPresetLocationVector(PresetLocation target_preset_location);
     bool executeVectorOfPresetLocations( std::vector<PresetLocation> path_to_execute );
     geometry_msgs::Pose gantryXY2worldposeXY(PresetLocation preset_location_2_convert);
+    // preset locations from start to safe location for three shelf rows starting from agv1 side
+    std::array<std::vector<PresetLocation>,3> shelf_preset_locations;
+    std::array<std::string, 3> gaps; //either "gap_conveyor" or "gap_end"
 
     PresetLocation getNearestBinPresetLocation();
 
