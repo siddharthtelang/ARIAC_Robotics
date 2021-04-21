@@ -642,6 +642,7 @@ bool RWAImplementation::executeVectorOfPresetLocations(std::vector<PresetLocatio
 {
     for (PresetLocation psetlocation : path_to_execute)
     {
+        ROS_INFO_STREAM("Moving to presetlocation >>>>>>> " << psetlocation.name);
         gantry_->goToPresetLocation(psetlocation);
     }
     return true;
