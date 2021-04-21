@@ -431,9 +431,32 @@ void RWAImplementation::initPresetLocs()
     ////////////
     
 
+    cam_to_y_coordinate = {
+        {0, 1.750927},
+        {7, 1.698910},
+        {9, 3.006604},
+        {12, 3.006604},
 
+        {6, 0.000000},
+        {16, 0.000000},
 
+        {8, -3.024268},
+        {11, -3.024268},
 
+        {1, -1.794935},
+        {2, -1.806997},
+
+        {3, 6.582773},
+        {4, -7.175601},
+        {5, 4.2},
+        {10, -3.024268},
+        {13, 3.78},
+        {14, -3.024268},
+        {15, 3.78},
+        {16, 0.000000},
+    };
+
+    
 
 
 
@@ -504,7 +527,9 @@ void RWAImplementation::initPresetLocs()
 
 // Note: this function is called once in the constructor of RWAImplementation
 void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
-    std::vector<bool> clear = {true, true, true, true}; // [Northernmost Lane Row .......... Southermost Lane Row]
+
+    ROS_INFO_STREAM(" Human Obstacles not initialized, Error, need to add some code here ************************************************");
+    std::vector<bool> clear = {false, true, true, false}; // [Northernmost Lane Row .......... Southermost Lane Row]
 
     // First deal with case of both inner lanes taken
     if (clear[1] == false && clear[2] == false) {
@@ -527,6 +552,13 @@ void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
         else if (clear[1] == false && clear[2] == false) { // Both innermost lanes not clear case, must account for Shelf Gaps
 
             ROS_INFO_STREAM(" Shelf Gaps not implemented, Error, need to add some code here ************************************************");
+
+            if ( true ) { // this code block: for testing only
+                regionDictionary["shelf8upper"] = {"shelf8_fromSouth_far", "wait"};
+            }
+            else if ( false ) {
+                regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near", "wait"};
+            }
 
             // if ( Gap is between shelf 11 and shelf 10) {
             //     regionDictionary["shelf8upper"] = {"shelf8_fromSouth_far", "wait"};
@@ -664,7 +696,7 @@ void RWAImplementation::buildKit()
         gantry_->goToPresetLocation(Bump(cam_to_presetlocation[discovered_cam_idx], add_to_x, add_to_y, 0));
         ROS_INFO_STREAM("goToPresetLocation with bump executed!");
     }
-    else if ((discovered_cam_idx != 0 || discovered_cam_idx != 7 || discovered_cam_idx != 1 || discovered_cam_idx != 2) && discovered_cam_idx >= 0 && discovered_cam_idx <= 16)
+    else if ((discovered_cam_idx != 0 || discovered_cam_idx != 7 || discovered_cam_idx != 1 || discovered_cam_idx != 2) && discovered_cam_idx >= 0 && discovered_cam_idx <= 16) // Any other camera
     {                                                                 // any other camera
         ROS_INFO_STREAM("Any Other Camera Block reached _______________________");
         double add_to_x_shelf = my_part.pose.position.x - -13.522081; // constant is perfect bin red pulley x

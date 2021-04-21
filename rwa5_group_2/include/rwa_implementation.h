@@ -177,6 +177,7 @@ private:
     int prev_num_orders_{0};
 
     std::map<int, PresetLocation> cam_to_presetlocation;
+    std::map<int, double> cam_to_y_coordinate;
     std::map<std::string, int> agv_to_camera;
     bool competition_started_{false};
 
