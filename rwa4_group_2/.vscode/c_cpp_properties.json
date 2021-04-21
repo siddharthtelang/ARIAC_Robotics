@@ -6,13 +6,13 @@
         "limitSymbolsToIncludedHeaders": true
       },
       "includePath": [
-        "/home/dani/ariac_ws/devel/include/**",
+        "${workspaceFolder}/devel/include/**",
         "/opt/ros/melodic/include/**",
-        "/home/dani/ariac_ws/src/ariac-gazebo_ros_pkgs/gazebo_plugins/include/**",
-        "/home/dani/ariac_ws/src/ariac-gazebo_ros_pkgs/gazebo_ros/include/**",
-        "/home/dani/ariac_ws/src/ariac-gazebo_ros_pkgs/gazebo_ros_control/include/**",
-        "/home/dani/ariac_ws/src/ARIAC/nist_gear/include/**",
-        "/home/dani/ariac_ws/src/ARIAC_Robotics/rwa3_group_2/include/**",
+        "${workspaceFolder}/src/ariac-gazebo_ros_pkgs/gazebo_plugins/include/**",
+        "${workspaceFolder}/src/ariac-gazebo_ros_pkgs/gazebo_ros/include/**",
+        "${workspaceFolder}/src/ariac-gazebo_ros_pkgs/gazebo_ros_control/include/**",
+        "${workspaceFolder}/src/ARIAC/nist_gear/include/**",
+        "${workspaceFolder}/src/ARIAC_Robotics/rwa4_group_2/include/**",
         "/usr/include/**"
       ],
       "name": "ROS"

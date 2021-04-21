@@ -14,19 +14,18 @@ void RWAImplementation::processOrder()
     ROS_INFO_STREAM("Processing Order...");
 
     std::unordered_map<std::string, std::unordered_map<std::string, std::queue<Product>>> total_products;
-    std::queue<std::vector<Product>> shipments;
+    std::vector<Product> products;
     std::string shipment_type;
 
     std::string delimiter = "_";
 
     auto order = order_list.back();
-
     std::queue<std::vector<Product>> order_task_queue;
     for (const auto &shipment : order.shipments)
     {
         shipment_type = shipment.shipment_type;
         std::string agv_id = shipment.agv_id;
-        std::vector<Product> products = shipment.products;
+        products = shipment.products;
         std::queue<std::string> current_shipment;
 
         ROS_INFO_STREAM("Shipment type = " << shipment_type);
@@ -35,7 +34,6 @@ void RWAImplementation::processOrder()
         ROS_INFO_STREAM("Shipment size = " << order.shipments.size());
 
         std::queue<Product> conveyor_parts;
-        std::vector<Product> shipment_task_queue;
         for (auto &product : products)
         { ////////// FOR PRODUCT IN PRODUCTS
             ROS_INFO_STREAM("Product type = " << product.type);
@@ -54,7 +52,7 @@ void RWAImplementation::processOrder()
             {
                 product.designated_model = sorted_map[color][type].top();
                 sorted_map[color][type].pop();
-                shipment_task_queue.push_back(product);
+                order_task_queue.push(std::vector<Product>{product});
                 ROS_INFO_STREAM(" !sorted_map[color][type].empty() if case entered ");
             }
             else if (full_type == conveyor_type_)
@@ -71,14 +69,15 @@ void RWAImplementation::processOrder()
                 ROS_INFO_STREAM(" else case entered ");
             }
             // total_products[color][type].push(product);
+            current_shipment.push(product.type);
         }
+        current_shipments.push(current_shipment);
         while (!conveyor_parts.empty())
         {
             auto product = conveyor_parts.front();
-            shipment_task_queue.push_back(product);
+            order_task_queue.push(std::vector<Product>{product});
             conveyor_parts.pop();
         }
-        order_task_queue.push(shipment_task_queue);
     }
     /* ORDERS PRODUCTS IN PAIRS. DON'T DELETE */
     // std::queue<Product> needs_pair;
@@ -115,20 +114,20 @@ void RWAImplementation::processOrder()
     ROS_INFO_STREAM("Completed order processing. All parts on task queue.");
 
     // // CANNOT ITERATE OVER QUEUE. THIS PART IS JUST FOR TESTING. WILL NOT WORK IF UNCOMMENTED DURING EXECUTION
-//     ROS_INFO_STREAM("");
-//     auto task_queue = task_queue_.top();
-//     while(!task_queue.empty()) {
-//         auto vec = task_queue.front();
-//         ROS_INFO_STREAM("Vector on queue.");
-//         for(auto product : vec) {
-//             ROS_INFO_STREAM("  Product on queue.");
-//             ROS_INFO_STREAM("  Product type: " << product.type);
-//             ROS_INFO_STREAM("  Product target AGV: " << product.agv_id);
-//             ROS_INFO_STREAM("    Designated model id: " << product.designated_model.id);
-//             ROS_INFO_STREAM("    Designated model type: " << product.designated_model.color << " " << product.designated_model.type << "\n");
-//         }
-//         task_queue.pop();
-//     }
+    // ROS_INFO_STREAM("");
+    // auto task_queue = task_queue_.top();
+    // while(!task_queue.empty()) {
+    //     auto vec = task_queue.front();
+    //     ROS_INFO_STREAM("Vector on queue.");
+    //     for(auto product : vec) {
+    //         ROS_INFO_STREAM("  Product on queue.");
+    //         ROS_INFO_STREAM("  Product type: " << product.type);
+    //         ROS_INFO_STREAM("  Product target AGV: " << product.agv_id);
+    //         ROS_INFO_STREAM("    Designated model id: " << product.designated_model.id);
+    //         ROS_INFO_STREAM("    Designated model type: " << product.designated_model.color << " " << product.designated_model.type << "\n");
+    //     }
+    //     task_queue.pop();
+    // }
 }
 
 /**
@@ -151,7 +150,7 @@ bool RWAImplementation::checkConveyor()
     bool continue_ = false;
     ROS_INFO_STREAM("Checking conveyor...");
 
-    if (!waiting_for_part_ && !cam_listener_->load_time_on_conveyor_.empty() && !cam_listener_->parts_on_conveyor_.empty())
+    if (!waiting_for_part_ && !cam_listener_->load_time_on_conveyor_.empty())
     {
         waiting_for_part_ = true;
         current_part_load_time_ = cam_listener_->load_time_on_conveyor_.front();
@@ -248,7 +247,7 @@ void RWAImplementation::initPresetLocs()
     bottom_left_staging_a.name = GET_VARIABLE_NAME(bottom_left_staging_a);
 
     // shelf5_a.gantry = {-14.22, -4.15, 0.00};
-    shelf5_a.gantry = {-14.42, -4.30, 0.00}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT
+    shelf5_a.gantry = {-14.42, -4.30, PI}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT
     // shelf5_a.gantry = {-14.72, -4.30, 0.00};
     // shelf5_a.gantry = {-14.42 - .897919, -4.30 - .853737, 0.00};
     // shelf5_a.gantry = {-15.42, -4.30, 0.00}; // WORKS FOR RIGHT SHELF PULLEY
@@ -257,6 +256,25 @@ void RWAImplementation::initPresetLocs()
     shelf5_a.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, 0.0};     // try fix
     shelf5_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
     shelf5_a.name = GET_VARIABLE_NAME(shelf5_a);
+
+    // shelf5_a.gantry = {-14.42, -4.30, -PI/2}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT
+    // shelf5_a.left_arm = {0.00, -3.02, 2.26, -1.13, 0.00, 0.0};     // try fix
+    // shelf5_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    // shelf5_a.name = GET_VARIABLE_NAME(shelf5_a);
+
+    shelf11_south_far.gantry = {-13.52-0.172656, 1.96, -PI/2}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT
+    // shelf11_south_far.left_arm = {0.00, -3.02, 2.26, -2.44, -1.51, 0.0};     // works, but blue pulley bumps on shelf during re-store of arms
+    // shelf11_south_far.left_arm = {0.00, -3.25, 2.09, -2.02, -1.54, 0.0};     // try to raise arm a little to prevent bumping on shelf////////////////////////////////////////////
+    shelf11_south_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    // shelf11_south_far.left_arm = {0.00, -3.25, 2.09, -2.26, -1.54, 0.0};     // try to raise arm a little to prevent bumping on shelf angling (canceled)
+    // shelf11_south_far.left_arm = {0.00, -3.33, 1.86, -1.69, -PI/2, 0.0};     // raise arm more (too much)
+    shelf11_south_far.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf11_south_far.name = GET_VARIABLE_NAME(shelf11_south_far);
+
+    shelf5_a_south.gantry = {-14.42, -4.30, PI}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT, test southern pick
+    shelf5_a_south.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, 0.0};     // try fix
+    shelf5_a_south.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf5_a_south.name = GET_VARIABLE_NAME(shelf5_a_south);
 
     shelf5_spun_a.gantry = {-15.42, -4.30, 3.14};
     shelf5_spun_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
@@ -268,7 +286,8 @@ void RWAImplementation::initPresetLocs()
     mid_5_8_staging_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_5_8_staging_a.name = GET_VARIABLE_NAME(mid_5_8_staging_a);
 
-    mid_8_11_staging_a.gantry = {0.0, 1.5, 0.00};
+    mid_8_11_staging_a.gantry = {0.0, 1.5, 0.00}; // test southern pick (cancel for now, do north pick far reach test)
+    // mid_8_11_staging_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_8_11_staging_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_8_11_staging_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_8_11_staging_a.name = GET_VARIABLE_NAME(mid_8_11_staging_a);
@@ -278,8 +297,14 @@ void RWAImplementation::initPresetLocs()
     shelf8_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
     shelf8_a.name = GET_VARIABLE_NAME(shelf8_a);
 
-    shelf11_a.gantry = {-14.22, 1.5, 0.00};
-    shelf11_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    shelf8_a_south.gantry = {-14.22, 1.5, PI}; // test southern pick, note PI / 2
+    shelf8_a_south.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    shelf8_a_south.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf8_a_south.name = GET_VARIABLE_NAME(shelf8_a_south); // remember to change this line to update string!
+
+    shelf11_a.gantry = {-14.22, 1.5, 0.88}; // spin approx 45 degrees to avoid hitting shelves
+    // shelf11_a.left_arm = {-PI / 2, -1.01, 2.66, -1.13, 0.00, 0.00}; // great!!! but narrow miss
+    shelf11_a.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00};
     shelf11_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
     shelf11_a.name = GET_VARIABLE_NAME(shelf11_a);
 
@@ -296,14 +321,39 @@ void RWAImplementation::initPresetLocs()
         {9, shelf5_a},
         {12, shelf5_a},
 
-        {6, shelf8_a},
-        {16, shelf8_a},
+        {6, shelf8_a_south},
+        {16, shelf8_a_south},
 
-        {8, shelf11_a},
+        {8, shelf11_south_far}, // testing south far
         {11, shelf11_a},
 
         {1, bin11_a},
         {2, bin11_a},
+    };
+
+    cam_to_y_coordinate = {
+        {0, 1.750927},
+        {7, 1.698910},
+        {9, 3.006604},
+        {12, 3.006604},
+
+        {6, 0.000000},
+        {16, 0.000000},
+
+        {8, -3.024268},
+        {11, -3.024268},
+
+        {1, -1.794935},
+        {2, -1.806997},
+
+        {3, 6.582773},
+        {4, -7.175601},
+        {5, 4.2},
+        {10, -3.024268},
+        {13, 3.78},
+        {14, -3.024268},
+        {15, 3.78},
+        {16, 0.000000},
     };
 
     agv_to_camera = {
@@ -313,7 +363,7 @@ void RWAImplementation::initPresetLocs()
     // vector of some of the locations, when gantry moves anywhere, it first searches through these possible locations,
     // and tries to find the closest one to it. That approximate location then serves as the beginning location for any move lookup.
     preset_locations_list_ = {start_a, bin3_a, agv2_a, agv1_staging_a,
-                              bottom_left_staging_a, shelf8_a, shelf11_a, bin11_a, shelf5_a}; // do not have mid_xyz anything here for now
+                              bottom_left_staging_a, shelf8_a, shelf8_a_south, shelf11_a, bin11_a, shelf5_a, shelf11_south_far}; // do not have mid_xyz anything here for now
 
     PathingLookupDictionary = {
         {{"start_a", "bin3_a"}, std::vector<PresetLocation>{start_a, bin3_a}},
@@ -323,6 +373,8 @@ void RWAImplementation::initPresetLocs()
         {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
         {{"start_a", "shelf11_a"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_a, shelf11_a}},
         {{"start_a", "bin11_a"}, std::vector<PresetLocation>{start_a, bin11_a}},
+
+        {{"start_a", "start_a"}, std::vector<PresetLocation>{start_a, start_a}}, // go to itself, improved realtime factor makes this occur? 0.8-0.84 real time factor
 
         {{"bin3_a", "start_a"}, std::vector<PresetLocation>{bin3_a, start_a}},
         {{"agv2_a", "start_a"}, std::vector<PresetLocation>{agv2_a, start_a}},
@@ -350,8 +402,13 @@ void RWAImplementation::initPresetLocs()
         {{"agv2_a", "bin11_a"}, std::vector<PresetLocation>{start_a, bin11_a}}, // go to start_a first
 
         {{"bin3_a", "bin11_a"}, std::vector<PresetLocation>{bin3_a, bin11_a}},
-        
-        {{"bin3_a", "bin3_a"}, std::vector<PresetLocation>{bin3_a, bin3_a}},
+
+        {{"start_a", "shelf8_a_south"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_a, shelf8_a_south}},
+
+        {{"start_a", "shelf11_south_far"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_a, shelf11_a, shelf11_south_far}}, // test south far
+        {{"shelf11_south_far", "start_a"}, std::vector<PresetLocation>{shelf11_south_far, shelf11_a, mid_8_11_staging_a, start_a}}, // test south far
+
+
 
     };
 }
@@ -395,7 +452,7 @@ void RWAImplementation::buildKit()
         ROS_INFO_STREAM("Deal with conveyor part _______________________");
         std::vector<CameraListener::ModelInfo> cam_parts_repoll = cam_listener_->fetchPartsFromCamera(*node_, 7);
 
-        if(cam_parts_repoll.empty()) return;
+        // if(!cam_parts_repoll.empty()) {
         CameraListener::ModelInfo model_info_conveyor_part = cam_parts_repoll[0]; // todo deal with not enough saved up conveyor parts
 
         my_part.pose.position.x = model_info_conveyor_part.world_pose.position.x; // seems very redundant to store in the modelInfo and part
@@ -409,8 +466,8 @@ void RWAImplementation::buildKit()
         part_in_tray.initial_pose = model_info_conveyor_part.world_pose; // save the initial pose
 
         my_part.type = model_info_conveyor_part.type + "_part_" + model_info_conveyor_part.color; // correct mismatch later
-        double add_to_x = my_part.pose.position.x - 4.365789 - 0.1;                         // constant is perfect bin red pulley x
-        double add_to_y = my_part.pose.position.y - 1.173381;                               // constant is perfect bin red pulley y
+        double add_to_x = my_part.pose.position.x - 4.365789 - 0.1;                               // constant is perfect bin red pulley x
+        double add_to_y = my_part.pose.position.y - 1.173381;                                     // constant is perfect bin red pulley y
 
         std::vector<PresetLocation> path = getPresetLocationVector(cam_to_presetlocation[7]);
         ROS_INFO_STREAM("getPresetLocationVector executed!");
@@ -456,20 +513,27 @@ void RWAImplementation::buildKit()
     }
     else if ((discovered_cam_idx != 0 || discovered_cam_idx != 7 || discovered_cam_idx != 1 || discovered_cam_idx != 2) && discovered_cam_idx >= 0 && discovered_cam_idx <= 16)
     {                                                                 // any other camera
-        double add_to_x_shelf = my_part.pose.position.x - -13.522081; // constant is perfect bin red pulley x
-        double add_to_y_shelf = my_part.pose.position.y - 3.446263;
+        // double add_to_x_shelf = my_part.pose.position.x - -13.522081; // constant is perfect bin red pulley x
+        // double add_to_y_shelf = my_part.pose.position.y - 3.446263;
+
+        double add_to_x_shelf = my_part.pose.position.x - -13.521975; // constant is perfect bin blue pulley x
+        double add_to_y_shelf = my_part.pose.position.y - -3.523814;
         ROS_INFO_STREAM(" x " << add_to_x_shelf << " y " << add_to_y_shelf);
 
+        ROS_INFO_STREAM("discovered_cam_idx is camera number " << discovered_cam_idx);
+        ROS_INFO_STREAM("cam_to_presetlocation lookup yields " << cam_to_presetlocation[discovered_cam_idx].name);
         std::vector<PresetLocation> path = getPresetLocationVector(cam_to_presetlocation[discovered_cam_idx]);
         ROS_INFO_STREAM("getPresetLocationVector executed!");
 
         executeVectorOfPresetLocations(path);
         ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
 
-        gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, 0));
+        // gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf + 1.795838, add_to_y_shelf - 1.707474, PI)); // test southern pick
+        gantry_->goToPresetLocation(Bump(shelf11_south_far, add_to_x_shelf, add_to_y_shelf, 0.0)); // test south far pick (by commenting this line)
         ROS_INFO_STREAM("goToPresetLocation with bump executed!");
 
-        ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
+
+        // ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
     }
     else
     {
@@ -477,6 +541,7 @@ void RWAImplementation::buildKit()
     }
 
     //--Go pick the part
+    ROS_INFO_STREAM("picking part of type === " << my_part.type);
     if (!gantry_->pickPart(my_part, "left_arm"))
     {
         // gantry.goToPresetLocation(gantry.start_);
@@ -501,15 +566,8 @@ void RWAImplementation::buildKit()
 
     //place the part
     // gantry_->placePart(part_in_tray, product.agv_id, "left_arm"); // problem when placing green gaskets, part is upsidedown
-
-    // check if part needs to be flipped and if yes, go to the agv and flip if before placing
-    bool success = checkForFlip(part_in_tray, product);
-    if (success)
-        gantry_->placePart(part_in_tray, product.agv_id, "right_arm");
-    else
-        gantry_->placePart(part_in_tray, product.agv_id, "left_arm");
-
-    //    task_queue_.top().front().erase(task_queue_.top().front().begin());
+    gantry_->placePart(part_in_tray, product.agv_id, "left_arm");
+    //    task_queue_.top().pop();
     //    ROS_INFO("Popped element");
 
     //assign camera an index based on its location on AGVs - either on agv1 or agv2
@@ -517,7 +575,7 @@ void RWAImplementation::buildKit()
     //add the placed Product this to array of placed products - for now only consider one part is placed
     parts_in_tray[camera].push_back(part_in_tray);
 
-    //    task_queue_.top().front().erase(task_queue_.top().front().begin());
+    //    task_queue_.top().pop();
     //    ROS_INFO("Popped element");
     //    gantry_->goToPresetLocation(start_a); // do not need to go back to start after placing part. only after picking part.
 }
@@ -528,11 +586,19 @@ double RWAImplementation::calcDistanceInXYPlane(geometry_msgs::Pose a, geometry_
     return std::sqrt(std::pow(a.position.x - b.position.x, 2) + std::pow(a.position.y - b.position.y, 2)); // euclidean distance
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+double RWAImplementation::calcDistanceInXYTorso(PresetLocation pLocation, std::vector<double> joint_positions)
+{
+    return std::sqrt(std::pow(pLocation.gantry[0] - joint_positions[0], 2) + std::pow(pLocation.gantry[1] - joint_positions[1], 2) + std::pow(pLocation.gantry[2] - joint_positions[2], 2) ); // euclidean distance
+}
+
+
 //////////////////////////////// Get nearest preset location to current gantry position
 PresetLocation RWAImplementation::getNearesetPresetLocation()
 {
     ////// Get current gantry position
-    geometry_msgs::Pose current_position = gantry_->getGantryPose();
+    // geometry_msgs::Pose current_position = gantry_->getGantryPose();
+    std::vector<double> joint_positions = gantry_->getGantryJointPositionsDoubleVector(); // instead of converting to Pose, use joint values directly
 
     ////// Define custom struct (distance, PresetLocation), see https://www.cplusplus.com/articles/NhA0RXSz/
 
@@ -541,8 +607,9 @@ PresetLocation RWAImplementation::getNearesetPresetLocation()
 
     for (PresetLocation pset_location : preset_locations_list_)
     {
-        geometry_msgs::Pose location_converted_to_pose = gantryXY2worldposeXY(pset_location);    // convert preset location to pose
-        double distance_i = calcDistanceInXYPlane(current_position, location_converted_to_pose); // euclidean dist in xy plane
+        // geometry_msgs::Pose location_converted_to_pose = gantryXY2worldposeXY(pset_location);    // convert preset location to pose
+        // double distance_i = calcDistanceInXYPlane(current_position, location_converted_to_pose); // euclidean dist in xy plane
+        double distance_i = calcDistanceInXYTorso(pset_location, joint_positions);              // "score", aka distance, in gantry's joint 0, 1, 2 space
         distance_and_PresetLocation_struct candidate_struct{distance_i, pset_location};          // make a struct
         vector_of_structs.push_back(candidate_struct);                                           // put struct in list of structs
     }
@@ -690,9 +757,9 @@ void RWAImplementation::checkAgvErrors()
                 else
                     product.get_from_conveyor = true;
                 // remove the faulty product
-                task_queue_.top().front().erase(task_queue_.top().front().begin());
+                task_queue_.top().pop();
                 // look for the replacement product
-                task_queue_.top().front().insert(task_queue_.top().front().begin(), product);
+                task_queue_.top().push(std::vector<Product>{product});
                 //parts_in_tray[camera] needs to be popped if faulty
                 parts_in_tray[camera_index].pop_back();
                 // go back to start
@@ -702,47 +769,36 @@ void RWAImplementation::checkAgvErrors()
     }
 
     /************** Check for Flipped Parts *****************/
-    /* Comment this for now. Implement another versio of flip part. Delete this commented part later
-    tf2::Quaternion q(
-            product.pose.orientation.x,
-            product.pose.orientation.y,
-            product.pose.orientation.z,
-            product.pose.orientation.w);
-    tf2::Matrix3x3 m(q);
-    double roll, pitch, yaw;
-    m.getRPY(roll, pitch, yaw);
-    if (abs(roll + pi)< 0.1) {
+    else if (product.pose.orientation.x * product.designated_model.world_pose.orientation.x <= 0)
+    {
         // flip the part
         Part part_in_tray;
         part_in_tray.pose = product.pose;
         part_in_tray.type = product.type;
         part_in_tray.initial_pose = product.designated_model.world_pose; // save the initial pose
-        gantry_->flipPart(part_in_tray, product.agv_id);
+        // gantry_->flipPart(part_in_tray, product.agv_id);
     }
-    */
 
     bool poseUpdated = false;
     if (!cam_listener_->faulty_parts)
     {
         /* if no faulty part, check for poses, if correctly placed then pop from task_queue_.top(),
-        pop the products from current shipment list  */
+        pop the products from current shipment list [current_shipments.top().pop()] */
         poseUpdated = checkAndCorrectPose(product.agv_id);
-        task_queue_.top().front().erase(task_queue_.top().front().begin());
+        current_shipments.top().pop();
+        task_queue_.top().pop();
     }
 
-    if (task_queue_.top().front().empty())
+    if (current_shipments.top().empty())
     {
         ros::Duration(1.0).sleep(); // add delay
         // one shipment completed. Send to AGV
         AGVControl agv_control(*node_);
         std::string kit_id = (product.agv_id == "agv1" ? "kit_tray_1" : "kit_tray_2");
         agv_control.sendAGV(product.shipment_type, kit_id);
-        task_queue_.top().pop();
-
-        if(task_queue_.top().empty()) 
-            task_queue_.top();
+        current_shipments.pop();
+        task_queue_.pop();
     }
-
     gantry_->goToPresetLocation(start_a);
 }
 
@@ -778,44 +834,20 @@ bool RWAImplementation::checkAndCorrectPose(std::string agv_id)
                 continue;
             else
             {
-                double roll, roll_, pitch, pitch_, yaw_desired, yaw_current;
-                tf2::Quaternion q_current(
-                     model.world_pose.orientation.x,
-                     model.world_pose.orientation.y,
-                     model.world_pose.orientation.z,
-                     model.world_pose.orientation.w);
-                tf2::Matrix3x3 m(q_current);
-                m.getRPY(roll, pitch, yaw_current);
-                //ROS_INFO_STREAM("YAW CURRENT = "<< yaw_current);
-                //Desired yaw
-                tf2::Quaternion q_desired(
-                     part_to_check.target_pose.orientation.x,
-                     part_to_check.target_pose.orientation.y,
-                     part_to_check.target_pose.orientation.z,
-                     part_to_check.target_pose.orientation.w);
-                tf2::Matrix3x3 m_(q_desired);
-                m_.getRPY(roll_, pitch_, yaw_desired);
-                //ROS_INFO_STREAM("YAW DESIRED = "<< yaw_desired);
-
                 ROS_INFO_STREAM("\nCHECK FOR PART " << part_to_check.type);
                 //correct world pose in tray as per order
                 auto correct_world_pose = part_to_check.target_pose;
                 //check delta between the above and the actual position determined by camera
-
-                auto delta_x = std::abs(std::abs(model.world_pose.position.x) - std::abs(correct_world_pose.position.x));
-                auto delta_y = std::abs(std::abs(model.world_pose.position.y) - std::abs(correct_world_pose.position.y));
-                auto delta_z = std::abs(std::abs(model.world_pose.position.z) - std::abs(correct_world_pose.position.z));
-                //auto delta_deg = std::abs(model.world_pose.orientation.z) - std::abs(correct_world_pose.orientation.z);
-                auto delta_deg = std::abs(std::abs(yaw_desired) - std::abs(yaw_current));
+                auto delta_x = std::abs(model.world_pose.position.x) - std::abs(correct_world_pose.position.x);
+                auto delta_y = std::abs(model.world_pose.position.y) - std::abs(correct_world_pose.position.y);
+                auto delta_z = std::abs(model.world_pose.position.z) - std::abs(correct_world_pose.position.z);
+                auto delta_deg = std::abs(model.world_pose.orientation.z) - std::abs(correct_world_pose.orientation.z); //---
 
                 ROS_INFO_STREAM("CURRENT WORLD POSE IN TRAY = " << model.world_pose);
                 ROS_INFO_STREAM("DESIRED WORLD POSE = " << correct_world_pose);
                 ROS_INFO_STREAM("Deltas = " << delta_x << " ; " << delta_y << " ; " << delta_z << " ; " << delta_deg);
 
-                /* if (delta_x <= 0.15 && delta_y <= 0.15 && delta_z <= 0.20 && delta_deg <= 0.02)  */
-                // update this to previous version of x,y,z delta conditions if regression fails
-                // As per competition, the max delta can be 3cm and 5 degrees to get pose score
-                if (delta_x <= 0.03 && delta_y <= 0.03 && delta_z <= 0.20 && delta_deg <= 0.1) // 0.1 radians = 5 degrees
+                if (delta_x <= 0.15 && delta_y <= 0.15 && delta_z <= 0.20 && delta_deg <= 0.02) //---
                 {
                     match = true;
                     ROS_INFO("Position is matched ; skip this and continue to next\n");
@@ -870,68 +902,11 @@ bool RWAImplementation::checkAndCorrectPose(std::string agv_id)
     return true;
 }
 
+
 bool RWAImplementation::competition_over() {
     if (competition_started_ && task_queue_.empty()){
         ROS_INFO_STREAM("Competition ending...");
         return true;
     }
     return false;
-}
-
-bool RWAImplementation::checkForFlip(part &part_in_tray, Product product)
-{
-    bool success = false;
-    if (product.type == "pulley_part_red")
-    {
-        double roll, pitch, yaw, roll_desired;
-        tf2::Quaternion q_current(
-            product.designated_model.world_pose.orientation.x,
-            product.designated_model.world_pose.orientation.y,
-            product.designated_model.world_pose.orientation.z,
-            product.designated_model.world_pose.orientation.w);
-        tf2::Matrix3x3 m(q_current);
-        m.getRPY(roll, pitch, yaw);
-
-        tf2::Quaternion q_desired(
-            product.pose.orientation.x,
-            product.pose.orientation.y,
-            product.pose.orientation.z,
-            product.pose.orientation.w);
-        tf2::Matrix3x3 m_(q_desired);
-        m_.getRPY(roll_desired, pitch, yaw);
-
-        tf2::Quaternion final_orientation;
-
-        if (std::abs(roll - roll_desired) > 3.0)
-        {
-            ROS_INFO("Flip Part needed");
-            double roll_zero = 0.0;
-            final_orientation.setRPY(roll_zero, pitch, yaw);
-            final_orientation.normalize();
-
-            if (roll > 3.0)
-            {
-                ROS_INFO("Part was flipped at origin, need to correct at destination");
-                product.designated_model.world_pose.orientation.x = final_orientation[0];
-                product.designated_model.world_pose.orientation.y = final_orientation[1];
-                product.designated_model.world_pose.orientation.z = final_orientation[2];
-                product.designated_model.world_pose.orientation.w = final_orientation[3];
-            }
-            else
-            {
-                ROS_INFO("Part is to be flipped at destination");
-                product.pose.orientation.x = final_orientation[0];
-                product.pose.orientation.y = final_orientation[1];
-                product.pose.orientation.z = final_orientation[2];
-                product.pose.orientation.w = final_orientation[3];
-            }
-            part_in_tray.pose = product.pose;
-            part_in_tray.type = product.type;
-            part_in_tray.initial_pose = product.designated_model.world_pose;
-            gantry_->flipPart(part_in_tray, product.agv_id);
-
-            success = true;
-        }
-    }
-    return success;
 }

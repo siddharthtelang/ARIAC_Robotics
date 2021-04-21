@@ -18,7 +18,7 @@
 #include "agv_control.h"
 #include "camera_listener.h"
 
-#define pi 3.14159265895866
+
 
 class RWAImplementation
 {
@@ -30,9 +30,8 @@ private:
     GantryControl* gantry_;
     Competition* competition_;
     AGVControl *agv_control_;
-
-    // ORDERS < SHIPMENTS < PRODUCTS  
     std::stack<std::queue<std::vector<Product>>> task_queue_;
+    std::stack<std::queue<std::string>> current_shipments;
 
     std::unordered_map<std::string, std::unordered_map<std::string, std::priority_queue<CameraListener::ModelInfo,
     std::vector<CameraListener::ModelInfo>, CameraListener::CompareDists>>> sorted_map;
@@ -54,10 +53,15 @@ private:
     PresetLocation shelf5_a;
     PresetLocation shelf5_spun_a;
 
+    PresetLocation shelf11_south_far;
+
+    PresetLocation shelf5_a_south;
+
     PresetLocation mid_5_8_staging_a;
     PresetLocation mid_8_11_staging_a;
 
     PresetLocation shelf8_a;
+    PresetLocation shelf8_a_south; // test southern pick
     PresetLocation shelf11_a;
 
     PresetLocation bin11_a; // for bin11 (and all 8 bins in that entire grouping)
@@ -78,13 +82,11 @@ private:
     int prev_num_orders_{0};
 
     std::map<int, PresetLocation> cam_to_presetlocation;
+    std::map<int, double> cam_to_y_coordinate;
     std::map<std::string, int> agv_to_camera;
     bool competition_started_{false};
 
-/**
- * \brief :A separate RWAImplentation class to have all the functionalities
- * \param :references of node, camera listener, gantry controller, and agv control classes
- */
+
 public:
     RWAImplementation(ros::NodeHandle& node, CameraListener& camera_listener, GantryControl& gantry, Competition& competition, AGVControl& agv_control) :
         node_{&node}, cam_listener_{&camera_listener}, gantry_{&gantry}, competition_{&competition}, agv_control_{&agv_control}
@@ -96,54 +98,13 @@ public:
         sorted_map = cam_listener_->sortPartsByDist();
     };
 
-    /**
-     * \brief: check for conveyor items
-     * \result: void
-     */
     bool checkConveyor();
-
-    /**
-     * \brief: do an init of all preset locations
-     * \result: void
-     */
     void initPresetLocs();
-
-    /**
-     * \brief: process new incoming order
-     * \result: void
-     */
     void processOrder();
-
-    /**
-     * \brief: build kit functionality
-     * \result: void
-     */
     void buildKit();
-
-    /**
-     * \brief: check for agv errors: faulty part, call check pose
-     * \result: void
-     */
     void checkAgvErrors();
-
-    /**
-     * \brief: check pose of part and correct if incorrect
-     * \param: agv id
-     * \result: void
-     */
     bool checkAndCorrectPose(std::string agv_id);
-
-    /**
-     * \brief: competition end trigger function
-     * \result: true/false
-     */
     bool competition_over();
-
-    /**
-     * \brief: check if the part needs to be flipped and flip if required
-     * \result: true/false
-     */
-    bool checkForFlip(part &part_in_tray, Product product);
 
     struct distance_and_PresetLocation_struct
     {
@@ -162,6 +123,7 @@ public:
     std::unordered_map<std::vector<std::string>, std::vector<PresetLocation>, container_hash<std::vector<std::string>> > PathingLookupDictionary;
 
     double calcDistanceInXYPlane(geometry_msgs::Pose a, geometry_msgs::Pose b);
+    double calcDistanceInXYTorso(PresetLocation pLocation, std::vector<double> joint_positions);
     PresetLocation getNearesetPresetLocation();
     std::vector<PresetLocation> getPresetLocationVector(PresetLocation target_preset_location);
     bool executeVectorOfPresetLocations( std::vector<PresetLocation> path_to_execute );
@@ -169,12 +131,10 @@ public:
 
     PresetLocation getNearestBinPresetLocation();
 
-    /**
-     * \brief: simple drop functionlity
-     * \result: true
-     */
     bool simpleDropPart() {
         gantry_->deactivateGripper("left_arm");
         return true;
     }
+
+
 };

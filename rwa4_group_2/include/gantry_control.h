@@ -67,25 +67,11 @@ class GantryControl {
      */
     void placePart(part part, std::string agv, std::string arm);
 
-    /**
-     * \brief: places the part at correct pose when dropped anywhere in tray due to faulty fripper
-     * \param: part to pick, agv and arm
-     * \result: void
-     */
     void placePartAtCorrectPose(part part, std::string agv, std::string arm);
 
-    /**
-     * \brief: Replacement of faulty part
-     * \param: part to pick, agv and arm
-     * \result: true false success boolean
-     */
     bool replaceFaultyPart(part part, std::string agv, std::string arm);
 
-    /**
-     * \brief: To flip a part
-     * \param: part to pick, agv id
-     * \result: true false success boolean
-     */
+
     bool flipPart(part part, std::string agv);
 
     
@@ -135,15 +121,30 @@ class GantryControl {
     start start_;
     bin3 bin3_;
     agv2 agv2_; // given
-    agv2 agv2_a;
     agv1 agv1_; // the one closer to us
-    agv1 agv1_a;
 
     geometry_msgs::Pose getGantryPose()
     {
       ROS_INFO_STREAM("insde getGantryPose !");
       // return full_robot_group_.getCurrentPose().pose;
       return left_arm_group_.getCurrentPose().pose; // for some reason cannot get full robot group's current pose, no end effector specified
+    }
+
+    std::vector<double> getGantryJointPositionsDoubleVector()
+    {
+
+      //--Raw pointers are frequently used to refer to the planning group for improved performance.
+      //--To start, we will create a pointer that references the current robot’s state.
+      const moveit::core::JointModelGroup *joint_model_group =
+          full_robot_group_.getCurrentState()->getJointModelGroup("Full_Robot");
+
+      //--Let’s set a joint space goal and move towards it.
+      moveit::core::RobotStatePtr current_state_a = full_robot_group_.getCurrentState();
+
+      std::vector<double> joint_group_positions;
+      current_state_a->copyJointGroupPositions(joint_model_group, joint_group_positions);
+
+      return joint_group_positions;
     }
 
   private:
