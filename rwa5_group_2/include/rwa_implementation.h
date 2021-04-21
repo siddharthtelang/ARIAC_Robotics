@@ -241,6 +241,12 @@ public:
 
     bool detectGaps();
 
+    // build regionDictionary, which maps regions which indicate shelf and upper/lower, to a preset location string and wait/nowait string.
+    void InitRegionDictionaryDependingOnSituation();
+
+    // regionDictionary, key is string indicating shelf and upper/lower, value is vector of strings, ie. ["shelf5_fromsouth_near", "nowait"]
+    std::unordered_map<std::string, std::vector<std::string> > regionDictionary;
+
 
     struct distance_and_PresetLocation_struct
     {

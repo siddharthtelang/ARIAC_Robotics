@@ -502,6 +502,69 @@ void RWAImplementation::initPresetLocs()
     };
 }
 
+void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
+    std::vector<bool> clear = {true, true, true, true}; // [Northernmost Lane Row .......... Southermost Lane Row]
+
+    // First deal with case of both inner lanes taken
+    if (clear[1] == false && clear[2] == false) {
+        // do stuff
+    }
+    else {
+
+        if (clear[0] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "nowait"}; }
+        else if (clear[1] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "nowait"}; }
+        else if (clear[0] == false && clear[1] == false) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "wait"}; }
+
+
+        if (clear[1] == true) { regionDictionary["shelf5lower"] = {"shelf5_fromSouth_near", "nowait"}; }
+        else if (clear[0] == true) { regionDictionary["shelf5lower"] = {"shelf5_fromNorth_far", "nowait"}; }
+        else if (clear[0] == false && clear[1] == false) { regionDictionary["shelf5lower"] = {"shelf5_fromNorth_far", "wait"}; }
+        
+
+        if (clear[1] == true) { regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near", "nowait"}; }
+        else if (clear[2] == true) { regionDictionary["shelf8upper"] = {"shelf8_fromSouth_far", "nowait"}; }
+        else if (clear[1] == false && clear[2] == false) { // Both innermost lanes not clear case, must account for Shelf Gaps
+
+            ROS_INFO_STREAM(" Shelf Gaps not implemented, Error, need to add some code here ************************************************");
+
+            // if ( Gap is between shelf 11 and shelf 10) {
+            //     regionDictionary["shelf8upper"] = {"shelf8_fromSouth_far", "wait"};
+            // }
+            // else if ( Gap is between shelf 5 and shelf 4) {
+            //     regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near", "wait"};
+            // }
+        }
+
+
+        if (clear[2] == true) { regionDictionary["shelf8lower"] = {"shelf8_fromSouth_near", "nowait"}; }
+        else if (clear[1] == true) { regionDictionary["shelf8lower"] = {"shelf8_fromNorth_far", "nowait"}; }
+        else if (clear[1] == false && clear[2] == false) { // Both innermost lanes not clear case, must account for Shelf Gaps
+
+            ROS_INFO_STREAM(" Shelf Gaps not implemented, Error, need to add some code here ************************************************");
+
+            // if ( Gap is between shelf 11 and shelf 10) {
+            //     regionDictionary["shelf8lower"] = {"shelf8_fromNorth_near", "wait"};
+            // }
+            // else if ( Gap is between shelf 5 and shelf 4) {
+            //     regionDictionary["shelf8lower"] = {"shelf8_fromNorth_far", "wait"};
+            // }
+        }
+
+
+        if (clear[2] == true) { regionDictionary["shelf11upper"] = {"shelf11_fromNorth_near", "nowait"}; }
+        else if (clear[3] == true) { regionDictionary["shelf11upper"] = {"shelf5_fromSouth_far", "nowait"}; }
+        else if (clear[2] == false && clear[3] == false) { regionDictionary["shelf11upper"] = {"shelf11_fromSouth_near", "wait"}; }
+
+
+        if (clear[3] == true) { regionDictionary["shelf11lower"] = {"shelf11_fromSouth_near", "nowait"}; }
+        else if (clear[2] == true) { regionDictionary["shelf11lower"] = {"shelf11_fromNorth_far", "nowait"}; }
+        else if (clear[2] == false && clear[3] == false) { regionDictionary["shelf11lower"] = {"shelf11_fromNorth_near", "wait"}; }
+
+    }
+
+
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void RWAImplementation::buildKit()
 {
@@ -602,6 +665,7 @@ void RWAImplementation::buildKit()
     }
     else if ((discovered_cam_idx != 0 || discovered_cam_idx != 7 || discovered_cam_idx != 1 || discovered_cam_idx != 2) && discovered_cam_idx >= 0 && discovered_cam_idx <= 16)
     {                                                                 // any other camera
+        ROS_INFO_STREAM("Any Other Camera Block reached _______________________");
         double add_to_x_shelf = my_part.pose.position.x - -13.522081; // constant is perfect bin red pulley x
         double add_to_y_shelf = my_part.pose.position.y - 3.446263;
         ROS_INFO_STREAM(" x " << add_to_x_shelf << " y " << add_to_y_shelf);
