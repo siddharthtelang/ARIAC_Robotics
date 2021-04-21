@@ -1,6 +1,9 @@
 #include "rwa_implementation.h"
 #include <unordered_map>
 
+#include <algorithm>
+
+
 #define GET_VARIABLE_NAME(Variable) (#Variable)
 
 void RWAImplementation::processOrder()
@@ -496,6 +499,8 @@ void RWAImplementation::initPresetLocs()
     preset_locations_list_ = {start_a, bin3_a, agv2_a, agv1_staging_a,
                               bottom_left_staging_a, shelf8_a, shelf11_a, bin11_a, shelf5_a, shelf8_fromSouth_far}; // do not have mid_xyz anything here for now
 
+    wait_preset_locations_list_ = {waitpoint_best_south_fromSouth.name, waitpoint_best_south_fromNorth.name, waitpoint_best_north_fromSouth.name, waitpoint_best_north_fromNorth.name};
+
     PathingLookupDictionary = {
         {{"start_a", "bin3_a"}, std::vector<PresetLocation>{start_a, bin3_a}},
         {{"start_a", "agv2_a"}, std::vector<PresetLocation>{start_a, agv2_a}},
@@ -813,7 +818,7 @@ void RWAImplementation::buildKit()
             // std::vector<PresetLocation> path = getPresetLocationVector(cam_to_presetlocation[discovered_cam_idx]); // todo lookup in wait dictionary here!
             ROS_INFO_STREAM("getPresetLocationVector executed!");
 
-            executeVectorOfPresetLocations(path);
+            executeVectorOfPresetLocationsWithWait(path); // Note the With Wait version is being called here
             ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
 
             if (near_or_far_string == "near") { gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, add_to_torso)); }
@@ -984,6 +989,25 @@ bool RWAImplementation::executeVectorOfPresetLocations(std::vector<PresetLocatio
     {
         ROS_INFO_STREAM("Moving to PresetLocation: >>>>> " << psetlocation.name);
         gantry_->goToPresetLocation(psetlocation);
+    }
+    return true;
+}
+
+bool RWAImplementation::executeVectorOfPresetLocationsWithWait(std::vector<PresetLocation> path_to_execute)
+{
+    for (PresetLocation psetlocation : path_to_execute)
+    {
+        ROS_INFO_STREAM("Moving to PresetLocation: >>>>> " << psetlocation.name);
+        gantry_->goToPresetLocation(psetlocation);
+
+        if(std::find(wait_preset_locations_list_.begin(), wait_preset_locations_list_.end(), psetlocation.name) != wait_preset_locations_list_.end()) {
+            /* v contains x */
+            // Call Dani's wait function ***********************************************
+            ROS_INFO_STREAM("Call Dani's wait-till-time-to-go function *******************************************************************************");
+        } else {
+            /* v does not contain x */
+            ;// do nothing, no need to wait, pass
+        }
     }
     return true;
 }

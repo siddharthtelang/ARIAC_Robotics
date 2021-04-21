@@ -8,8 +8,7 @@
   <arg     if="$(arg state_logging)" name="state_logging_args" value="--state-logging=true" />
 
   <arg name="no_gui" default="false" />
-  <arg unless="$(arg no_gui)" name="gui_a
-  rgs" value="" />
+  <arg unless="$(arg no_gui)" name="gui_args" value="" />
   <arg     if="$(arg no_gui)" name="gui_args" value="--no-gui" />
 
   <arg name="fill_demo_shipment" default="false" />

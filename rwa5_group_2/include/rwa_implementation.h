@@ -126,6 +126,7 @@ private:
 
 
     std::vector<PresetLocation> preset_locations_list_; // lookup list to compare distances with
+    std::vector<std::string> wait_preset_locations_list_;
 
     /* ===================== Conveyor Variables ===================== */
     const float dx_ = 6.6;
@@ -237,6 +238,7 @@ public:
     std::vector<PresetLocation> getPresetLocationVector(PresetLocation target_preset_location);
     std::vector<PresetLocation> getPresetLocationVectorUsingString(std::string target_preset_location_string, std::string wait_string);
     bool executeVectorOfPresetLocations( std::vector<PresetLocation> path_to_execute );
+    bool executeVectorOfPresetLocationsWithWait( std::vector<PresetLocation> path_to_execute );
     geometry_msgs::Pose gantryXY2worldposeXY(PresetLocation preset_location_2_convert);
     // preset locations from start to safe location for three shelf rows starting from agv1 side
     std::array<std::vector<PresetLocation>,3> shelf_preset_locations;
