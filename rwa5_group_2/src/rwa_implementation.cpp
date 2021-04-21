@@ -533,18 +533,73 @@ void RWAImplementation::initPresetLocs()
         {{"bin3_a", "bin11_a"}, std::vector<PresetLocation>{bin3_a, bin11_a}},
         {{"bin3_a", "bin3_a"}, std::vector<PresetLocation>{bin3_a, bin3_a}},
 
-        /////////////////////////////////////////////////
-        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
-        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
-        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
-        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
-        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
-        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
-        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
-        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
-        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
-        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
-        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
+        ////////////////////////////////////////////////////////////////////////////////////////////////// Row by row, left to right
+        {{"start_a", "waitpoint_best_north_fromNorth"}, std::vector<PresetLocation>{start_a, agv1_staging_a, waitpoint_best_north_fromNorth}},
+        {{"start_a", "waitpoint_best_north_fromSouth"}, std::vector<PresetLocation>{start_a, agv1_staging_a, waitpoint_best_north_fromSouth}},
+
+        {{"start_a", "shelf5_fromNorth_near"}, std::vector<PresetLocation>{start_a, agv1_staging_a, bottom_left_staging_a, shelf5_fromNorth_near}},
+        {{"start_a", "shelf5_fromNorth_far"}, std::vector<PresetLocation>{start_a, agv1_staging_a, bottom_left_staging_a, shelf5_fromNorth_far}},
+
+        {{"start_a", "shelf5_fromSouth_near"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromSouth, shelf5_fromSouth_near}},
+        {{"start_a", "shelf5_fromSouth_far"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromSouth, shelf5_fromSouth_near, shelf5_fromSouth_far}},
+        {{"start_a", "shelf8_fromNorth_near"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromNorth, shelf8_fromNorth_near}},
+        {{"start_a", "shelf8_fromNorth_far"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromNorth, shelf8_fromNorth_near, shelf8_fromNorth_far}},
+        // {{"start_a", "mid_5_8_intersection_fromNorth"}, std::vector<PresetLocation>{start_a, 222, mid_5_8_intersection_fromNorth}},
+        // {{"start_a", "mid_5_8_intersection_fromSouth"}, std::vector<PresetLocation>{start_a, 222, mid_5_8_intersection_fromSouth}},
+
+        {{"start_a", "mid_5_8_staging_fromNorth"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromNorth}},
+        {{"start_a", "mid_5_8_staging_fromSouth"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromSouth}},
+
+        {{"start_a", "shelf8_fromSouth_near"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromSouth, shelf8_fromSouth_near}},
+        {{"start_a", "shelf8_fromSouth_far"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromSouth, shelf8_fromSouth_near, shelf8_fromSouth_far}},
+        {{"start_a", "shelf11_fromNorth_near"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromNorth, shelf11_fromNorth_near}},
+        {{"start_a", "shelf11_fromNorth_far"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromNorth, shelf11_fromNorth_near, shelf11_fromNorth_far}},
+        // {{"start_a", "mid_8_11_intersection_fromNorth"}, std::vector<PresetLocation>{start_a, 222, mid_8_11_intersection_fromNorth}},
+        // {{"start_a", "mid_8_11_intersection_fromSouth"}, std::vector<PresetLocation>{start_a, 222, mid_8_11_intersection_fromSouth}},
+        {{"start_a", "mid_8_11_staging_fromNorth"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromNorth}},
+        {{"start_a", "mid_8_11_staging_fromSouth"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromSouth}},
+
+        {{"start_a", "shelf11_fromSouth_near"}, std::vector<PresetLocation>{start_a, agv2_a, southwest_corner_staging, shelf11_fromSouth_near}},
+        {{"start_a", "shelf11_fromSouth_far"}, std::vector<PresetLocation>{start_a, agv2_a, southwest_corner_staging, shelf11_fromSouth_far}},
+        
+        {{"start_a", "southwest_corner_staging"}, std::vector<PresetLocation>{start_a, agv2_a, southwest_corner_staging}},
+        {{"start_a", "waitpoint_best_south_fromNorth"}, std::vector<PresetLocation>{start_a, agv2_a, waitpoint_best_south_fromNorth}},
+        {{"start_a", "waitpoint_best_south_fromSouth"}, std::vector<PresetLocation>{start_a, agv2_a, waitpoint_best_south_fromSouth}},
+
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////// Row by row, left to right REVERSED
+        // {{"start_a", "waitpoint_best_north_fromNorth"}, std::vector<PresetLocation>{start_a, agv1_staging_a, waitpoint_best_north_fromNorth}},
+        // {{"start_a", "waitpoint_best_north_fromSouth"}, std::vector<PresetLocation>{start_a, agv1_staging_a, waitpoint_best_north_fromSouth}},
+
+        // {{"start_a", "shelf5_fromNorth_near"}, std::vector<PresetLocation>{start_a, agv1_staging_a, bottom_left_staging_a, shelf5_fromNorth_near}},
+        // {{"start_a", "shelf5_fromNorth_far"}, std::vector<PresetLocation>{start_a, agv1_staging_a, bottom_left_staging_a, shelf5_fromNorth_far}},
+
+        // {{"start_a", "shelf5_fromSouth_near"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromSouth, shelf5_fromSouth_near}},
+        // {{"start_a", "shelf5_fromSouth_far"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromSouth, shelf5_fromSouth_near, shelf5_fromSouth_far}},
+        // {{"start_a", "shelf8_fromNorth_near"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromNorth, shelf8_fromNorth_near}},
+        // {{"start_a", "shelf8_fromNorth_far"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromNorth, shelf8_fromNorth_near, shelf8_fromNorth_far}},
+        // // {{"start_a", "mid_5_8_intersection_fromNorth"}, std::vector<PresetLocation>{start_a, 222, mid_5_8_intersection_fromNorth}},
+        // // {{"start_a", "mid_5_8_intersection_fromSouth"}, std::vector<PresetLocation>{start_a, 222, mid_5_8_intersection_fromSouth}},
+
+        // {{"start_a", "mid_5_8_staging_fromNorth"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromNorth}},
+        // {{"start_a", "mid_5_8_staging_fromSouth"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromSouth}},
+
+        // {{"start_a", "shelf8_fromSouth_near"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromSouth, shelf8_fromSouth_near}},
+        // {{"start_a", "shelf8_fromSouth_far"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromSouth, shelf8_fromSouth_near, shelf8_fromSouth_far}},
+        // {{"start_a", "shelf11_fromNorth_near"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromNorth, shelf11_fromNorth_near}},
+        // {{"start_a", "shelf11_fromNorth_far"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromNorth, shelf11_fromNorth_near, shelf11_fromNorth_far}},
+        // // {{"start_a", "mid_8_11_intersection_fromNorth"}, std::vector<PresetLocation>{start_a, 222, mid_8_11_intersection_fromNorth}},
+        // // {{"start_a", "mid_8_11_intersection_fromSouth"}, std::vector<PresetLocation>{start_a, 222, mid_8_11_intersection_fromSouth}},
+        // {{"start_a", "mid_8_11_staging_fromNorth"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromNorth}},
+        // {{"start_a", "mid_8_11_staging_fromSouth"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromSouth}},
+
+        // {{"start_a", "shelf11_fromSouth_near"}, std::vector<PresetLocation>{start_a, agv2_a, southwest_corner_staging, shelf11_fromSouth_near}},
+        // {{"start_a", "shelf11_fromSouth_far"}, std::vector<PresetLocation>{start_a, agv2_a, southwest_corner_staging, shelf11_fromSouth_far}},
+        
+        // {{"start_a", "southwest_corner_staging"}, std::vector<PresetLocation>{start_a, agv2_a, southwest_corner_staging}},
+        // {{"start_a", "waitpoint_best_south_fromNorth"}, std::vector<PresetLocation>{start_a, agv2_a, waitpoint_best_south_fromNorth}},
+        // {{"start_a", "waitpoint_best_south_fromSouth"}, std::vector<PresetLocation>{start_a, agv2_a, waitpoint_best_south_fromSouth}},
+
 
 
     };
@@ -764,13 +819,13 @@ void RWAImplementation::buildKit()
         else if (near_or_far_string == "far" && fromNorth_or_fromSouth_string == "fromNorth") {
             ROS_INFO_STREAM("Case 3 fromNorth far encountered for offsets...");
             add_to_x_shelf = my_part.pose.position.x - -13.522081; // red pulley
-            add_to_y_shelf = my_part.pose.position.y - -3.521975; // Blue Pulley
+            add_to_y_shelf = my_part.pose.position.y - -3.523814; // Blue Pulley
             add_to_torso = 0.0;
         }
         else if (near_or_far_string == "far" && fromNorth_or_fromSouth_string == "fromSouth") {
             ROS_INFO_STREAM("Case 4 fromSouth far encountered for offsets...");
             add_to_x_shelf = my_part.pose.position.x - -13.522081       + 0.34115; // blue pulley + account for spin
-            add_to_y_shelf = my_part.pose.position.y - -3.521975        - 3.127628; // blue pulley + account for spin
+            add_to_y_shelf = my_part.pose.position.y - -3.523814        - 3.127628; // blue pulley + account for spin
             add_to_torso = PI; // spin torso
         }
         else {
@@ -790,7 +845,9 @@ void RWAImplementation::buildKit()
             executeVectorOfPresetLocations(path);
             ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
 
-            gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, add_to_torso));
+            if (near_or_far_string == "near") { gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, add_to_torso)); }
+            else if (near_or_far_string == "far") { gantry_->goToPresetLocation(Bump(shelf11_south_far, add_to_x_shelf, add_to_y_shelf, add_to_torso));}
+
             ROS_INFO_STREAM("goToPresetLocation with bump executed!");
 
             ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
@@ -803,6 +860,9 @@ void RWAImplementation::buildKit()
 
             executeVectorOfPresetLocations(path);
             ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
+
+            if (near_or_far_string == "near") { gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, add_to_torso)); }
+            else if (near_or_far_string == "far") { gantry_->goToPresetLocation(Bump(shelf11_south_far, add_to_x_shelf, add_to_y_shelf, add_to_torso));}
 
             gantry_->goToPresetLocation(Bump(shelf11_a, add_to_x_shelf, add_to_y_shelf, add_to_torso));
             ROS_INFO_STREAM("goToPresetLocation with bump executed!");
@@ -935,6 +995,7 @@ bool RWAImplementation::executeVectorOfPresetLocations(std::vector<PresetLocatio
 {
     for (PresetLocation psetlocation : path_to_execute)
     {
+        ROS_INFO_STREAM("Moving to PresetLocation: >>>>> " << psetlocation.name);
         gantry_->goToPresetLocation(psetlocation);
     }
     return true;
