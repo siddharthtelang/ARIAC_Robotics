@@ -502,6 +502,7 @@ void RWAImplementation::initPresetLocs()
     };
 }
 
+// Note: this function is called once in the constructor of RWAImplementation
 void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
     std::vector<bool> clear = {true, true, true, true}; // [Northernmost Lane Row .......... Southermost Lane Row]
 

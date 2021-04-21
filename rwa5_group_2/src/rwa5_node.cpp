@@ -141,6 +141,7 @@ int main(int argc, char ** argv) {
     RWAImplementation rwa(node, cam_listener, gantry, comp, agv_control);
 
     bool gaps_found = false;
+    rwa.InitRegionDictionaryDependingOnSituation(); // Initialize region (shelf + upper or lower) dictionary depending on situation.
     
     while(ros::ok()) {
         ROS_INFO_STREAM("Starting while loop...");
