@@ -611,19 +611,24 @@ void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
 
             ROS_INFO_STREAM(" Shelf Gaps not implemented, Error, need to add some code here ************************************************");
 
-            if ( true ) { // this code block: for testing only
-                regionDictionary["shelf8upper"] = {"shelf8_fromSouth_far", "wait", "fromSouth", "far"};
-            }
-            else if ( false ) {
-                regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near", "wait", "fromNorth", "near"};
-            }
-
-            // if ( Gap is between shelf 11 and shelf 10) {
+            // if ( true ) { // this code block: for testing only
             //     regionDictionary["shelf8upper"] = {"shelf8_fromSouth_far", "wait", "fromSouth", "far"};
             // }
-            // else if ( Gap is between shelf 5 and shelf 4) {
+            // else if ( false ) {
             //     regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near", "wait", "fromNorth", "near"};
             // }
+
+            if ( gaps[2] == "gap_end") { //  Gap is between shelf 11 and shelf 10
+                ROS_INFO_STREAM(" gap_end [2] case shelf8upper");
+                regionDictionary["shelf8upper"] = {"shelf8_fromSouth_far", "wait", "fromSouth", "far"};
+            }
+            else if ( gaps[0] == "gap_end" ) { // Gap is between shelf 5 and shelf 4
+                ROS_INFO_STREAM(" gap_end [0] case shelf8upper");
+                regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near", "wait", "fromNorth", "near"};
+            }
+            else {
+                ROS_INFO_STREAM(" Error gaps not found");
+            }
         }
 
 
@@ -633,19 +638,24 @@ void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
 
             ROS_INFO_STREAM(" Shelf Gaps not implemented, Error, need to add some code here ************************************************");
 
-            if ( true ) { // this code block: for testing only
-                regionDictionary["shelf8lower"] = {"shelf8_fromSouth_near", "wait", "fromSouth", "near"};
-            }
-            else if ( false ) {
-                regionDictionary["shelf8lower"] = {"shelf8_fromNorth_far", "wait", "fromNorth", "far"};
-            }
-
-            // if ( Gap is between shelf 11 and shelf 10) {
+            // if ( true ) { // this code block: for testing only
             //     regionDictionary["shelf8lower"] = {"shelf8_fromSouth_near", "wait", "fromSouth", "near"};
             // }
-            // else if ( Gap is between shelf 5 and shelf 4) {
+            // else if ( false ) {
             //     regionDictionary["shelf8lower"] = {"shelf8_fromNorth_far", "wait", "fromNorth", "far"};
             // }
+
+            if ( gaps[2] == "gap_end") { //  Gap is between shelf 11 and shelf 10
+                ROS_INFO_STREAM(" gap_end [2] case shelf8lower");
+                regionDictionary["shelf8lower"] = {"shelf8_fromSouth_near", "wait", "fromSouth", "near"};
+            }
+            else if ( gaps[0] == "gap_end" ) { // Gap is between shelf 5 and shelf 4
+                ROS_INFO_STREAM(" gap_end [0] case shelf8lower");
+                regionDictionary["shelf8lower"] = {"shelf8_fromNorth_far", "wait", "fromNorth", "far"};
+            }
+            else {
+                ROS_INFO_STREAM(" Error gaps not found");
+            }
         }
 
 
@@ -765,8 +775,8 @@ void RWAImplementation::buildKit()
 
         ///////////////////////////////////////////////////////////////////////////////////////
         std:: string shelf_and_upper_or_lower_string = isPartInUpperOrLowerRegionOfWhichShelf(my_part, discovered_cam_idx); // ie. "shelf5upper"
+        ROS_INFO_STREAM("executed isPartInUpperOrLowerRegionOfWhichShelf successfully ");
         std::vector<std::string> information_string_vector = regionDictionary[shelf_and_upper_or_lower_string]; // ie. ["shelf5_fromNorth_near", "nowait", "fromNorth", "near"]
-        
         std::string preset_location_string = information_string_vector[0]; // ie. "shelf5_fromNorth_near"
         std::string wait_or_nowait_string = information_string_vector[1]; // ie. "nowait"
         std::string fromNorth_or_fromSouth_string = information_string_vector[2]; // ie. "fromNorth"

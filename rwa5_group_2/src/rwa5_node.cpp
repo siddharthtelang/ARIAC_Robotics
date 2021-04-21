@@ -141,14 +141,17 @@ int main(int argc, char ** argv) {
     RWAImplementation rwa(node, cam_listener, gantry, comp, agv_control);
 
     bool gaps_found = false;
+
+    if (!gaps_found) // this if block needs to be before rwa.InitRegionDictionaryDependingOnSituation() call
+    {
+        gaps_found = rwa.detectGaps();
+    }
+
     rwa.InitRegionDictionaryDependingOnSituation(); // Initialize region (shelf + upper or lower) dictionary depending on situation.
     
     while(ros::ok()) {
         ROS_INFO_STREAM("Starting while loop...");
-        // if (!gaps_found)
-        // {
-        //     gaps_found = rwa.detectGaps();
-        // }
+
         rwa.processOrder();
         if (rwa.checkConveyor()) continue;       
         rwa.buildKit();
