@@ -229,11 +229,13 @@ public:
 
 
     std::unordered_map<std::vector<std::string>, std::vector<PresetLocation>, container_hash<std::vector<std::string>> > PathingLookupDictionary;
+    std::unordered_map<std::vector<std::string>, std::vector<PresetLocation>, container_hash<std::vector<std::string>> > WaitPathingLookupDictionary;
 
     double calcDistanceInXYPlane(geometry_msgs::Pose a, geometry_msgs::Pose b);
+    double calcDistanceInXYTorso(PresetLocation pLocation, std::vector<double> joint_positions);
     PresetLocation getNearesetPresetLocation();
     std::vector<PresetLocation> getPresetLocationVector(PresetLocation target_preset_location);
-    std::vector<PresetLocation> getPresetLocationVectorUsingString(std::string target_preset_location_string);
+    std::vector<PresetLocation> getPresetLocationVectorUsingString(std::string target_preset_location_string, std::string wait_string);
     bool executeVectorOfPresetLocations( std::vector<PresetLocation> path_to_execute );
     geometry_msgs::Pose gantryXY2worldposeXY(PresetLocation preset_location_2_convert);
     // preset locations from start to safe location for three shelf rows starting from agv1 side

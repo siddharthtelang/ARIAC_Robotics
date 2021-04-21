@@ -145,10 +145,10 @@ int main(int argc, char ** argv) {
     
     while(ros::ok()) {
         ROS_INFO_STREAM("Starting while loop...");
-        if (!gaps_found)
-        {
-            gaps_found = rwa.detectGaps();
-        }
+        // if (!gaps_found)
+        // {
+        //     gaps_found = rwa.detectGaps();
+        // }
         rwa.processOrder();
         if (rwa.checkConveyor()) continue;       
         rwa.buildKit();

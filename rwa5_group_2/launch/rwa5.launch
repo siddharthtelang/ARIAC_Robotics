@@ -8,7 +8,8 @@
   <arg     if="$(arg state_logging)" name="state_logging_args" value="--state-logging=true" />
 
   <arg name="no_gui" default="false" />
-  <arg unless="$(arg no_gui)" name="gui_args" value="" />
+  <arg unless="$(arg no_gui)" name="gui_a
+  rgs" value="" />
   <arg     if="$(arg no_gui)" name="gui_args" value="--no-gui" />
 
   <arg name="fill_demo_shipment" default="false" />
@@ -26,7 +27,7 @@
           $(arg gui_args)
           $(arg load_moveit_args)
           $(arg fill_demo_shipment_args)
-          -f $(find rwa5_group_2)/config/rwa4_sample_fewer_products.yaml
+          -f $(find rwa5_group_2)/config/rwa5-sample-reach.yaml
           $(find rwa5_group_2)/config/rwa5_sensor_group2.yaml
           " required="true" output="screen" />
 
