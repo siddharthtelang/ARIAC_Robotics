@@ -125,42 +125,6 @@ private:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
     std::vector<PresetLocation> preset_locations_list_; // lookup list to compare distances with
 
     /* ===================== Conveyor Variables ===================== */
@@ -177,6 +141,7 @@ private:
     int prev_num_orders_{0};
 
     std::map<int, PresetLocation> cam_to_presetlocation;
+    std::map<int, std::string> cam_to_shelf_string;
     std::map<int, double> cam_to_y_coordinate;
     std::map<std::string, int> agv_to_camera;
     bool competition_started_{false};
@@ -283,6 +248,23 @@ public:
     bool simpleDropPart() {
         gantry_->deactivateGripper("left_arm");
         return true;
+    }
+
+    std::string isPartInUpperOrLowerRegionOfWhichShelf(part my_part, int discovered_cam_idx) {
+        std::string shelf_string = cam_to_shelf_string[discovered_cam_idx]; // ie. "shelf5"
+
+        double product_y_coord = my_part.pose.position.y;
+        double camera_y_coord = cam_to_y_coordinate[discovered_cam_idx];
+
+        std::string upper_or_lower_string = "upper"; // initialize as upper
+        if (product_y_coord >= camera_y_coord) {
+            std::string upper_or_lower_string = "upper";
+        }
+        else {
+            std::string upper_or_lower_string = "lower";
+        }
+
+        return shelf_string + upper_or_lower_string; // ie. "shelf5" + "upper" = "shelf5upper"
     }
 
     /* ===================== Human Obstacle Variables ===================== */

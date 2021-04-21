@@ -456,8 +456,6 @@ void RWAImplementation::initPresetLocs()
         {16, 0.000000},
     };
 
-    
-
 
 
     cam_to_presetlocation = {
@@ -474,6 +472,19 @@ void RWAImplementation::initPresetLocs()
 
         {1, bin11_a},
         {2, bin11_a},
+    };
+
+    cam_to_shelf_string = {
+        // {0, "bin3_a"},
+        // {7, "bin3_a"},
+        {9, "shelf5"},
+        {12, "shelf5"},
+        {6, "shelf8"},
+        {16, "shelf8"},
+        {8, "shelf11"},
+        {11, "shelf11"},
+        // {1, "bin11_a"},
+        // {2, "bin11_a"},
     };
 
     agv_to_camera = {
@@ -537,61 +548,68 @@ void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
     }
     else {
 
-        if (clear[0] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "nowait"}; }
-        else if (clear[1] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "nowait"}; }
-        else if (clear[0] == false && clear[1] == false) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "wait"}; }
+        if (clear[0] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "nowait", "fromNorth", "near"}; }
+        else if (clear[1] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "nowait", "fromNorth"}; }
+        else if (clear[0] == false && clear[1] == false) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "wait", "fromNorth", "near"}; }
 
 
-        if (clear[1] == true) { regionDictionary["shelf5lower"] = {"shelf5_fromSouth_near", "nowait"}; }
-        else if (clear[0] == true) { regionDictionary["shelf5lower"] = {"shelf5_fromNorth_far", "nowait"}; }
-        else if (clear[0] == false && clear[1] == false) { regionDictionary["shelf5lower"] = {"shelf5_fromNorth_far", "wait"}; }
+        if (clear[1] == true) { regionDictionary["shelf5lower"] = {"shelf5_fromSouth_near", "nowait", "fromSouth", "near"}; }
+        else if (clear[0] == true) { regionDictionary["shelf5lower"] = {"shelf5_fromNorth_far", "nowait", "fromNorth", "far"}; }
+        else if (clear[0] == false && clear[1] == false) { regionDictionary["shelf5lower"] = {"shelf5_fromNorth_far", "wait", "fromNorth", "far"}; }
         
 
-        if (clear[1] == true) { regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near", "nowait"}; }
-        else if (clear[2] == true) { regionDictionary["shelf8upper"] = {"shelf8_fromSouth_far", "nowait"}; }
+        if (clear[1] == true) { regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near", "nowait", "fromNorth", "near"}; }
+        else if (clear[2] == true) { regionDictionary["shelf8upper"] = {"shelf8_fromSouth_far", "nowait", "fromSouth", "far"}; }
         else if (clear[1] == false && clear[2] == false) { // Both innermost lanes not clear case, must account for Shelf Gaps
 
             ROS_INFO_STREAM(" Shelf Gaps not implemented, Error, need to add some code here ************************************************");
 
             if ( true ) { // this code block: for testing only
-                regionDictionary["shelf8upper"] = {"shelf8_fromSouth_far", "wait"};
+                regionDictionary["shelf8upper"] = {"shelf8_fromSouth_far", "wait", "fromSouth", "far"};
             }
             else if ( false ) {
-                regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near", "wait"};
+                regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near", "wait", "fromNorth", "near"};
             }
 
             // if ( Gap is between shelf 11 and shelf 10) {
-            //     regionDictionary["shelf8upper"] = {"shelf8_fromSouth_far", "wait"};
+            //     regionDictionary["shelf8upper"] = {"shelf8_fromSouth_far", "wait", "fromSouth", "far"};
             // }
             // else if ( Gap is between shelf 5 and shelf 4) {
-            //     regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near", "wait"};
+            //     regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near", "wait", "fromNorth", "near"};
             // }
         }
 
 
-        if (clear[2] == true) { regionDictionary["shelf8lower"] = {"shelf8_fromSouth_near", "nowait"}; }
-        else if (clear[1] == true) { regionDictionary["shelf8lower"] = {"shelf8_fromNorth_far", "nowait"}; }
+        if (clear[2] == true) { regionDictionary["shelf8lower"] = {"shelf8_fromSouth_near", "nowait", "fromSouth", "near"}; }
+        else if (clear[1] == true) { regionDictionary["shelf8lower"] = {"shelf8_fromNorth_far", "nowait", "fromNorth", "far"}; }
         else if (clear[1] == false && clear[2] == false) { // Both innermost lanes not clear case, must account for Shelf Gaps
 
             ROS_INFO_STREAM(" Shelf Gaps not implemented, Error, need to add some code here ************************************************");
 
+            if ( true ) { // this code block: for testing only
+                regionDictionary["shelf8lower"] = {"shelf8_fromSouth_near", "wait", "fromSouth", "near"};
+            }
+            else if ( false ) {
+                regionDictionary["shelf8lower"] = {"shelf8_fromNorth_far", "wait", "fromNorth", "far"};
+            }
+
             // if ( Gap is between shelf 11 and shelf 10) {
-            //     regionDictionary["shelf8lower"] = {"shelf8_fromNorth_near", "wait"};
+            //     regionDictionary["shelf8lower"] = {"shelf8_fromSouth_near", "wait", "fromSouth", "near"};
             // }
             // else if ( Gap is between shelf 5 and shelf 4) {
-            //     regionDictionary["shelf8lower"] = {"shelf8_fromNorth_far", "wait"};
+            //     regionDictionary["shelf8lower"] = {"shelf8_fromNorth_far", "wait", "fromNorth", "far"};
             // }
         }
 
 
-        if (clear[2] == true) { regionDictionary["shelf11upper"] = {"shelf11_fromNorth_near", "nowait"}; }
-        else if (clear[3] == true) { regionDictionary["shelf11upper"] = {"shelf5_fromSouth_far", "nowait"}; }
-        else if (clear[2] == false && clear[3] == false) { regionDictionary["shelf11upper"] = {"shelf11_fromSouth_near", "wait"}; }
+        if (clear[2] == true) { regionDictionary["shelf11upper"] = {"shelf11_fromNorth_near", "nowait", "fromNorth", "near"}; }
+        else if (clear[3] == true) { regionDictionary["shelf11upper"] = {"shelf5_fromSouth_far", "nowait", "fromSouth", "far"}; }
+        else if (clear[2] == false && clear[3] == false) { regionDictionary["shelf11upper"] = {"shelf11_fromSouth_near", "wait", "fromSouth", "near"}; }
 
 
-        if (clear[3] == true) { regionDictionary["shelf11lower"] = {"shelf11_fromSouth_near", "nowait"}; }
-        else if (clear[2] == true) { regionDictionary["shelf11lower"] = {"shelf11_fromNorth_far", "nowait"}; }
-        else if (clear[2] == false && clear[3] == false) { regionDictionary["shelf11lower"] = {"shelf11_fromNorth_near", "wait"}; }
+        if (clear[3] == true) { regionDictionary["shelf11lower"] = {"shelf11_fromSouth_near", "nowait", "fromSouth", "near"}; }
+        else if (clear[2] == true) { regionDictionary["shelf11lower"] = {"shelf11_fromNorth_far", "nowait", "fromNorth", "far"}; }
+        else if (clear[2] == false && clear[3] == false) { regionDictionary["shelf11lower"] = {"shelf11_fromNorth_near", "wait", "fromNorth", "near"}; }
 
     }
 
@@ -698,21 +716,95 @@ void RWAImplementation::buildKit()
     }
     else if ((discovered_cam_idx != 0 || discovered_cam_idx != 7 || discovered_cam_idx != 1 || discovered_cam_idx != 2) && discovered_cam_idx >= 0 && discovered_cam_idx <= 16) // Any other camera
     {                                                                 // any other camera
-        ROS_INFO_STREAM("Any Other Camera Block reached _______________________");
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        std:: string shelf_and_upper_or_lower_string = isPartInUpperOrLowerRegionOfWhichShelf(my_part, discovered_cam_idx);
+        std::vector<std::string> information_string_vector = regionDictionary[shelf_and_upper_or_lower_string]; // ie. ["shelf5_fromNorth_near", "nowait", "fromNorth", "near"]
+        
+        std::string preset_location_string = information_string_vector[0]; // ie. "shelf5_fromNorth_near"
+        std::string wait_or_nowait_string = information_string_vector[1]; // ie. "nowait"
+        std::string fromNorth_or_fromSouth_string = information_string_vector[2]; // ie. "fromNorth"
+        std::string near_or_far_string = information_string_vector[3]; // ie. "near"
+
+        // Create Bump() offsets, 4 possible scenarios
         double add_to_x_shelf = my_part.pose.position.x - -13.522081; // constant is perfect bin red pulley x
-        double add_to_y_shelf = my_part.pose.position.y - 3.446263;
-        ROS_INFO_STREAM(" x " << add_to_x_shelf << " y " << add_to_y_shelf);
+        double add_to_y_shelf = my_part.pose.position.y - 3.446263; // constant is perfect bin red pulley y
+        double add_to_torso = 0.0;
 
-        std::vector<PresetLocation> path = getPresetLocationVector(cam_to_presetlocation[discovered_cam_idx]);
-        ROS_INFO_STREAM("getPresetLocationVector executed!");
+        if (near_or_far_string == "near" && fromNorth_or_fromSouth_string == "fromSouth") {
+            add_to_x_shelf = my_part.pose.position.x - -13.522081      + 1.795838; // red pulley + offset to account for spin
+            add_to_y_shelf = my_part.pose.position.y - 3.446263        - 1.707474; // constant is perfect bin red pulley y
+            add_to_torso = PI; // spin torso
+        }
+        else if (near_or_far_string == "near" && fromNorth_or_fromSouth_string == "fromNorth") {
+            add_to_x_shelf = my_part.pose.position.x - -13.522081; // red pulley
+            add_to_y_shelf = my_part.pose.position.y - 3.446263; // red pulley
+            add_to_torso = 0.0;
+        }
+        else if (near_or_far_string == "far" && fromNorth_or_fromSouth_string == "fromNorth") {
+            add_to_x_shelf = my_part.pose.position.x - -13.522081; // red pulley
+            add_to_y_shelf = my_part.pose.position.y - -3.521975; // Blue Pulley
+            add_to_torso = 0.0;
+        }
+        else if (near_or_far_string == "far" && fromNorth_or_fromSouth_string == "fromSouth") {
+            add_to_x_shelf = my_part.pose.position.x - -13.522081       + 0.34115; // blue pulley + account for spin
+            add_to_y_shelf = my_part.pose.position.y - -3.521975        - 3.127628; // blue pulley + account for spin
+            add_to_torso = PI; // spin torso
+        }
+        else {
+            // code should not reach here
+            ROS_INFO_STREAM("error, unknown condition found for near_or_far_string and fromNorth_or_fromSouth_string"); 
+        }
 
-        executeVectorOfPresetLocations(path);
-        ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
 
-        gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, 0));
-        ROS_INFO_STREAM("goToPresetLocation with bump executed!");
 
-        ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
+        std::vector<PresetLocation> path = getPresetLocationVector(cam_to_presetlocation[discovered_cam_idx]); // initialize with no wait
+        if (wait_or_nowait_string == "wait") {
+            ROS_INFO_STREAM("Wait condtion encountered, need to use wait dictionary situation here ******************");
+            // Lookup PresetLocation in waitDictionary
+            // std::vector<PresetLocation> path = getPresetLocationVector(cam_to_presetlocation[discovered_cam_idx]); // todo lookup in wait dictionary here!
+            ROS_INFO_STREAM("getPresetLocationVector executed!");
+
+            executeVectorOfPresetLocations(path);
+            ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
+
+            gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, add_to_torso));
+            ROS_INFO_STREAM("goToPresetLocation with bump executed!");
+
+            ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
+        }
+        else { // else the "nowait" case
+            ROS_INFO_STREAM("No Wait condtion encountered");
+            // Lookup PresetLocation in noWaitDictionary
+            std::vector<PresetLocation> path = getPresetLocationVector(cam_to_presetlocation[discovered_cam_idx]); // initialize with no wait
+            ROS_INFO_STREAM("getPresetLocationVector executed!");
+
+            executeVectorOfPresetLocations(path);
+            ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
+
+            gantry_->goToPresetLocation(Bump(shelf11_a, add_to_x_shelf, add_to_y_shelf, add_to_torso));
+            ROS_INFO_STREAM("goToPresetLocation with bump executed!");
+
+            ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
+
+        }
+        ///////////////////////////////////////////////////////////////////////////////////////
+
+        // ROS_INFO_STREAM("Any Other Camera Block reached _______________________");
+        // double add_to_x_shelf = my_part.pose.position.x - -13.522081; // constant is perfect bin red pulley x
+        // double add_to_y_shelf = my_part.pose.position.y - 3.446263;
+        // ROS_INFO_STREAM(" x " << add_to_x_shelf << " y " << add_to_y_shelf);
+
+        // std::vector<PresetLocation> path = getPresetLocationVector(cam_to_presetlocation[discovered_cam_idx]);
+        // ROS_INFO_STREAM("getPresetLocationVector executed!");
+
+        // executeVectorOfPresetLocations(path);
+        // ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
+
+        // gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, 0));
+        // ROS_INFO_STREAM("goToPresetLocation with bump executed!");
+
+        // ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
     }
     else
     {
