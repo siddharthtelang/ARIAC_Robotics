@@ -85,8 +85,12 @@ int main(int argc, char ** argv) {
 
         // auto dirs = rwa.lane_handler.queryLanes();
         // ROS_INFO_STREAM("--------------");
-        // for (int i{0}; i < 4; i++) {
-        //     ROS_INFO_STREAM("Lane " << i << ", Dir " << dirs[i]);
+        // for (int i{AllLanesHandler::LEFT}; i <= AllLanesHandler::RIGHT; i++) {
+        //     std::string prompt{""};
+        //     if (dirs[i] == 0) prompt = "Traveling away from conveyor";
+        //     else if (dirs[i] == 1) prompt = "Traveling towards conveyor";
+        //     else prompt = "Direction unknown. Likely no obstacle in lane";
+        //     ROS_INFO_STREAM("Lane " << i << ", Dir " << dirs[i] << ", " << prompt);
         // }
         // ROS_INFO_STREAM("--------------");
         // ros::Duration(1).sleep();
