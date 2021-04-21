@@ -45,22 +45,121 @@ private:
     /* ===================== Preset Locations ===================== */
     PresetLocation conveyor_belt;
     PresetLocation start_a;
+
     PresetLocation bin3_a; // for bin3 (and all 8 bins in that entire grouping)
-    PresetLocation bingreen_a;
-    PresetLocation binblue_a;
-    PresetLocation agv2_a;
-    PresetLocation agv1_staging_a;
+    PresetLocation bin11_a; // for bin11 (and all 8 bins in that entire grouping)
+
+    // PresetLocation bingreen_a;
+    // PresetLocation binblue_a;
+    // PresetLocation agv2_a;
+    // PresetLocation agv1_staging_a;
+    // PresetLocation bottom_left_staging_a;
+    // PresetLocation shelf5_a;
+    // PresetLocation shelf5_spun_a;
+
+    // PresetLocation mid_5_8_staging_a;
+    // PresetLocation mid_8_11_staging_a;
+
+    // PresetLocation shelf8_a;
+    // PresetLocation shelf11_a;
+
+    PresetLocation shelf11_south_far; // rename this to general far pick
+
+    ///////////// Shelf Preset Locations: arranged in rows from Northernmost (world +y direction) row to Southernmost (world -y direction) row,
+    ////////////                          each row is arranged from left (-x) to right (+x). This section is for the shelves only.
+
     PresetLocation bottom_left_staging_a;
-    PresetLocation shelf5_a;
-    PresetLocation shelf5_spun_a;
+    PresetLocation waitpoint_best_north_fromNorth;
+    PresetLocation waitpoint_best_north_fromSouth;
+    PresetLocation agv1_staging_a;
 
-    PresetLocation mid_5_8_staging_a;
-    PresetLocation mid_8_11_staging_a;
+    PresetLocation shelf5_a; // rename this to general near pick
+    PresetLocation shelf5_fromNorth_near;
+    PresetLocation shelf5_fromNorth_far;
 
+    //////////// Row 3
     PresetLocation shelf8_a;
+    PresetLocation shelf5_fromSouth_near;
+    PresetLocation shelf5_fromSouth_far;
+    PresetLocation shelf8_fromNorth_near;
+    PresetLocation shelf8_fromNorth_far;
+    PresetLocation mid_5_8_intersection_fromNorth;
+    PresetLocation mid_5_8_intersection_fromSouth;
+    PresetLocation mid_5_8_staging_a;
+    PresetLocation mid_5_8_staging_fromNorth;
+    PresetLocation mid_5_8_staging_fromSouth;
+
+    //////////// Row 4
     PresetLocation shelf11_a;
 
-    PresetLocation bin11_a; // for bin11 (and all 8 bins in that entire grouping)
+    PresetLocation shelf8_fromSouth_near;
+    PresetLocation shelf8_fromSouth_far;
+    PresetLocation shelf11_fromNorth_near;
+    PresetLocation shelf11_fromNorth_far;
+
+    PresetLocation mid_8_11_intersection_fromNorth;
+    PresetLocation mid_8_11_intersection_fromSouth;
+
+    PresetLocation mid_8_11_staging_a;
+
+    PresetLocation mid_8_11_staging_fromNorth;
+    PresetLocation mid_8_11_staging_fromSouth;
+
+    //////////// Row 5
+    PresetLocation shelf11_fromSouth_near;
+    PresetLocation shelf11_fromSouth_far;
+
+    //////////// Row 6
+    PresetLocation southwest_corner_staging;
+
+    PresetLocation waitpoint_best_south_fromNorth;
+    PresetLocation waitpoint_best_south_fromSouth;
+
+    PresetLocation agv2_a;
+
+    //////////// End Shelf Preset Locations
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
 
     std::vector<PresetLocation> preset_locations_list_; // lookup list to compare distances with
 

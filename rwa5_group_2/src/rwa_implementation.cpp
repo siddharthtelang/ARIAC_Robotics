@@ -220,11 +220,41 @@ void RWAImplementation::initPresetLocs()
     bin3_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     bin3_a.name = GET_VARIABLE_NAME(bin3_a);
 
-    // joint positions to go to agv2
-    agv2_a.gantry = {0.6, 6.9, PI};
-    agv2_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    agv2_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    agv2_a.name = GET_VARIABLE_NAME(agv2_a);
+
+    // joint positions to go to bin11 (and all 8 bins in the entire grouping)
+    bin11_a.gantry = {4.0, -1.1, 0.}; // the exact same as bin311_a
+    bin11_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    bin11_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    bin11_a.name = GET_VARIABLE_NAME(bin11_a);
+
+
+
+    // rename this to general far pick
+    shelf11_south_far.gantry = {-13.52-0.172656, 1.96, -PI/2}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT
+    shelf11_south_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf11_south_far.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf11_south_far.name = GET_VARIABLE_NAME(shelf11_south_far);
+
+
+
+    ///////////// Shelf Preset Locations: arranged in rows from Northernmost (world +y direction) row to Southernmost (world -y direction) row,
+    ////////////                          each row is arranged from left (-x) to right (+x). This section is for the shelves only.
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////// Row 1
+    bottom_left_staging_a.gantry = {-14.22, -6.75, 0.00};
+    bottom_left_staging_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    bottom_left_staging_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same except for joint 0
+    bottom_left_staging_a.name = GET_VARIABLE_NAME(bottom_left_staging_a);
+
+    waitpoint_best_north_fromNorth.gantry = {-11.0, -6.9, 0.88}; // waitpoint_best_north_fromNorth
+    waitpoint_best_north_fromNorth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    waitpoint_best_north_fromNorth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    waitpoint_best_north_fromNorth.name = GET_VARIABLE_NAME(waitpoint_best_north_fromNorth);
+
+    waitpoint_best_north_fromSouth.gantry = {-11.0, -6.9, 0.88-PI}; // waitpoint_best_north_fromSouth
+    waitpoint_best_north_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    waitpoint_best_north_fromSouth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    waitpoint_best_north_fromSouth.name = GET_VARIABLE_NAME(waitpoint_best_north_fromSouth);
 
     // joint positions to go to agv1
     agv1_staging_a.gantry = {0.6, -6.9, 0.00};
@@ -232,41 +262,180 @@ void RWAImplementation::initPresetLocs()
     agv1_staging_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same except for joint 0
     agv1_staging_a.name = GET_VARIABLE_NAME(agv1_staging_a);
 
-    bottom_left_staging_a.gantry = {-14.22, -6.75, 0.00};
-    bottom_left_staging_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
-    bottom_left_staging_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same except for joint 0
-    bottom_left_staging_a.name = GET_VARIABLE_NAME(bottom_left_staging_a);
 
-    shelf5_a.gantry = {-14.42, -4.30, 0.00};
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////// Row 2
+    shelf5_a.gantry = {-14.42, -4.30, 0.00}; // todo why is this -14.42 instead of -14.22
     shelf5_a.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, 0.0};
     shelf5_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
     shelf5_a.name = GET_VARIABLE_NAME(shelf5_a);
+
+    shelf5_fromNorth_near.gantry = {-14.22, -4.30, 0.88}; // shelf5_fromNorth_near
+    shelf5_fromNorth_near.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    shelf5_fromNorth_near.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf5_fromNorth_near.name = GET_VARIABLE_NAME(shelf5_fromNorth_near);
+
+
+    shelf5_fromNorth_far.gantry = {-14.22, -4.30, 0.88}; // shelf5_fromNorth_far
+    shelf5_fromNorth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf5_fromNorth_far.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf5_fromNorth_far.name = GET_VARIABLE_NAME(shelf5_fromNorth_far);
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////// Row 3
+    shelf8_a.gantry = {-14.22, -1.5, 0.00};
+    shelf8_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    shelf8_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf8_a.name = GET_VARIABLE_NAME(shelf8_a);
+
+
+    shelf5_fromSouth_near.gantry = {-14.22, -1.5, 0.88-PI}; // shelf5_fromSouth_near
+    shelf5_fromSouth_near.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    shelf5_fromSouth_near.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf5_fromSouth_near.name = GET_VARIABLE_NAME(shelf5_fromSouth_near);
+
+
+    shelf5_fromSouth_far.gantry = {-14.22, -1.5, 0.88-PI}; // shelf5_fromSouth_far
+    shelf5_fromSouth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf5_fromSouth_far.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf5_fromSouth_far.name = GET_VARIABLE_NAME(shelf5_fromSouth_far);
+
+
+    shelf8_fromNorth_near.gantry = {-14.22, -1.5, 0.88}; // shelf8_fromNorth_near
+    shelf8_fromNorth_near.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    shelf8_fromNorth_near.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf8_fromNorth_near.name = GET_VARIABLE_NAME(shelf8_fromNorth_near);
+
+
+    shelf8_fromNorth_far.gantry = {-14.22, -1.5, 0.88}; // shelf8_fromNorth_far
+    shelf8_fromNorth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf8_fromNorth_far.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf8_fromNorth_far.name = GET_VARIABLE_NAME(shelf8_fromNorth_far);
+
+
+
+    mid_5_8_intersection_fromNorth.gantry = {-11.0, -1.5, 0.88}; // Intersection!
+    mid_5_8_intersection_fromNorth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_5_8_intersection_fromNorth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    mid_5_8_intersection_fromNorth.name = GET_VARIABLE_NAME(mid_5_8_intersection_fromNorth);
+
+    mid_5_8_intersection_fromSouth.gantry = {-11.0, -1.5, 0.88-PI}; // mid_5_8_intersection_fromSouth
+    mid_5_8_intersection_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_5_8_intersection_fromSouth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    mid_5_8_intersection_fromSouth.name = GET_VARIABLE_NAME(mid_5_8_intersection_fromSouth);
 
     mid_5_8_staging_a.gantry = {0.0, -1.5, 0.00};
     mid_5_8_staging_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_5_8_staging_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_5_8_staging_a.name = GET_VARIABLE_NAME(mid_5_8_staging_a);
 
-    shelf8_a.gantry = {-14.22, -1.5, 0.00};
-    shelf8_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
-    shelf8_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
-    shelf8_a.name = GET_VARIABLE_NAME(shelf8_a);
+
+    mid_5_8_staging_fromNorth.gantry = {0.0, -1.5, 0.88}; // mid_5_8_staging_fromNorth
+    mid_5_8_staging_fromNorth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_5_8_staging_fromNorth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    mid_5_8_staging_fromNorth.name = GET_VARIABLE_NAME(mid_5_8_staging_fromNorth);
+
+    mid_5_8_staging_fromSouth.gantry = {0.0, -1.5, 0.88-PI}; // mid_5_8_staging_fromSouth
+    mid_5_8_staging_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_5_8_staging_fromSouth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    mid_5_8_staging_fromSouth.name = GET_VARIABLE_NAME(mid_5_8_staging_fromSouth);
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////// Row 4
+    shelf11_a.gantry = {-14.22, 1.5, 0.00};
+    shelf11_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    shelf11_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf11_a.name = GET_VARIABLE_NAME(shelf11_a);
+
+    shelf8_fromSouth_near.gantry = {-14.22, 1.5, 0.88-PI}; // shelf8_fromSouth_near
+    shelf8_fromSouth_near.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    shelf8_fromSouth_near.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf8_fromSouth_near.name = GET_VARIABLE_NAME(shelf8_fromSouth_near);
+
+    shelf8_fromSouth_far.gantry = {-14.22, 1.5, 0.88-PI}; // shelf8_fromSouth_far
+    shelf8_fromSouth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf8_fromSouth_far.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf8_fromSouth_far.name = GET_VARIABLE_NAME(shelf8_fromSouth_far);
+
+    shelf11_fromNorth_near.gantry = {-14.22, 1.5, 0.88}; // shelf11_fromNorth_near
+    shelf11_fromNorth_near.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    shelf11_fromNorth_near.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf11_fromNorth_near.name = GET_VARIABLE_NAME(shelf11_fromNorth_near);
+
+    shelf11_fromNorth_far.gantry = {-14.22, 1.5, 0.88}; // shelf11_fromNorth_far
+    shelf11_fromNorth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf11_fromNorth_far.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf11_fromNorth_far.name = GET_VARIABLE_NAME(shelf11_fromNorth_far);
+
+
+    mid_8_11_intersection_fromNorth.gantry = {-11.0, 1.5, 0.88}; // mid_8_11_intersection_fromNorth
+    mid_8_11_intersection_fromNorth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_8_11_intersection_fromNorth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    mid_8_11_intersection_fromNorth.name = GET_VARIABLE_NAME(mid_8_11_intersection_fromNorth);
+
+    mid_8_11_intersection_fromSouth.gantry = {-11.0, 1.5, 0.88-PI}; // mid_8_11_intersection_fromSouth
+    mid_8_11_intersection_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_8_11_intersection_fromSouth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    mid_8_11_intersection_fromSouth.name = GET_VARIABLE_NAME(mid_8_11_intersection_fromSouth);
 
     mid_8_11_staging_a.gantry = {0.0, 1.5, 0.00};
     mid_8_11_staging_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_8_11_staging_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_8_11_staging_a.name = GET_VARIABLE_NAME(mid_8_11_staging_a);
 
-    shelf11_a.gantry = {-14.22, 1.5, 0.00};
-    shelf11_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
-    shelf11_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
-    shelf11_a.name = GET_VARIABLE_NAME(shelf11_a);
 
-    // joint positions to go to bin11 (and all 8 bins in the entire grouping)
-    bin11_a.gantry = {4.0, -1.1, 0.}; // the exact same as bin311_a
-    bin11_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    bin11_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    bin11_a.name = GET_VARIABLE_NAME(bin11_a);
+    mid_8_11_staging_fromNorth.gantry = {0.0, 1.5, 0.88}; // mid_8_11_staging_fromNorth
+    mid_8_11_staging_fromNorth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_8_11_staging_fromNorth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    mid_8_11_staging_fromNorth.name = GET_VARIABLE_NAME(mid_8_11_staging_fromNorth);
+
+    mid_8_11_staging_fromSouth.gantry = {0.0, 1.5, 0.88-PI}; // mid_8_11_staging_fromSouth
+    mid_8_11_staging_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_8_11_staging_fromSouth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    mid_8_11_staging_fromSouth.name = GET_VARIABLE_NAME(mid_8_11_staging_fromSouth);
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////// Row 5
+
+    shelf11_fromSouth_near.gantry = {-14.22, 4.30, 0.88-PI}; // shelf11_fromSouth_near
+    shelf11_fromSouth_near.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    shelf11_fromSouth_near.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf11_fromSouth_near.name = GET_VARIABLE_NAME(shelf11_fromSouth_near);
+
+    shelf11_fromSouth_far.gantry = {-14.22, 4.30, 0.88-PI}; // shelf11_fromSouth_far
+    shelf11_fromSouth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf11_fromSouth_far.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf11_fromSouth_far.name = GET_VARIABLE_NAME(shelf11_fromSouth_far);
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////// Row 6
+
+    southwest_corner_staging.gantry = {-14.22, 6.9, PI}; // southwest_corner_staging
+    southwest_corner_staging.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    southwest_corner_staging.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    southwest_corner_staging.name = GET_VARIABLE_NAME(southwest_corner_staging);
+
+
+    waitpoint_best_south_fromNorth.gantry = {-11.0, 6.9, 0.88}; // waitpoint_best_south_fromNorth
+    waitpoint_best_south_fromNorth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    waitpoint_best_south_fromNorth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    waitpoint_best_south_fromNorth.name = GET_VARIABLE_NAME(waitpoint_best_south_fromNorth);
+
+    waitpoint_best_south_fromSouth.gantry = {-11.0, 6.9, 0.88-PI}; // waitpoint_best_south_fromSouth
+    waitpoint_best_south_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    waitpoint_best_south_fromSouth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    waitpoint_best_south_fromSouth.name = GET_VARIABLE_NAME(waitpoint_best_south_fromSouth);
+
+    // joint positions to go to agv2
+    agv2_a.gantry = {0.6, 6.9, PI};
+    agv2_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    agv2_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    agv2_a.name = GET_VARIABLE_NAME(agv2_a);
+
+    //////////// End Shelf Preset Locations
+    ////////////
+    
+
+
+
+
+
+
 
     cam_to_presetlocation = {
         {0, bin3_a},
