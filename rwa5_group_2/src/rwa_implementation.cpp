@@ -843,3 +843,102 @@ bool RWAImplementation::competition_over() {
     }
     return false;
 }
+
+bool RWAImplementation::detectGaps()
+{
+    tf2_ros::Buffer tfBuffer;
+    tf2_ros::TransformListener tfListener(tfBuffer);
+    std::array<geometry_msgs::TransformStamped, 9> shelves;
+    int shelf_number = 3;
+    ros::Duration(0.5).sleep();
+    ros::Duration timeout(0.2);
+    std::string shelf_frame= "";
+    ROS_INFO("Lookup for shelves");
+
+    for (int i = 0; i < 9; i++, shelf_number++)
+    {
+        try
+        {
+            shelf_frame = "shelf" + std::to_string(shelf_number) + "_frame";
+            shelves[i] = tfBuffer.lookupTransform(
+                "world",
+                shelf_frame,
+                ros::Time(0),
+                timeout);
+        }
+        catch (tf2::TransformException &ex)
+        {
+            ROS_WARN("%s", ex.what());
+            ros::Duration(1.0).sleep();
+            continue;
+        }
+        ROS_INFO_STREAM("Shelf  " << std::to_string(shelf_number) << "  position = \n"  << shelves[i].transform.translation);
+    }
+
+    float s1, s2, s3, gap, safe_y, safe_x, max_y, d21, d32, shelf_length = 4.12;
+    PresetLocation toAgv, toFarReachSafeLocation, toSafeLocation;
+
+    for (int i = 0; i < 3; i++)
+    {
+        s1 = shelves[(3*i)].transform.translation.x;
+        s2 = shelves[(3*i)+1].transform.translation.x;
+        s3 = shelves[(3*i)+2].transform.translation.x;
+        ROS_INFO_STREAM("Shelf's x coordinate --> "<<s1<<" ,"<<s2<<", "<<s3);
+        d21 = std::abs(s2) - std::abs(s1);
+        d32 = std::abs(s3) - std::abs(s2);
+        if (d21 > d32)
+        {
+            ROS_INFO_STREAM("Gap is between 1st and 2nd shelf in shelf row " << i+1 << " from AGV1");
+            gap = d21/2;
+            safe_x = -(shelf_length + gap);
+            gaps[i] = "gap_conveyor";
+        }
+        else
+        {
+            ROS_INFO_STREAM("Gap is between 2nd and 3rd shelf in shelf row " << i+1 << " from AGV1");
+            gap = d32/2;
+            safe_x = -(2*shelf_length + gap);
+            gaps[i] = "gap_end";
+        }
+        if (i == 0)
+        {
+            toAgv = gantry_->agv1_;
+            safe_y = -3.08; //gantry frame
+            max_y = -6.9;
+        }
+        else if (i == 2)
+        {
+            toAgv = gantry_->agv2_;
+            safe_y = 3.08; //gantry frame
+            max_y = 6.9;
+        }
+        else
+        {
+            toAgv = gantry_->start_;
+            safe_y = 0;
+            max_y = 0;
+        }
+        //keep left arm and right arm joint positions same as agv, just change gantry joint position
+        //To be updated if left and right arm joint have to be different than that of agv's
+        toFarReachSafeLocation = toAgv;
+        toFarReachSafeLocation.gantry = {safe_x, max_y, PI};
+        toSafeLocation = toAgv;
+        toSafeLocation.gantry = {safe_x, safe_y, PI};
+
+        /*for testing only
+        gantry_->goToPresetLocation(toAgv);
+        gantry_->goToPresetLocation(toFarReachSafeLocation);
+        gantry_->goToPresetLocation(toSafeLocation); */
+
+        /* array of vectors - each vector will have preset for going to:
+        1) agv from start
+        2) waypoint b/w agv and safe location - waiting area to check for obstacles
+        3) safe location from waypoint in 2) - gap b/w shelves
+        As per requirement, individual preset locations can be extracted from the vector
+        */
+        shelf_preset_locations[i].push_back(toAgv);
+        shelf_preset_locations[i].push_back(toFarReachSafeLocation);
+        shelf_preset_locations[i].push_back(toSafeLocation);
+    }
+    return true;
+}
