@@ -135,29 +135,59 @@ typedef struct Order {
 class LaneBreakbeamPair {
 
 public:
-    explicit LaneBreakbeamPair(ros::NodeHandle& node, int br_closer, int br_further) : node_{&node}
-    {
-        br_topic_closer_ += std::to_string(br_closer) + "_change";
-        br_topic_further_ += std::to_string(br_further) + "_change";
-    };
+    void subscribePair(ros::NodeHandle& node, int br_closer, int br_further) {
+
+        std::string br_topic_closer = "/ariac/breakbeam_" + std::to_string(br_closer) + "_change";
+        std::string br_topic_further = "/ariac/breakbeam_" + std::to_string(br_further) + "_change";
+
+        close_breakbeam_subscriber_ = node.subscribe<nist_gear::Proximity>(br_topic_closer, 10,
+                                                                        boost::bind(&LaneBreakbeamPair::breakbeam_callback, this, _1, 0));
+
+        far_breakbeam_subscriber_ = node.subscribe<nist_gear::Proximity>(br_topic_further, 10,
+                                                                          boost::bind(&LaneBreakbeamPair::breakbeam_callback, this, _1, 1));
+    }
 
     /**
      * @brief query pair of breakbeam sensors in a given lane
      * 
      */
-    int queryPair();
+    int queryPair() {
+        return towards_conveyor_;
+    }
+
     void breakbeam_callback(const nist_gear::Proximity::ConstPtr &msg, const int breakbeam);
 
 
 private:
-    ros::NodeHandle* node_;
-    std::string br_topic_closer_ = "/ariac/breakbeam_";
-    std::string br_topic_further_ = "/ariac/breakbeam_";
+    ros::Subscriber close_breakbeam_subscriber_;
+    ros::Subscriber far_breakbeam_subscriber_;
 
     int prev_hit_ = -1;
     std::array<double, 2> time_hit_{}; 
     int towards_conveyor_{-1}; 
     const int breakbeam_rate_{1};
+    bool has_obstacle_{false};
+};
+
+class AllLanesHandler {
+
+public:
+    AllLanesHandler() : lanes_{} {}
+
+    void setNode(ros::NodeHandle& node)
+    {
+        lanes_[LEFT].subscribePair(node, 7,8);
+        lanes_[MID_LEFT].subscribePair(node, 5,6);
+        lanes_[MID_RIGHT].subscribePair(node, 3,4);
+        lanes_[RIGHT].subscribePair(node, 1,2);
+    }
+
+    std::array<int, 4> queryLanes();
+    enum LaneNumbers{LEFT, MID_LEFT, MID_RIGHT, RIGHT};
+
+private:
+    std::array<LaneBreakbeamPair, 4> lanes_{};
+    
 };
 
 #endif

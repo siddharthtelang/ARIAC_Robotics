@@ -39,16 +39,10 @@ void LaneBreakbeamPair::breakbeam_callback(const nist_gear::Proximity::ConstPtr 
         }
 }
 
-int LaneBreakbeamPair::queryPair()
-{
-        ros::Subscriber close_breakbeam_subscriber;
-        ros::Subscriber far_breakbeam_subscriber;
-
-        close_breakbeam_subscriber = node_->subscribe<nist_gear::Proximity>(br_topic_closer_, 10,
-                                                                            boost::bind(&LaneBreakbeamPair::breakbeam_callback, this, _1, 0));
-        far_breakbeam_subscriber = node_->subscribe<nist_gear::Proximity>(br_topic_further_, 10,
-                                                                          boost::bind(&LaneBreakbeamPair::breakbeam_callback, this, _1, 1));
-
-        ros::Duration(0.2).sleep();
-        return towards_conveyor_;
+std::array<int, 4> AllLanesHandler::queryLanes() {
+        std::array<int, 4> lane_w_obstacle_dirs{};
+        for (int i{0}; i < lanes_.size(); i++) {
+                lane_w_obstacle_dirs[i] = lanes_[i].queryPair();
+        }
+        return lane_w_obstacle_dirs;
 }
