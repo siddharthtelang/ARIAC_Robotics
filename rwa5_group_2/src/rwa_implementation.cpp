@@ -533,6 +533,20 @@ void RWAImplementation::initPresetLocs()
         {{"bin3_a", "bin11_a"}, std::vector<PresetLocation>{bin3_a, bin11_a}},
         {{"bin3_a", "bin3_a"}, std::vector<PresetLocation>{bin3_a, bin3_a}},
 
+        /////////////////////////////////////////////////
+        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
+        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
+        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
+        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
+        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
+        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
+        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
+        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
+        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
+        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
+        // {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
+
+
     };
 }
 
@@ -716,9 +730,10 @@ void RWAImplementation::buildKit()
     }
     else if ((discovered_cam_idx != 0 || discovered_cam_idx != 7 || discovered_cam_idx != 1 || discovered_cam_idx != 2) && discovered_cam_idx >= 0 && discovered_cam_idx <= 16) // Any other camera
     {                                                                 // any other camera
+        ROS_INFO_STREAM("Any Other Camera Case Reached");
 
         ///////////////////////////////////////////////////////////////////////////////////////
-        std:: string shelf_and_upper_or_lower_string = isPartInUpperOrLowerRegionOfWhichShelf(my_part, discovered_cam_idx);
+        std:: string shelf_and_upper_or_lower_string = isPartInUpperOrLowerRegionOfWhichShelf(my_part, discovered_cam_idx); // ie. "shelf5upper"
         std::vector<std::string> information_string_vector = regionDictionary[shelf_and_upper_or_lower_string]; // ie. ["shelf5_fromNorth_near", "nowait", "fromNorth", "near"]
         
         std::string preset_location_string = information_string_vector[0]; // ie. "shelf5_fromNorth_near"
@@ -727,26 +742,33 @@ void RWAImplementation::buildKit()
         std::string near_or_far_string = information_string_vector[3]; // ie. "near"
 
         // Create Bump() offsets, 4 possible scenarios
+        ROS_INFO_STREAM("Calculating offsets...");
         double add_to_x_shelf = my_part.pose.position.x - -13.522081; // constant is perfect bin red pulley x
         double add_to_y_shelf = my_part.pose.position.y - 3.446263; // constant is perfect bin red pulley y
         double add_to_torso = 0.0;
 
         if (near_or_far_string == "near" && fromNorth_or_fromSouth_string == "fromSouth") {
+            ROS_INFO_STREAM("Case 1 fromSouth near encountered for offsets...");
+
             add_to_x_shelf = my_part.pose.position.x - -13.522081      + 1.795838; // red pulley + offset to account for spin
             add_to_y_shelf = my_part.pose.position.y - 3.446263        - 1.707474; // constant is perfect bin red pulley y
             add_to_torso = PI; // spin torso
         }
         else if (near_or_far_string == "near" && fromNorth_or_fromSouth_string == "fromNorth") {
+            ROS_INFO_STREAM("Case 2 fromNorth near encountered for offsets...");
+
             add_to_x_shelf = my_part.pose.position.x - -13.522081; // red pulley
             add_to_y_shelf = my_part.pose.position.y - 3.446263; // red pulley
             add_to_torso = 0.0;
         }
         else if (near_or_far_string == "far" && fromNorth_or_fromSouth_string == "fromNorth") {
+            ROS_INFO_STREAM("Case 3 fromNorth far encountered for offsets...");
             add_to_x_shelf = my_part.pose.position.x - -13.522081; // red pulley
             add_to_y_shelf = my_part.pose.position.y - -3.521975; // Blue Pulley
             add_to_torso = 0.0;
         }
         else if (near_or_far_string == "far" && fromNorth_or_fromSouth_string == "fromSouth") {
+            ROS_INFO_STREAM("Case 4 fromSouth far encountered for offsets...");
             add_to_x_shelf = my_part.pose.position.x - -13.522081       + 0.34115; // blue pulley + account for spin
             add_to_y_shelf = my_part.pose.position.y - -3.521975        - 3.127628; // blue pulley + account for spin
             add_to_torso = PI; // spin torso
@@ -758,7 +780,7 @@ void RWAImplementation::buildKit()
 
 
 
-        std::vector<PresetLocation> path = getPresetLocationVector(cam_to_presetlocation[discovered_cam_idx]); // initialize with no wait
+        std::vector<PresetLocation> path = getPresetLocationVectorUsingString(preset_location_string); // initialize with no wait
         if (wait_or_nowait_string == "wait") {
             ROS_INFO_STREAM("Wait condtion encountered, need to use wait dictionary situation here ******************");
             // Lookup PresetLocation in waitDictionary
@@ -776,7 +798,7 @@ void RWAImplementation::buildKit()
         else { // else the "nowait" case
             ROS_INFO_STREAM("No Wait condtion encountered");
             // Lookup PresetLocation in noWaitDictionary
-            std::vector<PresetLocation> path = getPresetLocationVector(cam_to_presetlocation[discovered_cam_idx]); // initialize with no wait
+            std::vector<PresetLocation> path = getPresetLocationVectorUsingString(preset_location_string); // initialize with no wait
             ROS_INFO_STREAM("getPresetLocationVector executed!");
 
             executeVectorOfPresetLocations(path);
@@ -893,6 +915,16 @@ std::vector<PresetLocation> RWAImplementation::getPresetLocationVector(PresetLoc
 {
     PresetLocation approximate_current_position = getNearesetPresetLocation();
     std::vector<std::string> key = {{approximate_current_position.name, target_preset_location.name}};
+    ROS_INFO_STREAM("key executed! =====" << key[0] << " " << key[1]);
+    std::vector<PresetLocation> path_to_execute = PathingLookupDictionary.at(key);
+    ROS_INFO_STREAM("path_to_execute lookup executed!");
+    return path_to_execute;
+}
+
+std::vector<PresetLocation> RWAImplementation::getPresetLocationVectorUsingString(std::string target_preset_location_string)
+{
+    PresetLocation approximate_current_position = getNearesetPresetLocation();
+    std::vector<std::string> key = {{approximate_current_position.name, target_preset_location_string}};
     ROS_INFO_STREAM("key executed! =====" << key[0] << " " << key[1]);
     std::vector<PresetLocation> path_to_execute = PathingLookupDictionary.at(key);
     ROS_INFO_STREAM("path_to_execute lookup executed!");

@@ -233,6 +233,7 @@ public:
     double calcDistanceInXYPlane(geometry_msgs::Pose a, geometry_msgs::Pose b);
     PresetLocation getNearesetPresetLocation();
     std::vector<PresetLocation> getPresetLocationVector(PresetLocation target_preset_location);
+    std::vector<PresetLocation> getPresetLocationVectorUsingString(std::string target_preset_location_string);
     bool executeVectorOfPresetLocations( std::vector<PresetLocation> path_to_execute );
     geometry_msgs::Pose gantryXY2worldposeXY(PresetLocation preset_location_2_convert);
     // preset locations from start to safe location for three shelf rows starting from agv1 side
@@ -256,14 +257,19 @@ public:
         double product_y_coord = my_part.pose.position.y;
         double camera_y_coord = cam_to_y_coordinate[discovered_cam_idx];
 
+        ROS_INFO_STREAM("product_y_coord === " << product_y_coord << " and camera_y_coord === " << camera_y_coord);
+
         std::string upper_or_lower_string = "upper"; // initialize as upper
         if (product_y_coord >= camera_y_coord) {
-            std::string upper_or_lower_string = "upper";
+            ROS_INFO_STREAM("Part is Above (upper) to camera");
+
+            upper_or_lower_string = "upper";
         }
         else {
-            std::string upper_or_lower_string = "lower";
+            upper_or_lower_string = "lower";
+            ROS_INFO_STREAM("Part is Below (lower) to camera");
         }
-
+        ROS_INFO_STREAM("Output isPartInUpperOrLowerRegionOfWhichShelf String === " << shelf_string + upper_or_lower_string);
         return shelf_string + upper_or_lower_string; // ie. "shelf5" + "upper" = "shelf5upper"
     }
 
