@@ -22,9 +22,6 @@ void LaneBreakbeamPair::breakbeam_callback(const nist_gear::Proximity::ConstPtr 
 {
         if ((msg->object_detected == true) && (ros::Time::now().toSec() - time_hit_[breakbeam] > breakbeam_rate_)) 
         {
-                ROS_INFO_STREAM("========");
-                ROS_INFO_STREAM("Passed sensor " << breakbeam);
-                ROS_INFO_STREAM("========");
                 if (breakbeam == 0)
                 {
                         if (prev_hit_ == 1) towards_conveyor_ = 1;
@@ -40,9 +37,33 @@ void LaneBreakbeamPair::breakbeam_callback(const nist_gear::Proximity::ConstPtr 
 }
 
 std::array<int, 4> AllLanesHandler::queryLanes() {
-        std::array<int, 4> lane_w_obstacle_dirs{};
+        std::array<int, 4> lane_dirs{};
         for (int i{0}; i < lanes_.size(); i++) {
-                lane_w_obstacle_dirs[i] = lanes_[i].queryPair();
+                lane_dirs[i] = lanes_[i].queryPair();
         }
-        return lane_w_obstacle_dirs;
+        return lane_dirs;
+}
+
+std::array<bool, 5> AllLanesHandler::clearLanes() {
+        std::array<bool, 5> clear_lanes{false};
+        auto lane_dirs = queryLanes();
+        int count{0};
+        for (int i{0}; i < 4; i++) {
+                dir = lane_dirs[i];
+                if (dir == -1) {
+                        clear_lanes[i] = true;
+                        count++;
+                }
+        }
+        if (count == 2) clear_lanes[4] = true;
+        return clear_lanes;
+}
+
+bool AllLanesHandler::waitForLane(int lane) {
+        auto dir = lanes_[lane].queryPair();
+        while(dir == 0 || lanes_[lane].prev_hit_ == 1) {
+                ros::Duration(0.1).sleep();
+                dir = lanes_[lane].queryPair();
+        }
+        return true;
 }

@@ -80,24 +80,16 @@ int main(int argc, char ** argv) {
     {
         gaps_found = rwa.detectGaps();
     }
-
-    rwa.InitRegionDictionaryDependingOnSituation(); // Initialize region (shelf + upper or lower) dictionary depending on situation.
     
     while(ros::ok()) {
         ROS_INFO_STREAM("Starting while loop...");
-
         rwa.processOrder();
+        rwa.InitRegionDictionaryDependingOnSituation(); // Initialize region (shelf + upper or lower) dictionary depending on situation.
         if (rwa.checkConveyor()) continue;       
         rwa.buildKit();
         rwa.checkAgvErrors();
         ros::Duration(0.5).sleep();
         if (rwa.competition_over()) break;
-        // ROS_INFO_STREAM("----------------------------");
-        // ROS_INFO_STREAM("left lane: " << rwa.left_lane.queryPair());
-        // ROS_INFO_STREAM("mid left lane: " << rwa.mid_left_lane.queryPair());
-        // ROS_INFO_STREAM("mid right lane: " << rwa.mid_right_lane.queryPair());
-        // ROS_INFO_STREAM("right lane: " << rwa.right_lane.queryPair());
-    }
 
         // auto dirs = rwa.lane_handler.queryLanes();
         // ROS_INFO_STREAM("--------------");
@@ -110,6 +102,7 @@ int main(int argc, char ** argv) {
         // }
         // ROS_INFO_STREAM("--------------");
         // ros::Duration(1).sleep();
+    }
 
     comp.endCompetition();
 

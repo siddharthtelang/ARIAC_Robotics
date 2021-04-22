@@ -157,12 +157,12 @@ public:
 
     void breakbeam_callback(const nist_gear::Proximity::ConstPtr &msg, const int breakbeam);
 
+    int prev_hit_ = -1;
 
 private:
     ros::Subscriber close_breakbeam_subscriber_;
     ros::Subscriber far_breakbeam_subscriber_;
 
-    int prev_hit_ = -1;
     std::array<double, 2> time_hit_{}; 
     int towards_conveyor_{-1}; 
     const int breakbeam_rate_{1};
@@ -183,6 +183,8 @@ public:
     }
 
     std::array<int, 4> queryLanes();
+    std::array<bool, 5> clearLanes();
+    bool waitForOpening(int lane);
     enum LaneNumbers{LEFT, MID_LEFT, MID_RIGHT, RIGHT};
 
 private:
