@@ -207,6 +207,12 @@ public:
      */
     bool competition_over();
 
+    /**
+     * \brief: check if the part needs to be flipped and flip if required
+     * \result: true/false
+     */
+    bool checkForFlip(part &part_in_tray, Product product);
+
     bool detectGaps();
 
     // build regionDictionary, which maps regions which indicate shelf and upper/lower, to a preset location string and wait/nowait string.

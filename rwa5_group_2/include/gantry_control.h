@@ -156,7 +156,9 @@ class GantryControl {
     start start_;
     bin3 bin3_;
     agv2 agv2_; // given
+    agv2 agv2_a;
     agv1 agv1_; // the one closer to us
+    agv1 agv1_a;
 
     geometry_msgs::Pose getGantryPose()
     {

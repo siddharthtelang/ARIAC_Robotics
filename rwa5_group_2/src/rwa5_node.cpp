@@ -110,7 +110,6 @@ int main(int argc, char ** argv) {
         // }
         // ROS_INFO_STREAM("--------------");
         // ros::Duration(1).sleep();
-    }
 
     comp.endCompetition();
 

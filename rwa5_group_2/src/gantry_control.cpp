@@ -59,10 +59,20 @@ void GantryControl::init()
     agv2_.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     agv2_.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
 
+    // joint positions to go to agv2_a, for right arm
+    agv2_a.gantry = {-0.6, 6.9, PI};
+    agv2_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    agv2_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+
     // joint positions to go to agv1
     agv1_.gantry = {0.6, -6.9, PI};
     agv1_.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     agv1_.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+
+    // joint positions to go to agv1_a, for right arm
+    agv1_a.gantry = {-0.6, -6.9, PI};
+    agv1_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    agv1_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
 
     //--Raw pointers are frequently used to refer to the planning group for improved performance.
     //--To start, we will create a pointer that references the current robot’s state.
@@ -207,7 +217,20 @@ bool GantryControl::pickPart(part part, std::string arm)
     activateGripper(arm);
     geometry_msgs::Pose currentPose = temp_arm_group->getCurrentPose().pose;
 
-    part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - EPSILON;
+    // update the z if the part if flipped
+    double roll, pitch, yaw;
+    tf2::Quaternion q_current(
+        part.pose.orientation.x,
+        part.pose.orientation.y,
+        part.pose.orientation.z,
+        part.pose.orientation.w);
+    tf2::Matrix3x3 m(q_current);
+    m.getRPY(roll, pitch, yaw);
+    if (std::abs(roll) > 3.0 && part.type.find("pulley") == 0)
+        part.pose.position.z = part.pose.position.z + GRIPPER_HEIGHT - EPSILON;
+    else
+        part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - EPSILON;
+
     part.pose.orientation.x = currentPose.orientation.x;
     part.pose.orientation.y = currentPose.orientation.y;
     part.pose.orientation.z = currentPose.orientation.z;
@@ -235,7 +258,7 @@ bool GantryControl::pickPart(part part, std::string arm)
             //--Move arm to previous position
             temp_arm_group->setPoseTarget(currentPose);
             temp_arm_group->move();
-            // ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else! // Commented for speed Human Obstacles
+            //ros::Duration(0.5).sleep(); // try to get it to lift before doing anything else! // Commented for speed Human Obstacles
 
             // goToPresetLocation(start_); // having this line here is great, but does not work for shelf, since path is impeded
             // move this to main code, but maybe let's keep the delay below?
@@ -293,9 +316,20 @@ void GantryControl::placePart(part part, std::string agv, std::string arm)
     ros::Duration(.5).sleep();
 
     if (agv == "agv2")
-        goToPresetLocation(agv2_);
+    {
+        if (arm == "right_arm")
+            goToPresetLocation(agv2_a);
+        else
+            goToPresetLocation(agv2_);
+    }
     else if (agv == "agv1")
-        goToPresetLocation(agv1_);
+    {
+        if (arm == "right_arm")
+            goToPresetLocation(agv1_a);
+        else
+            goToPresetLocation(agv1_);
+    }
+
     target_pose_in_tray.position.z += (ABOVE_TARGET + 1.5 * model_height[part.type]);
 
     /* Start: Set the correct orientation */
@@ -359,12 +393,23 @@ void GantryControl::placePartAtCorrectPose(part part, std::string agv, std::stri
 
     auto target_pose_in_tray = getTargetWorldPose(part.pose, agv);
 
-    ros::Duration(2.0).sleep();
+    //ros::Duration(2.0).sleep();
 
     if (agv == "agv2")
-        goToPresetLocation(agv2_);
+    {
+        if (arm == "right_arm")
+            goToPresetLocation(agv2_a);
+        else
+            goToPresetLocation(agv2_);
+    }
     else if (agv == "agv1")
-        goToPresetLocation(agv1_);
+    {
+        if (arm == "right_arm")
+            goToPresetLocation(agv1_a);
+        else
+            goToPresetLocation(agv1_);
+    }
+
     target_pose_in_tray.position.z += (ABOVE_TARGET + 1.5 * model_height[part.type]);
 
     /* Start: Set the correct orientation */
@@ -376,6 +421,19 @@ void GantryControl::placePartAtCorrectPose(part part, std::string agv, std::stri
                                 part.initial_pose.orientation.y,
                                 part.initial_pose.orientation.z,
                                 part.initial_pose.orientation.w);
+
+    tf2::Matrix3x3 m(q_init_part);
+    tf2::Quaternion new_init_orientation;
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+    if (std::abs(roll) > 3.0)
+    {
+        roll = 0.0;
+        new_init_orientation.setRPY(roll, pitch, yaw);
+        new_init_orientation.normalize();
+        q_init_part = new_init_orientation;
+    }
+
     //set the final pose
     tf2::Quaternion q_final_part(target_pose_in_tray.orientation.x,
                                 target_pose_in_tray.orientation.y,
@@ -409,115 +467,21 @@ void GantryControl::placePartAtCorrectPose(part part, std::string agv, std::stri
     ROS_INFO("Place OK");
 }
 
-bool GantryControl::replaceFaultyPart(part part, std::string agv, std::string arm)
+bool GantryControl::replaceFaultyPart(part Part, std::string agv, std::string arm)
 {
-    moveit::planning_interface::MoveGroupInterface *temp_arm_group;
-    if (arm == "left_arm")
-        temp_arm_group = &left_arm_group_;
-    else if (arm == "right_arm")
-        temp_arm_group = &right_arm_group_;
-    else
+    auto target_pose_in_tray = getTargetWorldPose(Part.pose, agv);
+    part partToPick = Part;
+    partToPick.pose = target_pose_in_tray;
+    bool success = pickPart(partToPick, arm);
+    if (success)
     {
-        ROS_INFO_STREAM("Please select arm to use.");
-        throw 1;
+        ROS_INFO("Pick faulty part success, now proceed to throw");
+	goToPresetLocation(agv == "agv1" ? agv1_ : agv2_);
+        goToPresetLocation(start_);
+        ROS_INFO("Drop Part Now");
+        deactivateGripper(arm);
     }
-    activateGripper(arm);
-    geometry_msgs::Pose currentPose = temp_arm_group->getCurrentPose().pose;
-    auto target_pose_in_tray = getTargetWorldPose(part.pose, agv);
-    ros::Duration(2.0).sleep();
-    //--TODO: Consider agv1 too
-    /*    if (agv == "agv2")
-        goToPresetLocation(agv2_);
-    else if (agv == "agv1")
-        goToPresetLocation(agv1_);*/
-    //    target_pose_in_tray.position.z += (ABOVE_TARGET + 1.5 * model_height[part.type]);
-    target_pose_in_tray.position.z += model_height.at(part.type) + GRIPPER_HEIGHT - EPSILON;
-    target_pose_in_tray.orientation.x = currentPose.orientation.x;
-    target_pose_in_tray.orientation.y = currentPose.orientation.y;
-    target_pose_in_tray.orientation.z = currentPose.orientation.z;
-    target_pose_in_tray.orientation.w = currentPose.orientation.w;
-
-    temp_arm_group->setPoseTarget(target_pose_in_tray);
-    temp_arm_group->move();
-    activateGripper(arm);
-    auto state = getGripperState(arm);
-
-    //    auto state = getGripperState(arm);
-    if (state.enabled)
-    {
-        ROS_INFO_STREAM("[Gripper] = enabled");
-        //--Move arm to part
-        //        temp_arm_group->setPoseTarget(part.pose);
-        //        temp_arm_group->move();
-        //        auto state = getGripperState(arm);
-        if (state.attached)
-        {
-            ROS_INFO_STREAM("[Gripper] = object attached");
-            //--Move arm to previous position
-            //            currentPose.position.z =
-            temp_arm_group->setPoseTarget(currentPose);
-            temp_arm_group->move();
-            ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else!
-
-            if (agv == "agv2")
-                goToPresetLocation(agv2_);
-            else if (agv == "agv1")
-                goToPresetLocation(agv1_);
-
-            PresetLocation start_a;
-            start_a.gantry = {0, 0, 0};
-            start_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-            start_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-            goToPresetLocation(start_a);
-            ros::Duration(1.0).sleep(); // try to get it to actually go to start....
-            deactivateGripper(arm);
-            // goToPresetLocation(start_); // having this line here is great, but does not work for shelf, since path is impeded
-            // move this to main code, but maybe let's keep the delay below?
-            ros::Duration(1.0).sleep(); // try to get it to actually go to start....
-
-            return true;
-        }
-        else
-        {
-            ROS_INFO_STREAM("[Gripper] = object not attached");
-            int max_attempts{5};
-            int current_attempt{0};
-            //--try to pick up the part 5 times
-            while (current_attempt < max_attempts)
-            {
-                temp_arm_group->setPoseTarget(currentPose);
-                temp_arm_group->move();
-                ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
-                temp_arm_group->setPoseTarget(part.pose);
-                temp_arm_group->move();
-                ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
-                activateGripper(arm);
-                current_attempt++;
-            }
-            temp_arm_group->setPoseTarget(currentPose);
-            temp_arm_group->move();
-            ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else! upped to 1.0 from 0.5
-        }
-    }
-    else
-    {
-        ROS_INFO_STREAM("[Gripper] = not enabled");
-    }
-
-    // joint positions to go to start location
-    PresetLocation start_a;
-    start_a.gantry = {0, 0, 0};
-    start_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    start_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-
-    goToPresetLocation(start_a);
-    deactivateGripper(arm);
-    ros::Duration(1.0).sleep();
-    //    auto state = getGripperState(arm);
-    return false;
-    //    if (state.attached)
-    // ;// pass, don't necesarily go back to start in case of faulty part
-    //goToPresetLocation(start_);
+    return success;
 }
 
 ////////////////////////////
@@ -688,108 +652,54 @@ bool GantryControl::sendJointPosition(trajectory_msgs::JointTrajectory command_m
     }
 }
 
-
-bool GantryControl::flipPart(part part, std::string agv){
-    ROS_INFO("Entering flipPart method");
-//    pickPart(part,"left_arm");
-//    placePart(part, agv, "left_arm");
-
-//    moveit::planning_interface::MoveGroupInterface* temp_arm_group;
-
-    //--Activate gripper
-    activateGripper("left_arm");
-    geometry_msgs::Pose currentPose = left_arm_group_.getCurrentPose().pose;
-    geometry_msgs::Pose pickup_pose;
-
-    pickup_pose  = getTargetWorldPose(part.pose, agv);
-    pickup_pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - EPSILON;
-    pickup_pose.orientation.x = currentPose.orientation.x;
-    pickup_pose.orientation.y = currentPose.orientation.y;
-    pickup_pose.orientation.z = currentPose.orientation.z;
-    pickup_pose.orientation.w = currentPose.orientation.w;
-
-    auto state = getGripperState("left_arm");
-
-    if (state.enabled) {
-        ROS_INFO_STREAM("[Gripper] = enabled");
-        //--Move arm to part
-        bool success = left_arm_group_.setPoseTarget(pickup_pose);
-        left_arm_group_.move();
-        if (state.attached) {
-            ROS_INFO_STREAM("[Gripper] = object attached");
-            //--Move arm to previous position
-            left_arm_group_.setPoseTarget(currentPose);
-            left_arm_group_.move();
-            ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else!
-
-            if (agv == "agv2")
-                goToPresetLocation(agv2_);
-            else if (agv == "agv1")
-                goToPresetLocation(agv1_);
-            PresetLocation pose_change_1_agv1, pose_change_2_agv1, pose_change_1_agv2, pose_change_2_agv2;
-            pose_change_1_agv1.gantry = { 0.0, -6.9, PI };
-            pose_change_1_agv1.left_arm = { PI / 4, -0.2, 1.3, 0.5, PI / 2, 0.00 };
-            pose_change_1_agv1.right_arm = { -PI / 4, -3, -PI / 2, -0.1, PI / 2, -0.79 };
-
-            // switching waypoint
-            pose_change_2_agv1.gantry = { 0.0, -6.9, PI };
-            pose_change_2_agv1.left_arm = { 0.77, -0.2, 1.3, 0.49, 1.59, 0.00 };
-            pose_change_2_agv1.right_arm =
-                    { -PI / 4, -3.2, -1.5, -0.02, PI / 2, -PI / 4 };
-
-            // pose change waypoint
-            pose_change_1_agv2.gantry = { 0.0, 5, PI };
-            pose_change_1_agv2.left_arm = { PI / 4, -0.2, 1.3, 0.5, PI / 2, 0.00 };
-            pose_change_1_agv2.right_arm = { -PI / 4, -3, -PI / 2, -0.1, PI / 2, -0.79 };
-
-            // switching waypoint
-            pose_change_2_agv2.gantry = { 0.0, 5, PI };
-            pose_change_2_agv2.left_arm = { 0.77, -0.2, 1.3, 0.49, 1.59, 0.00 };
-            pose_change_2_agv2.right_arm =
-                    { -PI / 4, -3.2, -1.5, -0.02, PI / 2, -PI / 4 };
-
-            // set the arms target pose
-            geometry_msgs::Pose target_pose = getTargetWorldPose(part.pose, agv);
-            activateGripper("right_arm");
-            if (agv == "agv1") {
-                goToPresetLocation(pose_change_1_agv1);
-                goToPresetLocation(pose_change_2_agv1);
-            }
-            else {
-                ROS_INFO("Pose Change 1");
-                goToPresetLocation(pose_change_1_agv2);
-                ROS_INFO("Pose Change 2");
-                goToPresetLocation(pose_change_2_agv2);
-            }
-            deactivateGripper("left_arm");
-            ros::Duration(2).sleep();
-            auto state = getGripperState("right_arm");
-            while (!state.attached) {
-                state = getGripperState("right_arm");
-                ROS_DEBUG_STREAM_THROTTLE(1,
-                                          "Tring to activate right gripper " << state.attached << " " << state.enabled);
-            }
-            deactivateGripper("left_arm");
-            // goToPresetLocation(flipped_pulley_preset);
-//            goToPresetLocation(start_);
-            auto target_pose_in_tray = getTargetWorldPose(part.pose, agv);
-
-            ros::Duration(2.0).sleep();
-            //--TODO: Consider agv1 too
-            if (agv == "agv2")
-                goToPresetLocation(agv2_);
-            else if (agv == "agv1")
-                goToPresetLocation(agv1_);
-            target_pose_in_tray.position.z += (ABOVE_TARGET + 1.5 * model_height[part.type]);
-
-            right_arm_group_.setPoseTarget(target_pose_in_tray);
-            right_arm_group_.move();
-
-            deactivateGripper("right_arm");
-//            auto stathttps://github.com/AmanVirmani/ARIAC_Roboticse = getGripperState("right_arm");
-            return true;
-        }
+bool GantryControl::flipPart(part part, std::string agv)
+{
+    ROS_INFO("now proceed to flip");
+    if (agv == "agv2")
+        goToPresetLocation(agv2_);
+    else if (agv == "agv1")
+        goToPresetLocation(agv1_);
+    PresetLocation pose_change_1_agv1, pose_change_2_agv1, pose_change_1_agv2, pose_change_2_agv2;
+    pose_change_1_agv1.gantry = { 0.0, -6.9, PI };
+    pose_change_1_agv1.left_arm = { PI / 4, -0.2, 1.3, 0.5, PI / 2, 0.00 };
+    pose_change_1_agv1.right_arm = { -PI / 4, -3, -PI / 2, -0.1, PI / 2, -0.79 };
+    // switching waypoint
+    pose_change_2_agv1.gantry = { 0.0, -6.9, PI };
+    pose_change_2_agv1.left_arm = { 0.77, -0.2, 1.3, 0.49, 1.59, 0.00 };
+    pose_change_2_agv1.right_arm = { -PI / 4, -3.2, -1.5, -0.02, PI / 2, -PI / 4 };
+    // pose change waypoint
+    pose_change_1_agv2.gantry = { 0.0, 5, PI };
+    pose_change_1_agv2.left_arm = { PI / 4, -0.2, 1.3, 0.5, PI / 2, 0.00 };
+    pose_change_1_agv2.right_arm = { -PI / 4, -3, -PI / 2, -0.1, PI / 2, -0.79 };
+    // switching waypoint
+    pose_change_2_agv2.gantry = { 0.0, 5, PI };
+    pose_change_2_agv2.left_arm = { 0.77, -0.2, 1.3, 0.49, 1.59, 0.00 };
+    pose_change_2_agv2.right_arm = { -PI / 4, -3.2, -1.5, -0.02, PI / 2, -PI / 4 };
+    // set the arms target pose
+    //geometry_msgs::Pose target_pose = getTargetWorldPose(part.pose, agv);
+    if (agv == "agv1") {
+        goToPresetLocation(pose_change_1_agv1);
+        goToPresetLocation(pose_change_2_agv1);
     }
+    else {
+        ROS_INFO("Pose Change 1");
+        goToPresetLocation(pose_change_1_agv2);
+        ROS_INFO("Pose Change 2");
+        goToPresetLocation(pose_change_2_agv2);
+    }
+    activateGripper("right_arm");
+    auto state = getGripperState("right_arm");
 
-    ROS_INFO("Exiting flipPart method");
+    int max_attempts{10};
+    int current_attempt{0};
+    while (!state.attached && current_attempt < max_attempts)
+    {
+        ROS_INFO("Tring to activate right gripper");
+        activateGripper("right_arm");
+        state = getGripperState("right_arm");
+        ros::Duration(0.5).sleep();
+        current_attempt++;
+    }
+    ros::Duration(0.5).sleep();
+    deactivateGripper("left_arm");
 }
