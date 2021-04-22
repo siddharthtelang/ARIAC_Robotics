@@ -45,24 +45,88 @@ private:
     /* ===================== Preset Locations ===================== */
     PresetLocation conveyor_belt;
     PresetLocation start_a;
+
     PresetLocation bin3_a; // for bin3 (and all 8 bins in that entire grouping)
-    PresetLocation bingreen_a;
-    PresetLocation binblue_a;
-    PresetLocation agv2_a;
-    PresetLocation agv1_staging_a;
-    PresetLocation bottom_left_staging_a;
-    PresetLocation shelf5_a;
-    PresetLocation shelf5_spun_a;
-
-    PresetLocation mid_5_8_staging_a;
-    PresetLocation mid_8_11_staging_a;
-
-    PresetLocation shelf8_a;
-    PresetLocation shelf11_a;
-
     PresetLocation bin11_a; // for bin11 (and all 8 bins in that entire grouping)
 
+    // PresetLocation bingreen_a;
+    // PresetLocation binblue_a;
+    // PresetLocation agv2_a;
+    // PresetLocation agv1_staging_a;
+    // PresetLocation bottom_left_staging_a;
+    // PresetLocation shelf5_a;
+    // PresetLocation shelf5_spun_a;
+
+    // PresetLocation mid_5_8_staging_a;
+    // PresetLocation mid_8_11_staging_a;
+
+    // PresetLocation shelf8_a;
+    // PresetLocation shelf11_a;
+
+    PresetLocation shelf11_south_far; // rename this to general far pick
+
+    ///////////// Shelf Preset Locations: arranged in rows from Northernmost (world +y direction) row to Southernmost (world -y direction) row,
+    ////////////                          each row is arranged from left (-x) to right (+x). This section is for the shelves only.
+
+    PresetLocation bottom_left_staging_a;
+    PresetLocation waitpoint_best_north_fromNorth;
+    PresetLocation waitpoint_best_north_fromSouth;
+    PresetLocation agv1_staging_a;
+
+    PresetLocation shelf5_a; // rename this to general near pick
+    PresetLocation shelf5_fromNorth_near;
+    PresetLocation shelf5_fromNorth_far;
+
+    //////////// Row 3
+    PresetLocation shelf8_a;
+    PresetLocation shelf5_fromSouth_near;
+    PresetLocation shelf5_fromSouth_far;
+    PresetLocation shelf8_fromNorth_near;
+    PresetLocation shelf8_fromNorth_far;
+    PresetLocation mid_5_8_intersection_fromNorth;
+    PresetLocation mid_5_8_intersection_fromSouth;
+    PresetLocation mid_5_8_staging_a;
+    PresetLocation mid_5_8_staging_fromNorth;
+    PresetLocation mid_5_8_staging_fromSouth;
+
+    //////////// Row 4
+    PresetLocation shelf11_a;
+
+    PresetLocation shelf8_fromSouth_near;
+    PresetLocation shelf8_fromSouth_far;
+    PresetLocation shelf11_fromNorth_near;
+    PresetLocation shelf11_fromNorth_far;
+
+    PresetLocation mid_8_11_intersection_fromNorth;
+    PresetLocation mid_8_11_intersection_fromSouth;
+
+    PresetLocation mid_8_11_staging_a;
+
+    PresetLocation mid_8_11_staging_fromNorth;
+    PresetLocation mid_8_11_staging_fromSouth;
+
+    //////////// Row 5
+    PresetLocation shelf11_fromSouth_near;
+    PresetLocation shelf11_fromSouth_far;
+
+    //////////// Row 6
+    PresetLocation southwest_corner_staging;
+
+    PresetLocation waitpoint_best_south_fromNorth;
+    PresetLocation waitpoint_best_south_fromSouth;
+
+    PresetLocation agv2_a;
+
+    //////////// End Shelf Preset Locations
+
+
+
+
+
+
+
     std::vector<PresetLocation> preset_locations_list_; // lookup list to compare distances with
+    std::vector<std::string> wait_preset_locations_list_;
 
     /* ===================== Conveyor Variables ===================== */
     const float dx_ = 6.6;
@@ -78,6 +142,8 @@ private:
     int prev_num_orders_{0};
 
     std::map<int, PresetLocation> cam_to_presetlocation;
+    std::map<int, std::string> cam_to_shelf_string;
+    std::map<int, double> cam_to_y_coordinate;
     std::map<std::string, int> agv_to_camera;
     bool competition_started_{false};
 
@@ -141,6 +207,14 @@ public:
      */
     bool competition_over();
 
+    bool detectGaps();
+
+    // build regionDictionary, which maps regions which indicate shelf and upper/lower, to a preset location string and wait/nowait string.
+    void InitRegionDictionaryDependingOnSituation();
+
+    // regionDictionary, key is string indicating shelf and upper/lower, value is vector of strings, ie. ["shelf5_fromsouth_near", "nowait"]
+    std::unordered_map<std::string, std::vector<std::string> > regionDictionary;
+
 
     struct distance_and_PresetLocation_struct
     {
@@ -157,12 +231,19 @@ public:
 
 
     std::unordered_map<std::vector<std::string>, std::vector<PresetLocation>, container_hash<std::vector<std::string>> > PathingLookupDictionary;
+    std::unordered_map<std::vector<std::string>, std::vector<PresetLocation>, container_hash<std::vector<std::string>> > WaitPathingLookupDictionary;
 
     double calcDistanceInXYPlane(geometry_msgs::Pose a, geometry_msgs::Pose b);
+    double calcDistanceInXYTorso(PresetLocation pLocation, std::vector<double> joint_positions);
     PresetLocation getNearesetPresetLocation();
     std::vector<PresetLocation> getPresetLocationVector(PresetLocation target_preset_location);
+    std::vector<PresetLocation> getPresetLocationVectorUsingString(std::string target_preset_location_string, std::string wait_string);
     bool executeVectorOfPresetLocations( std::vector<PresetLocation> path_to_execute );
+    bool executeVectorOfPresetLocationsWithWait( std::vector<PresetLocation> path_to_execute );
     geometry_msgs::Pose gantryXY2worldposeXY(PresetLocation preset_location_2_convert);
+    // preset locations from start to safe location for three shelf rows starting from agv1 side
+    std::array<std::vector<PresetLocation>,3> shelf_preset_locations;
+    std::array<std::string, 3> gaps; //either "gap_conveyor" or "gap_end"
 
     PresetLocation getNearestBinPresetLocation();
 
@@ -173,6 +254,28 @@ public:
     bool simpleDropPart() {
         gantry_->deactivateGripper("left_arm");
         return true;
+    }
+
+    std::string isPartInUpperOrLowerRegionOfWhichShelf(part my_part, int discovered_cam_idx) {
+        std::string shelf_string = cam_to_shelf_string[discovered_cam_idx]; // ie. "shelf5"
+
+        double product_y_coord = my_part.pose.position.y;
+        double camera_y_coord = cam_to_y_coordinate[discovered_cam_idx];
+
+        ROS_INFO_STREAM("product_y_coord === " << product_y_coord << " and camera_y_coord === " << camera_y_coord);
+
+        std::string upper_or_lower_string = "upper"; // initialize as upper
+        if (product_y_coord >= camera_y_coord) {
+            ROS_INFO_STREAM("Part is Above (upper) to camera");
+
+            upper_or_lower_string = "upper";
+        }
+        else {
+            upper_or_lower_string = "lower";
+            ROS_INFO_STREAM("Part is Below (lower) to camera");
+        }
+        ROS_INFO_STREAM("Output isPartInUpperOrLowerRegionOfWhichShelf String === " << shelf_string + upper_or_lower_string);
+        return shelf_string + upper_or_lower_string; // ie. "shelf5" + "upper" = "shelf5upper"
     }
 
     /* ===================== Human Obstacle Variables ===================== */

@@ -73,15 +73,31 @@ int main(int argc, char ** argv) {
     CameraListener cam_listener(node);
     AGVControl agv_control(node);
     RWAImplementation rwa(node, cam_listener, gantry, comp, agv_control);
+
+    bool gaps_found = false;
+
+    if (!gaps_found) // this if block needs to be before rwa.InitRegionDictionaryDependingOnSituation() call
+    {
+        gaps_found = rwa.detectGaps();
+    }
+
+    rwa.InitRegionDictionaryDependingOnSituation(); // Initialize region (shelf + upper or lower) dictionary depending on situation.
     
     while(ros::ok()) {
         ROS_INFO_STREAM("Starting while loop...");
+
         rwa.processOrder();
         if (rwa.checkConveyor()) continue;       
         rwa.buildKit();
         rwa.checkAgvErrors();
         ros::Duration(0.5).sleep();
         if (rwa.competition_over()) break;
+        // ROS_INFO_STREAM("----------------------------");
+        // ROS_INFO_STREAM("left lane: " << rwa.left_lane.queryPair());
+        // ROS_INFO_STREAM("mid left lane: " << rwa.mid_left_lane.queryPair());
+        // ROS_INFO_STREAM("mid right lane: " << rwa.mid_right_lane.queryPair());
+        // ROS_INFO_STREAM("right lane: " << rwa.right_lane.queryPair());
+    }
 
         // auto dirs = rwa.lane_handler.queryLanes();
         // ROS_INFO_STREAM("--------------");

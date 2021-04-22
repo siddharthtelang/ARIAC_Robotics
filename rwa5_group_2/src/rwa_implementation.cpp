@@ -1,6 +1,9 @@
 #include "rwa_implementation.h"
 #include <unordered_map>
 
+#include <algorithm>
+
+
 #define GET_VARIABLE_NAME(Variable) (#Variable)
 
 void RWAImplementation::processOrder()
@@ -219,22 +222,41 @@ void RWAImplementation::initPresetLocs()
     bin3_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     bin3_a.name = GET_VARIABLE_NAME(bin3_a);
 
-    // joint positions to go to bingreen
-    bingreen_a.gantry = {4.0, -1.1, 0.};
-    bingreen_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    bingreen_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    bingreen_a.name = GET_VARIABLE_NAME(bingreen_a);
 
-    // joint positions to go to binblue
-    binblue_a.gantry = {2.96, -1.1, 0.};
-    binblue_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    binblue_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    binblue_a.name = GET_VARIABLE_NAME(binblue_a);
-    // joint positions to go to agv2
-    agv2_a.gantry = {0.6, 6.9, PI};
-    agv2_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    agv2_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    agv2_a.name = GET_VARIABLE_NAME(agv2_a);
+    // joint positions to go to bin11 (and all 8 bins in the entire grouping)
+    bin11_a.gantry = {4.0, -1.1, 0.}; // the exact same as bin311_a
+    bin11_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    bin11_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    bin11_a.name = GET_VARIABLE_NAME(bin11_a);
+
+
+
+    // rename this to general far pick
+    shelf11_south_far.gantry = {-13.52-0.172656, 1.96, -PI/2}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT
+    shelf11_south_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf11_south_far.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf11_south_far.name = GET_VARIABLE_NAME(shelf11_south_far);
+
+
+
+    ///////////// Shelf Preset Locations: arranged in rows from Northernmost (world +y direction) row to Southernmost (world -y direction) row,
+    ////////////                          each row is arranged from left (-x) to right (+x). This section is for the shelves only.
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////// Row 1
+    bottom_left_staging_a.gantry = {-14.22, -6.75, 0.00};
+    bottom_left_staging_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    bottom_left_staging_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same except for joint 0
+    bottom_left_staging_a.name = GET_VARIABLE_NAME(bottom_left_staging_a);
+
+    waitpoint_best_north_fromNorth.gantry = {-11.4, -6.9, 0.88}; // waitpoint_best_north_fromNorth
+    waitpoint_best_north_fromNorth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    waitpoint_best_north_fromNorth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    waitpoint_best_north_fromNorth.name = GET_VARIABLE_NAME(waitpoint_best_north_fromNorth);
+
+    waitpoint_best_north_fromSouth.gantry = {-11.4, -6.9, 0.88-PI}; // waitpoint_best_north_fromSouth
+    waitpoint_best_north_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    waitpoint_best_north_fromSouth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    waitpoint_best_north_fromSouth.name = GET_VARIABLE_NAME(waitpoint_best_north_fromSouth);
 
     // joint positions to go to agv1
     agv1_staging_a.gantry = {0.6, -6.9, 0.00};
@@ -242,53 +264,201 @@ void RWAImplementation::initPresetLocs()
     agv1_staging_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same except for joint 0
     agv1_staging_a.name = GET_VARIABLE_NAME(agv1_staging_a);
 
-    bottom_left_staging_a.gantry = {-14.22, -6.75, 0.00};
-    bottom_left_staging_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
-    bottom_left_staging_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same except for joint 0
-    bottom_left_staging_a.name = GET_VARIABLE_NAME(bottom_left_staging_a);
 
-    // shelf5_a.gantry = {-14.22, -4.15, 0.00};
-    shelf5_a.gantry = {-14.42, -4.30, 0.00}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT
-    // shelf5_a.gantry = {-14.72, -4.30, 0.00};
-    // shelf5_a.gantry = {-14.42 - .897919, -4.30 - .853737, 0.00};
-    // shelf5_a.gantry = {-15.42, -4.30, 0.00}; // WORKS FOR RIGHT SHELF PULLEY
-    // shelf5_a.left_arm = {-PI/2, -1.01, 1.88, -1.13, 0.00, 0.00}; // higher up
-    // shelf5_a.left_arm = {-1.64, -0.99, 1.84, -.85, -.08, -.26};
-    shelf5_a.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, 0.0};     // try fix
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////// Row 2
+    shelf5_a.gantry = {-14.42, -4.30, 0.00}; // todo why is this -14.42 instead of -14.22
+    shelf5_a.left_arm = {-1.76, -1.00, 1.86, -.85, -.20, 0.0};
     shelf5_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
     shelf5_a.name = GET_VARIABLE_NAME(shelf5_a);
 
-    shelf5_spun_a.gantry = {-15.42, -4.30, 3.14};
-    shelf5_spun_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
-    shelf5_spun_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
-    shelf5_spun_a.name = GET_VARIABLE_NAME(shelf5_spun_a);
+    shelf5_fromNorth_near.gantry = {-14.22, -4.30, 0.88}; // shelf5_fromNorth_near
+    shelf5_fromNorth_near.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    shelf5_fromNorth_near.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf5_fromNorth_near.name = GET_VARIABLE_NAME(shelf5_fromNorth_near);
+
+
+    shelf5_fromNorth_far.gantry = {-13.52-0.172656, -4.30, -PI/2}; // shelf5_fromNorth_far
+    shelf5_fromNorth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf5_fromNorth_far.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf5_fromNorth_far.name = GET_VARIABLE_NAME(shelf5_fromNorth_far);
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////// Row 3
+    shelf8_a.gantry = {-14.22, -1.5, 0.00};
+    shelf8_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    shelf8_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    shelf8_a.name = GET_VARIABLE_NAME(shelf8_a);
+
+
+    shelf5_fromSouth_near.gantry = {-14.22, -1.5, 0.88-PI}; // shelf5_fromSouth_near
+    shelf5_fromSouth_near.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    shelf5_fromSouth_near.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf5_fromSouth_near.name = GET_VARIABLE_NAME(shelf5_fromSouth_near);
+
+
+    shelf5_fromSouth_far.gantry = {-13.52-0.172656, -1.5, -PI/2}; // shelf5_fromSouth_far
+    shelf5_fromSouth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf5_fromSouth_far.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf5_fromSouth_far.name = GET_VARIABLE_NAME(shelf5_fromSouth_far);
+
+
+    shelf8_fromNorth_near.gantry = {-14.22, -1.5, 0.88}; // shelf8_fromNorth_near
+    shelf8_fromNorth_near.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    shelf8_fromNorth_near.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf8_fromNorth_near.name = GET_VARIABLE_NAME(shelf8_fromNorth_near);
+
+
+    shelf8_fromNorth_far.gantry = {-13.52-0.172656, -1.5, -PI/2}; // shelf8_fromNorth_far
+    shelf8_fromNorth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf8_fromNorth_far.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf8_fromNorth_far.name = GET_VARIABLE_NAME(shelf8_fromNorth_far);
+
+
+
+    mid_5_8_intersection_fromNorth.gantry = {-11.4, -1.5, 0.88}; // Intersection!
+    mid_5_8_intersection_fromNorth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_5_8_intersection_fromNorth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    mid_5_8_intersection_fromNorth.name = GET_VARIABLE_NAME(mid_5_8_intersection_fromNorth);
+
+    mid_5_8_intersection_fromSouth.gantry = {-11.4, -1.5, 0.88-PI}; // mid_5_8_intersection_fromSouth
+    mid_5_8_intersection_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_5_8_intersection_fromSouth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    mid_5_8_intersection_fromSouth.name = GET_VARIABLE_NAME(mid_5_8_intersection_fromSouth);
 
     mid_5_8_staging_a.gantry = {0.0, -1.5, 0.00};
     mid_5_8_staging_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_5_8_staging_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     mid_5_8_staging_a.name = GET_VARIABLE_NAME(mid_5_8_staging_a);
 
-    mid_8_11_staging_a.gantry = {0.0, 1.5, 0.00};
-    mid_8_11_staging_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
-    mid_8_11_staging_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
-    mid_8_11_staging_a.name = GET_VARIABLE_NAME(mid_8_11_staging_a);
 
-    shelf8_a.gantry = {-14.22, -1.5, 0.00};
-    shelf8_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
-    shelf8_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
-    shelf8_a.name = GET_VARIABLE_NAME(shelf8_a);
+    mid_5_8_staging_fromNorth.gantry = {0.0, -1.5, 0.88}; // mid_5_8_staging_fromNorth
+    mid_5_8_staging_fromNorth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_5_8_staging_fromNorth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    mid_5_8_staging_fromNorth.name = GET_VARIABLE_NAME(mid_5_8_staging_fromNorth);
 
+    mid_5_8_staging_fromSouth.gantry = {0.0, -1.5, 0.88-PI}; // mid_5_8_staging_fromSouth
+    mid_5_8_staging_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_5_8_staging_fromSouth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    mid_5_8_staging_fromSouth.name = GET_VARIABLE_NAME(mid_5_8_staging_fromSouth);
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////// Row 4
     shelf11_a.gantry = {-14.22, 1.5, 0.00};
     shelf11_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
     shelf11_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
     shelf11_a.name = GET_VARIABLE_NAME(shelf11_a);
 
-    // joint positions to go to bin11 (and all 8 bins in the entire grouping)
-    // bin11_a.gantry = {4.0, 1.1, PI};
-    bin11_a.gantry = {4.0, -1.1, 0.}; // the exact same as bin311_a
-    bin11_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    bin11_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    bin11_a.name = GET_VARIABLE_NAME(bin11_a);
+    shelf8_fromSouth_near.gantry = {-14.22, 1.5, 0.88-PI}; // shelf8_fromSouth_near
+    shelf8_fromSouth_near.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    shelf8_fromSouth_near.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf8_fromSouth_near.name = GET_VARIABLE_NAME(shelf8_fromSouth_near);
+
+    shelf8_fromSouth_far.gantry = {-13.52-0.172656, 1.5, PI/2}; // shelf8_fromSouth_far
+    shelf8_fromSouth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf8_fromSouth_far.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf8_fromSouth_far.name = GET_VARIABLE_NAME(shelf8_fromSouth_far);
+
+    shelf11_fromNorth_near.gantry = {-14.22, 1.5, 0.88}; // shelf11_fromNorth_near
+    shelf11_fromNorth_near.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    shelf11_fromNorth_near.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf11_fromNorth_near.name = GET_VARIABLE_NAME(shelf11_fromNorth_near);
+
+    shelf11_fromNorth_far.gantry = {-13.52-0.172656, 1.5, -PI/2}; // shelf11_fromNorth_far
+    shelf11_fromNorth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf11_fromNorth_far.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf11_fromNorth_far.name = GET_VARIABLE_NAME(shelf11_fromNorth_far);
+
+
+    mid_8_11_intersection_fromNorth.gantry = {-11.4, 1.5, 0.88}; // mid_8_11_intersection_fromNorth
+    mid_8_11_intersection_fromNorth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_8_11_intersection_fromNorth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    mid_8_11_intersection_fromNorth.name = GET_VARIABLE_NAME(mid_8_11_intersection_fromNorth);
+
+    mid_8_11_intersection_fromSouth.gantry = {-11.4, 1.5, 0.88-PI}; // mid_8_11_intersection_fromSouth
+    mid_8_11_intersection_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_8_11_intersection_fromSouth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    mid_8_11_intersection_fromSouth.name = GET_VARIABLE_NAME(mid_8_11_intersection_fromSouth);
+
+    mid_8_11_staging_a.gantry = {0.0, 1.5, 0.00};
+    mid_8_11_staging_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    mid_8_11_staging_a.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    mid_8_11_staging_a.name = GET_VARIABLE_NAME(mid_8_11_staging_a);
+
+
+    mid_8_11_staging_fromNorth.gantry = {0.0, 1.5, 0.88}; // mid_8_11_staging_fromNorth
+    mid_8_11_staging_fromNorth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_8_11_staging_fromNorth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    mid_8_11_staging_fromNorth.name = GET_VARIABLE_NAME(mid_8_11_staging_fromNorth);
+
+    mid_8_11_staging_fromSouth.gantry = {0.0, 1.5, 0.88-PI}; // mid_8_11_staging_fromSouth
+    mid_8_11_staging_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_8_11_staging_fromSouth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    mid_8_11_staging_fromSouth.name = GET_VARIABLE_NAME(mid_8_11_staging_fromSouth);
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////// Row 5
+
+    shelf11_fromSouth_near.gantry = {-14.22, 4.30, 0.88-PI}; // shelf11_fromSouth_near
+    shelf11_fromSouth_near.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    shelf11_fromSouth_near.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf11_fromSouth_near.name = GET_VARIABLE_NAME(shelf11_fromSouth_near);
+
+    shelf11_fromSouth_far.gantry = {-13.52-0.172656, 4.30, -PI/2}; // shelf11_fromSouth_far
+    shelf11_fromSouth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf11_fromSouth_far.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf11_fromSouth_far.name = GET_VARIABLE_NAME(shelf11_fromSouth_far);
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////// Row 6
+
+    southwest_corner_staging.gantry = {-14.22, 6.9, PI}; // southwest_corner_staging
+    southwest_corner_staging.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    southwest_corner_staging.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
+    southwest_corner_staging.name = GET_VARIABLE_NAME(southwest_corner_staging);
+
+
+    waitpoint_best_south_fromNorth.gantry = {-11.4, 6.9, 0.88}; // waitpoint_best_south_fromNorth
+    waitpoint_best_south_fromNorth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    waitpoint_best_south_fromNorth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    waitpoint_best_south_fromNorth.name = GET_VARIABLE_NAME(waitpoint_best_south_fromNorth);
+
+    waitpoint_best_south_fromSouth.gantry = {-11.4, 6.9, 0.88-PI}; // waitpoint_best_south_fromSouth
+    waitpoint_best_south_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    waitpoint_best_south_fromSouth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    waitpoint_best_south_fromSouth.name = GET_VARIABLE_NAME(waitpoint_best_south_fromSouth);
+
+    // joint positions to go to agv2
+    agv2_a.gantry = {0.6, 6.9, PI};
+    agv2_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    agv2_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    agv2_a.name = GET_VARIABLE_NAME(agv2_a);
+
+    //////////// End Shelf Preset Locations
+    ////////////
+    
+
+    cam_to_y_coordinate = {
+        {0, 1.750927},
+        {7, 1.698910},
+        {9, 3.006604},
+        {12, 3.006604},
+
+        {6, 0.000000},
+        {16, 0.000000},
+
+        {8, -3.024268},
+        {11, -3.024268},
+
+        {1, -1.794935},
+        {2, -1.806997},
+
+        {3, 6.582773},
+        {4, -7.175601},
+        {5, 4.2},
+        {10, -3.024268},
+        {13, 3.78},
+        {14, -3.024268},
+        {15, 3.78},
+        {16, 0.000000},
+    };
+
+
 
     cam_to_presetlocation = {
         {0, bin3_a},
@@ -306,6 +476,19 @@ void RWAImplementation::initPresetLocs()
         {2, bin11_a},
     };
 
+    cam_to_shelf_string = {
+        // {0, "bin3_a"},
+        // {7, "bin3_a"},
+        {9, "shelf5"},
+        {12, "shelf5"},
+        {6, "shelf8"},
+        {16, "shelf8"},
+        {8, "shelf11"},
+        {11, "shelf11"},
+        // {1, "bin11_a"},
+        // {2, "bin11_a"},
+    };
+
     agv_to_camera = {
         {"agv1", 3},
         {"agv2", 4}};
@@ -313,7 +496,9 @@ void RWAImplementation::initPresetLocs()
     // vector of some of the locations, when gantry moves anywhere, it first searches through these possible locations,
     // and tries to find the closest one to it. That approximate location then serves as the beginning location for any move lookup.
     preset_locations_list_ = {start_a, bin3_a, agv2_a, agv1_staging_a,
-                              bottom_left_staging_a, shelf8_a, shelf11_a, bin11_a, shelf5_a}; // do not have mid_xyz anything here for now
+                              bottom_left_staging_a, shelf8_a, shelf11_a, bin11_a, shelf5_a, shelf8_fromSouth_far}; // do not have mid_xyz anything here for now
+
+    wait_preset_locations_list_ = {waitpoint_best_south_fromSouth.name, waitpoint_best_south_fromNorth.name, waitpoint_best_north_fromSouth.name, waitpoint_best_north_fromNorth.name};
 
     PathingLookupDictionary = {
         {{"start_a", "bin3_a"}, std::vector<PresetLocation>{start_a, bin3_a}},
@@ -352,7 +537,137 @@ void RWAImplementation::initPresetLocs()
         {{"bin3_a", "bin11_a"}, std::vector<PresetLocation>{bin3_a, bin11_a}},
         {{"bin3_a", "bin3_a"}, std::vector<PresetLocation>{bin3_a, bin3_a}},
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////// Row by row, left to right
+        {{"start_a", "waitpoint_best_north_fromNorth"}, std::vector<PresetLocation>{start_a, agv1_staging_a, waitpoint_best_north_fromNorth}},
+        {{"start_a", "waitpoint_best_north_fromSouth"}, std::vector<PresetLocation>{start_a, agv1_staging_a, waitpoint_best_north_fromSouth}},
+
+        {{"start_a", "shelf5_fromNorth_near"}, std::vector<PresetLocation>{start_a, agv1_staging_a, bottom_left_staging_a, shelf5_fromNorth_near}},
+        {{"start_a", "shelf5_fromNorth_far"}, std::vector<PresetLocation>{start_a, agv1_staging_a, bottom_left_staging_a, shelf5_fromNorth_far}},
+
+        {{"start_a", "shelf5_fromSouth_near"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromSouth, shelf5_fromSouth_near}},
+        {{"start_a", "shelf5_fromSouth_far"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromSouth, shelf5_fromSouth_near, shelf5_fromSouth_far}},
+        {{"start_a", "shelf8_fromNorth_near"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromNorth, shelf8_fromNorth_near}},
+        {{"start_a", "shelf8_fromNorth_far"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromNorth, shelf8_fromNorth_near, shelf8_fromNorth_far}},
+        // {{"start_a", "mid_5_8_intersection_fromNorth"}, std::vector<PresetLocation>{start_a, 222, mid_5_8_intersection_fromNorth}},
+        // {{"start_a", "mid_5_8_intersection_fromSouth"}, std::vector<PresetLocation>{start_a, 222, mid_5_8_intersection_fromSouth}},
+
+        {{"start_a", "mid_5_8_staging_fromNorth"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromNorth}},
+        {{"start_a", "mid_5_8_staging_fromSouth"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_fromSouth}},
+
+        {{"start_a", "shelf8_fromSouth_near"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromSouth, shelf8_fromSouth_near}},
+        {{"start_a", "shelf8_fromSouth_far"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromSouth, shelf8_fromSouth_near, shelf8_fromSouth_far}},
+        {{"start_a", "shelf11_fromNorth_near"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromNorth, shelf11_fromNorth_near}},
+        {{"start_a", "shelf11_fromNorth_far"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromNorth, shelf11_fromNorth_near, shelf11_fromNorth_far}},
+        // {{"start_a", "mid_8_11_intersection_fromNorth"}, std::vector<PresetLocation>{start_a, 222, mid_8_11_intersection_fromNorth}},
+        // {{"start_a", "mid_8_11_intersection_fromSouth"}, std::vector<PresetLocation>{start_a, 222, mid_8_11_intersection_fromSouth}},
+        {{"start_a", "mid_8_11_staging_fromNorth"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromNorth}},
+        {{"start_a", "mid_8_11_staging_fromSouth"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_fromSouth}},
+
+        {{"start_a", "shelf11_fromSouth_near"}, std::vector<PresetLocation>{start_a, agv2_a, southwest_corner_staging, shelf11_fromSouth_near}},
+        {{"start_a", "shelf11_fromSouth_far"}, std::vector<PresetLocation>{start_a, agv2_a, southwest_corner_staging, shelf11_fromSouth_far}},
+        
+        {{"start_a", "southwest_corner_staging"}, std::vector<PresetLocation>{start_a, agv2_a, southwest_corner_staging}},
+        {{"start_a", "waitpoint_best_south_fromNorth"}, std::vector<PresetLocation>{start_a, agv2_a, waitpoint_best_south_fromNorth}},
+        {{"start_a", "waitpoint_best_south_fromSouth"}, std::vector<PresetLocation>{start_a, agv2_a, waitpoint_best_south_fromSouth}},
+
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////// Row by row, left to right REVERSED
+        {{"shelf8_fromSouth_far", "start_a"}, std::vector<PresetLocation>{shelf8_fromSouth_far, shelf8_fromSouth_near, mid_8_11_intersection_fromSouth, waitpoint_best_south_fromSouth, agv2_a, start_a}},
+
     };
+
+    WaitPathingLookupDictionary = {
+        {{"start_a", "shelf8_fromSouth_far"}, std::vector<PresetLocation>{start_a, agv2_a, waitpoint_best_south_fromSouth, mid_8_11_intersection_fromSouth, shelf8_fromSouth_near, shelf8_fromSouth_far}},
+        {{"shelf8_fromSouth_far", "start_a"}, std::vector<PresetLocation>{shelf8_fromSouth_far, shelf8_fromSouth_near, mid_8_11_intersection_fromSouth, waitpoint_best_south_fromSouth, agv2_a, start_a}},
+
+
+        {{"agv1_staging_a", "shelf8_fromSouth_far"}, std::vector<PresetLocation>{agv1_staging_a, agv2_a, waitpoint_best_south_fromSouth, mid_8_11_intersection_fromSouth, shelf8_fromSouth_near, shelf8_fromSouth_far}},
+        {{"agv2_a", "shelf8_fromSouth_far"}, std::vector<PresetLocation>{agv2_a, waitpoint_best_south_fromSouth, mid_8_11_intersection_fromSouth, shelf8_fromSouth_near, shelf8_fromSouth_far}},
+
+
+    };
+}
+
+// Note: this function is called once in the constructor of RWAImplementation
+void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
+
+    ROS_INFO_STREAM(" Human Obstacles not initialized, Error, need to add some code here ************************************************");
+    std::vector<bool> clear = {true, false, false, true}; // [Northernmost Lane Row .......... Southermost Lane Row]
+
+        if (clear[0] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "nowait", "fromNorth", "near"}; }
+        else if (clear[1] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "nowait", "fromNorth"}; }
+        else if (clear[0] == false && clear[1] == false) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "wait", "fromNorth", "near"}; }
+
+
+        if (clear[1] == true) { regionDictionary["shelf5lower"] = {"shelf5_fromSouth_near", "nowait", "fromSouth", "near"}; }
+        else if (clear[0] == true) { regionDictionary["shelf5lower"] = {"shelf5_fromNorth_far", "nowait", "fromNorth", "far"}; }
+        else if (clear[0] == false && clear[1] == false) { regionDictionary["shelf5lower"] = {"shelf5_fromNorth_far", "wait", "fromNorth", "far"}; }
+        
+
+        if (clear[1] == true) { regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near", "nowait", "fromNorth", "near"}; }
+        else if (clear[2] == true) { regionDictionary["shelf8upper"] = {"shelf8_fromSouth_far", "nowait", "fromSouth", "far"}; }
+        else if (clear[1] == false && clear[2] == false) { // Both innermost lanes not clear case, must account for Shelf Gaps
+
+            ROS_INFO_STREAM(" Shelf Gaps not implemented, Error, need to add some code here ************************************************");
+
+            // if ( true ) { // this code block: for testing only
+            //     regionDictionary["shelf8upper"] = {"shelf8_fromSouth_far", "wait", "fromSouth", "far"};
+            // }
+            // else if ( false ) {
+            //     regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near", "wait", "fromNorth", "near"};
+            // }
+
+            if ( gaps[2] == "gap_end") { //  Gap is between shelf 11 and shelf 10
+                ROS_INFO_STREAM(" gap_end [2] case shelf8upper");
+                regionDictionary["shelf8upper"] = {"shelf8_fromSouth_far", "wait", "fromSouth", "far"};
+            }
+            else if ( gaps[0] == "gap_end" ) { // Gap is between shelf 5 and shelf 4
+                ROS_INFO_STREAM(" gap_end [0] case shelf8upper");
+                regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near", "wait", "fromNorth", "near"};
+            }
+            else {
+                ROS_INFO_STREAM(" Error gaps not found");
+            }
+        }
+
+
+        if (clear[2] == true) { regionDictionary["shelf8lower"] = {"shelf8_fromSouth_near", "nowait", "fromSouth", "near"}; }
+        else if (clear[1] == true) { regionDictionary["shelf8lower"] = {"shelf8_fromNorth_far", "nowait", "fromNorth", "far"}; }
+        else if (clear[1] == false && clear[2] == false) { // Both innermost lanes not clear case, must account for Shelf Gaps
+
+            ROS_INFO_STREAM(" Shelf Gaps not implemented, Error, need to add some code here ************************************************");
+
+            // if ( true ) { // this code block: for testing only
+            //     regionDictionary["shelf8lower"] = {"shelf8_fromSouth_near", "wait", "fromSouth", "near"};
+            // }
+            // else if ( false ) {
+            //     regionDictionary["shelf8lower"] = {"shelf8_fromNorth_far", "wait", "fromNorth", "far"};
+            // }
+
+            if ( gaps[2] == "gap_end") { //  Gap is between shelf 11 and shelf 10
+                ROS_INFO_STREAM(" gap_end [2] case shelf8lower");
+                regionDictionary["shelf8lower"] = {"shelf8_fromSouth_near", "wait", "fromSouth", "near"};
+            }
+            else if ( gaps[0] == "gap_end" ) { // Gap is between shelf 5 and shelf 4
+                ROS_INFO_STREAM(" gap_end [0] case shelf8lower");
+                regionDictionary["shelf8lower"] = {"shelf8_fromNorth_far", "wait", "fromNorth", "far"};
+            }
+            else {
+                ROS_INFO_STREAM(" Error gaps not found");
+            }
+        }
+
+
+        if (clear[2] == true) { regionDictionary["shelf11upper"] = {"shelf11_fromNorth_near", "nowait", "fromNorth", "near"}; }
+        else if (clear[3] == true) { regionDictionary["shelf11upper"] = {"shelf5_fromSouth_far", "nowait", "fromSouth", "far"}; }
+        else if (clear[2] == false && clear[3] == false) { regionDictionary["shelf11upper"] = {"shelf11_fromSouth_near", "wait", "fromSouth", "near"}; }
+
+
+        if (clear[3] == true) { regionDictionary["shelf11lower"] = {"shelf11_fromSouth_near", "nowait", "fromSouth", "near"}; }
+        else if (clear[2] == true) { regionDictionary["shelf11lower"] = {"shelf11_fromNorth_far", "nowait", "fromNorth", "far"}; }
+        else if (clear[2] == false && clear[3] == false) { regionDictionary["shelf11lower"] = {"shelf11_fromNorth_near", "wait", "fromNorth", "near"}; }
+
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -453,22 +768,110 @@ void RWAImplementation::buildKit()
         gantry_->goToPresetLocation(Bump(cam_to_presetlocation[discovered_cam_idx], add_to_x, add_to_y, 0));
         ROS_INFO_STREAM("goToPresetLocation with bump executed!");
     }
-    else if ((discovered_cam_idx != 0 || discovered_cam_idx != 7 || discovered_cam_idx != 1 || discovered_cam_idx != 2) && discovered_cam_idx >= 0 && discovered_cam_idx <= 16)
+    else if ((discovered_cam_idx != 0 || discovered_cam_idx != 7 || discovered_cam_idx != 1 || discovered_cam_idx != 2) && discovered_cam_idx >= 0 && discovered_cam_idx <= 16) // Any other camera
     {                                                                 // any other camera
+        ROS_INFO_STREAM("Any Other Camera Case Reached");
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        std:: string shelf_and_upper_or_lower_string = isPartInUpperOrLowerRegionOfWhichShelf(my_part, discovered_cam_idx); // ie. "shelf5upper"
+        ROS_INFO_STREAM("executed isPartInUpperOrLowerRegionOfWhichShelf successfully ");
+        std::vector<std::string> information_string_vector = regionDictionary[shelf_and_upper_or_lower_string]; // ie. ["shelf5_fromNorth_near", "nowait", "fromNorth", "near"]
+        std::string preset_location_string = information_string_vector[0]; // ie. "shelf5_fromNorth_near"
+        std::string wait_or_nowait_string = information_string_vector[1]; // ie. "nowait"
+        std::string fromNorth_or_fromSouth_string = information_string_vector[2]; // ie. "fromNorth"
+        std::string near_or_far_string = information_string_vector[3]; // ie. "near"
+
+        // Create Bump() offsets, 4 possible scenarios
+        ROS_INFO_STREAM("Calculating offsets...");
         double add_to_x_shelf = my_part.pose.position.x - -13.522081; // constant is perfect bin red pulley x
-        double add_to_y_shelf = my_part.pose.position.y - 3.446263;
-        ROS_INFO_STREAM(" x " << add_to_x_shelf << " y " << add_to_y_shelf);
+        double add_to_y_shelf = my_part.pose.position.y - 3.446263; // constant is perfect bin red pulley y
+        double add_to_torso = 0.0;
 
-        std::vector<PresetLocation> path = getPresetLocationVector(cam_to_presetlocation[discovered_cam_idx]);
-        ROS_INFO_STREAM("getPresetLocationVector executed!");
+        if (near_or_far_string == "near" && fromNorth_or_fromSouth_string == "fromSouth") {
+            ROS_INFO_STREAM("Case 1 fromSouth near encountered for offsets...");
 
-        executeVectorOfPresetLocations(path);
-        ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
+            add_to_x_shelf = my_part.pose.position.x - -13.522081      + 1.795838; // red pulley + offset to account for spin
+            add_to_y_shelf = my_part.pose.position.y - 3.446263        - 1.707474; // constant is perfect bin red pulley y
+            add_to_torso = PI; // spin torso
+        }
+        else if (near_or_far_string == "near" && fromNorth_or_fromSouth_string == "fromNorth") {
+            ROS_INFO_STREAM("Case 2 fromNorth near encountered for offsets...");
 
-        gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, 0));
-        ROS_INFO_STREAM("goToPresetLocation with bump executed!");
+            add_to_x_shelf = my_part.pose.position.x - -13.522081; // red pulley
+            add_to_y_shelf = my_part.pose.position.y - 3.446263; // red pulley
+            add_to_torso = 0.0;
+        }
+        else if (near_or_far_string == "far" && fromNorth_or_fromSouth_string == "fromNorth") {
+            ROS_INFO_STREAM("Case 3 fromNorth far encountered for offsets...");
+            add_to_x_shelf = my_part.pose.position.x - -13.522081; // red pulley
+            add_to_y_shelf = my_part.pose.position.y - -3.523814; // Blue Pulley
+            add_to_torso = 0.0;
+        }
+        else if (near_or_far_string == "far" && fromNorth_or_fromSouth_string == "fromSouth") {
+            ROS_INFO_STREAM("Case 4 fromSouth far encountered for offsets...");
+            add_to_x_shelf = my_part.pose.position.x - -13.522081       + 0.34115; // blue pulley + account for spin
+            add_to_y_shelf = my_part.pose.position.y - -3.523814        - 3.127628; // blue pulley + account for spin
+            add_to_torso = PI; // spin torso
+        }
+        else {
+            // code should not reach here
+            ROS_INFO_STREAM("error, unknown condition found for near_or_far_string and fromNorth_or_fromSouth_string"); 
+        }
 
-        ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
+
+
+        std::vector<PresetLocation> path = getPresetLocationVectorUsingString(preset_location_string, wait_or_nowait_string); // initialize with no wait
+        if (wait_or_nowait_string == "wait") {
+            ROS_INFO_STREAM("Wait condtion encountered, need to use wait dictionary situation here ******************");
+            // Lookup PresetLocation in waitDictionary
+            // std::vector<PresetLocation> path = getPresetLocationVector(cam_to_presetlocation[discovered_cam_idx]); // todo lookup in wait dictionary here!
+            ROS_INFO_STREAM("getPresetLocationVector executed!");
+
+            executeVectorOfPresetLocationsWithWait(path); // Note the With Wait version is being called here
+            ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
+
+            if (near_or_far_string == "near") { gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, add_to_torso)); }
+            else if (near_or_far_string == "far") { gantry_->goToPresetLocation(Bump(shelf11_south_far, add_to_x_shelf, add_to_y_shelf, add_to_torso));}
+
+            ROS_INFO_STREAM("goToPresetLocation with bump executed!");
+
+            // ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away // commented for speed Human Obstacles
+        }
+        else { // else the "nowait" case
+            ROS_INFO_STREAM("No Wait condtion encountered");
+            // Lookup PresetLocation in noWaitDictionary
+            std::vector<PresetLocation> path = getPresetLocationVectorUsingString(preset_location_string, wait_or_nowait_string); // initialize with no wait
+            ROS_INFO_STREAM("getPresetLocationVector executed!");
+
+            executeVectorOfPresetLocations(path);
+            ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
+
+            if (near_or_far_string == "near") { gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, add_to_torso)); }
+            else if (near_or_far_string == "far") { gantry_->goToPresetLocation(Bump(shelf11_south_far, add_to_x_shelf, add_to_y_shelf, add_to_torso));}
+
+            gantry_->goToPresetLocation(Bump(shelf11_a, add_to_x_shelf, add_to_y_shelf, add_to_torso));
+            ROS_INFO_STREAM("goToPresetLocation with bump executed!");
+
+            // ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away // commented for speed Human Obstacles
+
+        }
+        ///////////////////////////////////////////////////////////////////////////////////////
+
+        // ROS_INFO_STREAM("Any Other Camera Block reached _______________________");
+        // double add_to_x_shelf = my_part.pose.position.x - -13.522081; // constant is perfect bin red pulley x
+        // double add_to_y_shelf = my_part.pose.position.y - 3.446263;
+        // ROS_INFO_STREAM(" x " << add_to_x_shelf << " y " << add_to_y_shelf);
+
+        // std::vector<PresetLocation> path = getPresetLocationVector(cam_to_presetlocation[discovered_cam_idx]);
+        // ROS_INFO_STREAM("getPresetLocationVector executed!");
+
+        // executeVectorOfPresetLocations(path);
+        // ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
+
+        // gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, 0));
+        // ROS_INFO_STREAM("goToPresetLocation with bump executed!");
+
+        // ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
     }
     else
     {
@@ -490,7 +893,7 @@ void RWAImplementation::buildKit()
     { // if any camera
         std::vector<PresetLocation> path = getPresetLocationVector(start_a);
         executeVectorOfPresetLocations(path);
-        ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
+        // ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves // Commented for speed Human Obstacles
     }
 
     // // testing drop parts into bins, uncomment this whole block, comment out entire next block
@@ -520,11 +923,18 @@ double RWAImplementation::calcDistanceInXYPlane(geometry_msgs::Pose a, geometry_
     return std::sqrt(std::pow(a.position.x - b.position.x, 2) + std::pow(a.position.y - b.position.y, 2)); // euclidean distance
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+double RWAImplementation::calcDistanceInXYTorso(PresetLocation pLocation, std::vector<double> joint_positions)
+{
+    return std::sqrt(std::pow(pLocation.gantry[0] - joint_positions[0], 2) + std::pow(pLocation.gantry[1] - joint_positions[1], 2) + std::pow(pLocation.gantry[2] - joint_positions[2], 2) ); // euclidean distance
+}
+
 //////////////////////////////// Get nearest preset location to current gantry position
 PresetLocation RWAImplementation::getNearesetPresetLocation()
 {
     ////// Get current gantry position
-    geometry_msgs::Pose current_position = gantry_->getGantryPose();
+    // geometry_msgs::Pose current_position = gantry_->getGantryPose();
+    std::vector<double> joint_positions = gantry_->getGantryJointPositionsDoubleVector(); // instead of converting to Pose, use joint values directly
 
     ////// Define custom struct (distance, PresetLocation), see https://www.cplusplus.com/articles/NhA0RXSz/
 
@@ -533,8 +943,9 @@ PresetLocation RWAImplementation::getNearesetPresetLocation()
 
     for (PresetLocation pset_location : preset_locations_list_)
     {
-        geometry_msgs::Pose location_converted_to_pose = gantryXY2worldposeXY(pset_location);    // convert preset location to pose
-        double distance_i = calcDistanceInXYPlane(current_position, location_converted_to_pose); // euclidean dist in xy plane
+        // geometry_msgs::Pose location_converted_to_pose = gantryXY2worldposeXY(pset_location);    // convert preset location to pose
+        // double distance_i = calcDistanceInXYPlane(current_position, location_converted_to_pose); // euclidean dist in xy plane
+        double distance_i = calcDistanceInXYTorso(pset_location, joint_positions);              // "score", aka distance, in gantry's joint 0, 1, 2 space
         distance_and_PresetLocation_struct candidate_struct{distance_i, pset_location};          // make a struct
         vector_of_structs.push_back(candidate_struct);                                           // put struct in list of structs
     }
@@ -563,11 +974,49 @@ std::vector<PresetLocation> RWAImplementation::getPresetLocationVector(PresetLoc
     return path_to_execute;
 }
 
+std::vector<PresetLocation> RWAImplementation::getPresetLocationVectorUsingString(std::string target_preset_location_string, std::string wait_string)
+{
+    PresetLocation approximate_current_position = getNearesetPresetLocation();
+    std::vector<std::string> key = {{approximate_current_position.name, target_preset_location_string}};
+    ROS_INFO_STREAM("key executed! =====" << key[0] << " " << key[1]);
+
+    std::vector<PresetLocation> path_to_execute = PathingLookupDictionary.at(key);
+    if (wait_string == "wait") {
+        path_to_execute = WaitPathingLookupDictionary.at(key);
+    }
+    else {
+        path_to_execute = PathingLookupDictionary.at(key);
+    }
+
+    ROS_INFO_STREAM("path_to_execute lookup executed!");
+    return path_to_execute;
+}
+
 bool RWAImplementation::executeVectorOfPresetLocations(std::vector<PresetLocation> path_to_execute)
 {
     for (PresetLocation psetlocation : path_to_execute)
     {
+        ROS_INFO_STREAM("Moving to PresetLocation: >>>>> " << psetlocation.name);
         gantry_->goToPresetLocation(psetlocation);
+    }
+    return true;
+}
+
+bool RWAImplementation::executeVectorOfPresetLocationsWithWait(std::vector<PresetLocation> path_to_execute)
+{
+    for (PresetLocation psetlocation : path_to_execute)
+    {
+        ROS_INFO_STREAM("Moving to PresetLocation: >>>>> " << psetlocation.name);
+        gantry_->goToPresetLocation(psetlocation);
+
+        if(std::find(wait_preset_locations_list_.begin(), wait_preset_locations_list_.end(), psetlocation.name) != wait_preset_locations_list_.end()) {
+            /* v contains x */
+            // Call Dani's wait function ***********************************************
+            ROS_INFO_STREAM("Call Dani's wait-till-time-to-go function *******************************************************************************");
+        } else {
+            /* v does not contain x */
+            ;// do nothing, no need to wait, pass
+        }
     }
     return true;
 }
@@ -842,4 +1291,103 @@ bool RWAImplementation::competition_over() {
         return true;
     }
     return false;
+}
+
+bool RWAImplementation::detectGaps()
+{
+    tf2_ros::Buffer tfBuffer;
+    tf2_ros::TransformListener tfListener(tfBuffer);
+    std::array<geometry_msgs::TransformStamped, 9> shelves;
+    int shelf_number = 3;
+    ros::Duration(0.5).sleep();
+    ros::Duration timeout(0.2);
+    std::string shelf_frame= "";
+    ROS_INFO("Lookup for shelves");
+
+    for (int i = 0; i < 9; i++, shelf_number++)
+    {
+        try
+        {
+            shelf_frame = "shelf" + std::to_string(shelf_number) + "_frame";
+            shelves[i] = tfBuffer.lookupTransform(
+                "world",
+                shelf_frame,
+                ros::Time(0),
+                timeout);
+        }
+        catch (tf2::TransformException &ex)
+        {
+            ROS_WARN("%s", ex.what());
+            ros::Duration(1.0).sleep();
+            continue;
+        }
+        ROS_INFO_STREAM("Shelf  " << std::to_string(shelf_number) << "  position = \n"  << shelves[i].transform.translation);
+    }
+
+    float s1, s2, s3, gap, safe_y, safe_x, max_y, d21, d32, shelf_length = 4.12;
+    PresetLocation toAgv, toFarReachSafeLocation, toSafeLocation;
+
+    for (int i = 0; i < 3; i++)
+    {
+        s1 = shelves[(3*i)].transform.translation.x;
+        s2 = shelves[(3*i)+1].transform.translation.x;
+        s3 = shelves[(3*i)+2].transform.translation.x;
+        ROS_INFO_STREAM("Shelf's x coordinate --> "<<s1<<" ,"<<s2<<", "<<s3);
+        d21 = std::abs(s2) - std::abs(s1);
+        d32 = std::abs(s3) - std::abs(s2);
+        if (d21 > d32)
+        {
+            ROS_INFO_STREAM("Gap is between 1st and 2nd shelf in shelf row " << i+1 << " from AGV1");
+            gap = d21/2;
+            safe_x = -(shelf_length + gap);
+            gaps[i] = "gap_conveyor";
+        }
+        else
+        {
+            ROS_INFO_STREAM("Gap is between 2nd and 3rd shelf in shelf row " << i+1 << " from AGV1");
+            gap = d32/2;
+            safe_x = -(2*shelf_length + gap);
+            gaps[i] = "gap_end";
+        }
+        if (i == 0)
+        {
+            toAgv = gantry_->agv1_;
+            safe_y = -3.08; //gantry frame
+            max_y = -6.9;
+        }
+        else if (i == 2)
+        {
+            toAgv = gantry_->agv2_;
+            safe_y = 3.08; //gantry frame
+            max_y = 6.9;
+        }
+        else
+        {
+            toAgv = gantry_->start_;
+            safe_y = 0;
+            max_y = 0;
+        }
+        //keep left arm and right arm joint positions same as agv, just change gantry joint position
+        //To be updated if left and right arm joint have to be different than that of agv's
+        toFarReachSafeLocation = toAgv;
+        toFarReachSafeLocation.gantry = {safe_x, max_y, PI};
+        toSafeLocation = toAgv;
+        toSafeLocation.gantry = {safe_x, safe_y, PI};
+
+        /*for testing only
+        gantry_->goToPresetLocation(toAgv);
+        gantry_->goToPresetLocation(toFarReachSafeLocation);
+        gantry_->goToPresetLocation(toSafeLocation); */
+
+        /* array of vectors - each vector will have preset for going to:
+        1) agv from start
+        2) waypoint b/w agv and safe location - waiting area to check for obstacles
+        3) safe location from waypoint in 2) - gap b/w shelves
+        As per requirement, individual preset locations can be extracted from the vector
+        */
+        shelf_preset_locations[i].push_back(toAgv);
+        shelf_preset_locations[i].push_back(toFarReachSafeLocation);
+        shelf_preset_locations[i].push_back(toSafeLocation);
+    }
+    return true;
 }

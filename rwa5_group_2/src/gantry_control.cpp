@@ -228,14 +228,14 @@ bool GantryControl::pickPart(part part, std::string arm)
         temp_arm_group->setPoseTarget(part.pose);
         temp_arm_group->move();
         auto state = getGripperState(arm);
-        ros::Duration(0.5).sleep();
+        // ros::Duration(0.5).sleep(); // Commented for speed Human Obstacles
         if (state.attached)
         {
             ROS_INFO_STREAM("[Gripper] = object attached");
             //--Move arm to previous position
             temp_arm_group->setPoseTarget(currentPose);
             temp_arm_group->move();
-            ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else!
+            // ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else! // Commented for speed Human Obstacles
 
             // goToPresetLocation(start_); // having this line here is great, but does not work for shelf, since path is impeded
             // move this to main code, but maybe let's keep the delay below?
@@ -547,7 +547,7 @@ void GantryControl::goToPresetLocation(PresetLocation location)
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
     bool success = (full_robot_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
     if (success)
-        ros::Duration(1.0).sleep();
+        // ros::Duration(1.0).sleep(); // Commented for speed Human Obstacles
         full_robot_group_.move();
 }
 
