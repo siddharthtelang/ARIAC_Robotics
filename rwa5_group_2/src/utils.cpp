@@ -49,7 +49,7 @@ std::array<bool, 5> AllLanesHandler::clearLanes() {
         auto lane_dirs = queryLanes();
         int count{0};
         for (int i{0}; i < 4; i++) {
-                dir = lane_dirs[i];
+                auto dir = lane_dirs[i];
                 if (dir == -1) {
                         clear_lanes[i] = true;
                         count++;
@@ -59,7 +59,7 @@ std::array<bool, 5> AllLanesHandler::clearLanes() {
         return clear_lanes;
 }
 
-bool AllLanesHandler::waitForLane(int lane) {
+bool AllLanesHandler::waitForOpening(int lane) {
         auto dir = lanes_[lane].queryPair();
         while(dir == 0 || lanes_[lane].prev_hit_ == 1) {
                 ros::Duration(0.1).sleep();

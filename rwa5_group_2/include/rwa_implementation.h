@@ -146,6 +146,7 @@ private:
     std::map<int, double> cam_to_y_coordinate;
     std::map<std::string, int> agv_to_camera;
     bool competition_started_{false};
+    bool region_dict_defined_{false};
 
 /**
  * \brief :A separate RWAImplentation class to have all the functionalities
