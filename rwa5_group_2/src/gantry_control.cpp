@@ -325,8 +325,11 @@ bool GantryControl::pickPartFast(part part, std::string arm)
     if (std::abs(roll) > 3.0 && part.type.find("pulley") == 0)
         part.pose.position.z = part.pose.position.z + GRIPPER_HEIGHT - EPSILON;
     else
-        part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - .0055; //const double EPSILON = 0.0065; // prevent mashing into and "deviated joint" error maybe // 60%
-        // part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - .0040; //const double EPSILON = 0.0065; // prevent mashing into and "deviated joint" error maybe
+        // part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - .0055; //const double EPSILON = 0.0065; // prevent mashing into and "deviated joint" error maybe // 60%
+        // part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - .0040; //const double EPSILON = 0.0065; // prevent mashing into and "deviated joint" error maybe //.0040 fails ik
+        // part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - .0030; //const double EPSILON = 0.0065; // prevent mashing into and "deviated joint" error maybe // have seen it work, but too slow
+        part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - .0030;  // const double EPSILON = 0.0065; // prevent mashing into and "deviated joint" error maybe // have seen it work, but too slow,
+                                                                                                            // (update: pick part, do not come back up, just go to next pose, is speedy enough)
 
 
     part.pose.orientation.x = currentPose.orientation.x;
@@ -357,8 +360,9 @@ bool GantryControl::pickPartFast(part part, std::string arm)
         {
             ROS_INFO_STREAM("[Gripper] = object attached");
             //--Move arm to previous position
-            temp_arm_group->setPoseTarget(currentPose);
-            temp_arm_group->move();
+            // temp_arm_group->setPoseTarget(currentPose); // speed up pick even more, do not even raise arm, just go to next presetlocation
+            // temp_arm_group->move();
+
             // ros::Duration(0.5).sleep(); // try to get it to lift before doing anything else! // Commented for speed Human Obstacles
 
             // goToPresetLocation(start_); // having this line here is great, but does not work for shelf, since path is impeded

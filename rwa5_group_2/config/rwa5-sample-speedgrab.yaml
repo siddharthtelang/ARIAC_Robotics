@@ -88,5 +88,10 @@ faulty_products:
   - pulley_part_blue_3
   - piston_rod_part_red_2
   - piston_rod_part_red_6
-  - gasket_part_green_4
+  - gasket_part_green_4 ################################### test faulty parts
+  # - gasket_part_green_2
+  # - gasket_part_green_3
+  # - gasket_part_green_1
+  # - gasket_part_green_5
+  # - gasket_part_green_6
 time_limit: -1

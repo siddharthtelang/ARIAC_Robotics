@@ -639,7 +639,8 @@ std::vector<PresetLocation> RWAImplementation::getPresetLocationVectorUsingStrin
     std::vector<std::string> key = {{approximate_current_position.name, target_preset_location_string}};
     ROS_INFO_STREAM("key executed! =====" << key[0] << " " << key[1]);
 
-    std::vector<PresetLocation> path_to_execute = PathingLookupDictionary.at(key);
+    // std::vector<PresetLocation> path_to_execute = PathingLookupDictionary.at(key); // this line error, cannot find wait preset locations
+    std::vector<PresetLocation> path_to_execute; // initialize empty, wait_string MUST be "wait" or "nowait"
     if (wait_string == "wait") {
         path_to_execute = WaitPathingLookupDictionary.at(key);
     }
