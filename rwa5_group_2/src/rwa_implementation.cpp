@@ -63,12 +63,14 @@ void RWAImplementation::processOrder()
             else if (full_type == conveyor_type_)
             {
                 product.get_from_conveyor = true;
+                // product.get_from_conveyor = false; // CRITICAL CHANGE FOR TESTING DELETE/COMMENT THIS LINE
                 conveyor_parts.push(product);
                 ROS_INFO_STREAM(" full_type == conveyor_type if case entered ");
             }
             else
             {
                 product.get_from_conveyor = true;
+                // product.get_from_conveyor = false; // CRITICAL CHANGE FOR TESTING DELETE/COMMENT THIS LINE
                 conveyor_type_ = full_type;
                 conveyor_parts.push(product);
                 ROS_INFO_STREAM(" else case entered ");
@@ -322,7 +324,11 @@ void RWAImplementation::buildKit()
     ROS_INFO_STREAM("product.type === " << product.type);
     ROS_INFO_STREAM("product.get_from_conveyor === " << product.get_from_conveyor);
 
-    // if (true) { // if part was moved from conveyor to the bin
+    std::string wait_or_nowait_string = "nowait"; // ie. "nowait", assume nowait unless changed further below
+    
+    ROS_INFO_STREAM(" x " << add_to_x << " y " << add_to_y);
+
+    // if (false) // if part was moved from conveyor to the bin CRITICAL FOR TESTING ONLY, COMMENT THIS LINE
     if (product.get_from_conveyor == true)
     { // if part was moved from conveyor to the bin
         ROS_INFO_STREAM("Deal with conveyor part _______________________");
@@ -401,7 +407,7 @@ void RWAImplementation::buildKit()
         ROS_INFO_STREAM("executed isPartInUpperOrLowerRegionOfWhichShelf successfully ");
         std::vector<std::string> information_string_vector = regionDictionary[shelf_and_upper_or_lower_string]; // ie. ["shelf5_fromNorth_near", "nowait", "fromNorth", "near"]
         std::string preset_location_string = information_string_vector[0]; // ie. "shelf5_fromNorth_near"
-        std::string wait_or_nowait_string = information_string_vector[1]; // ie. "nowait"
+        wait_or_nowait_string = information_string_vector[1]; // ie. "nowait"
         std::string fromNorth_or_fromSouth_string = information_string_vector[2]; // ie. "fromNorth"
         std::string near_or_far_string = information_string_vector[3]; // ie. "near"
 
@@ -502,22 +508,37 @@ void RWAImplementation::buildKit()
         ROS_INFO_STREAM("error, the camera idx is not equal to an expected number!!");
     }
 
-    //--Go pick the part
-    if (!gantry_->pickPart(my_part, "left_arm"))
-    {
-        // gantry.goToPresetLocation(gantry.start_);
-        // spinner.stop();
-        // ros::shutdown();
-        //pass
+
+    if (wait_or_nowait_string == "wait") {
+        //--Go pick the part
+        if (!gantry_->pickPartFast(my_part, "left_arm") && wait_or_nowait_string == "nowait")
+        {
+            //pass
+        }
+    }
+    else { // original, no wait code
+        //--Go pick the part
+        if (!gantry_->pickPart(my_part, "left_arm") && wait_or_nowait_string == "nowait")
+        {
+            // gantry.goToPresetLocation(gantry.start_);
+            // spinner.stop();
+            // ros::shutdown();
+            //pass
+        }
     }
 
     // go back to start
     // gantry_->goToPresetLocation(start_a);
-    if (true)
-    { // if any camera
-        std::vector<PresetLocation> path = getPresetLocationVector(start_a);
+    if (wait_or_nowait_string == "wait")
+    { // if wait, any camera
+        std::vector<PresetLocation> path = getPresetLocationVectorWithWait(start_a); 
         executeVectorOfPresetLocations(path);
         // ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves // Commented for speed Human Obstacles
+    }
+    else { // if nowait, if any camera
+        std::vector<PresetLocation> path = getPresetLocationVector(start_a);
+        executeVectorOfPresetLocations(path);
+        ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves // Commented for speed Human Obstacles
     }
 
     // // testing drop parts into bins, uncomment this whole block, comment out entire next block
@@ -598,6 +619,16 @@ std::vector<PresetLocation> RWAImplementation::getPresetLocationVector(PresetLoc
     std::vector<std::string> key = {{approximate_current_position.name, target_preset_location.name}};
     ROS_INFO_STREAM("key executed! =====" << key[0] << " " << key[1]);
     std::vector<PresetLocation> path_to_execute = PathingLookupDictionary.at(key);
+    ROS_INFO_STREAM("path_to_execute lookup executed!");
+    return path_to_execute;
+}
+
+std::vector<PresetLocation> RWAImplementation::getPresetLocationVectorWithWait(PresetLocation target_preset_location)
+{
+    PresetLocation approximate_current_position = getNearesetPresetLocation();
+    std::vector<std::string> key = {{approximate_current_position.name, target_preset_location.name}};
+    ROS_INFO_STREAM("key executed! =====" << key[0] << " " << key[1]);
+    std::vector<PresetLocation> path_to_execute = WaitPathingLookupDictionary.at(key);
     ROS_INFO_STREAM("path_to_execute lookup executed!");
     return path_to_execute;
 }
@@ -1118,12 +1149,19 @@ void RWAImplementation::initPresetLocs()
     bin11_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     bin11_a.name = GET_VARIABLE_NAME(bin11_a);
 
+    // // rename this to general far pick
+    // shelf11_south_far.gantry = {-13.52-0.172656, 1.96, -PI/2}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT
+    // shelf11_south_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    // shelf11_south_far.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    // shelf11_south_far.name = GET_VARIABLE_NAME(shelf11_south_far);
+
     // rename this to general far pick
     shelf11_south_far.gantry = {-13.52-0.172656, 1.96, -PI/2}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT
-    shelf11_south_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
-    shelf11_south_far.right_arm = {PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00}; // same as left except for joint 0
+    // shelf11_south_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf11_south_far.left_arm = {0.00, -2.06, 1.62, -2.73, -PI/2, 0.0};     // lower for better pick part speed
+    // shelf11_south_far.left_arm = {0.00, -2.06, 1.61, -2.73, -PI/2, 0.0};     // lower for better pick part speed 1.62>1.61
+    shelf11_south_far.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
     shelf11_south_far.name = GET_VARIABLE_NAME(shelf11_south_far);
-
 
 
     ///////////// Shelf Preset Locations: arranged in rows from Northernmost (world +y direction) row to Southernmost (world -y direction) row,
@@ -1238,9 +1276,14 @@ void RWAImplementation::initPresetLocs()
     shelf8_fromSouth_near.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
     shelf8_fromSouth_near.name = GET_VARIABLE_NAME(shelf8_fromSouth_near);
 
-    shelf8_fromSouth_far.gantry = {-13.52-0.172656, 1.5, PI/2}; // shelf8_fromSouth_far
-    shelf8_fromSouth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
-    shelf8_fromSouth_far.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    // shelf8_fromSouth_far.gantry = {-13.52-0.172656, 1.5, PI/2}; // shelf8_fromSouth_far
+    // shelf8_fromSouth_far.gantry = {-13.52-0.172656   -0.1-0.1   , 1.7+0.1, PI/2}; // shelf8_fromSouth_far //tuned for kick
+    // shelf8_fromSouth_far.gantry = {-13.52-0.172656   -0.1-0.1   , 1.7, PI/2}; // shelf8_fromSouth_far //tuned for kick
+    shelf8_fromSouth_far.gantry = {-13.52-0.172656, 1.7, PI/2}; // shelf8_fromSouth_far //tuned for kick
+    // shelf8_fromSouth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf8_fromSouth_far.left_arm = {0.0, -3.58, 2.87, -4.65, -PI/2, 0.00}; // stowed fast
+    // shelf8_fromSouth_far.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    shelf8_fromSouth_far.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
     shelf8_fromSouth_far.name = GET_VARIABLE_NAME(shelf8_fromSouth_far);
 
     shelf11_fromNorth_near.gantry = {-14.22, 1.5, 0.88}; // shelf11_fromNorth_near
@@ -1259,9 +1302,12 @@ void RWAImplementation::initPresetLocs()
     mid_8_11_intersection_fromNorth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
     mid_8_11_intersection_fromNorth.name = GET_VARIABLE_NAME(mid_8_11_intersection_fromNorth);
 
-    mid_8_11_intersection_fromSouth.gantry = {-11.4, 1.5, 0.88-PI}; // mid_8_11_intersection_fromSouth
-    mid_8_11_intersection_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
-    mid_8_11_intersection_fromSouth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    // mid_8_11_intersection_fromSouth.gantry = {-11.4, 1.5, 0.88-PI}; // mid_8_11_intersection_fromSouth
+    mid_8_11_intersection_fromSouth.gantry = {-11.4, 1.5, PI/2}; // mid_8_11_intersection_fromSouth
+    // mid_8_11_intersection_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_8_11_intersection_fromSouth.left_arm = {0.0, -3.58, 2.87, -4.65, -PI/2, 0.00}; // stowed fast
+    // mid_8_11_intersection_fromSouth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    mid_8_11_intersection_fromSouth.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
     mid_8_11_intersection_fromSouth.name = GET_VARIABLE_NAME(mid_8_11_intersection_fromSouth);
 
     mid_8_11_staging_a.gantry = {0.0, 1.5, 0.00};
@@ -1305,9 +1351,16 @@ void RWAImplementation::initPresetLocs()
     waitpoint_best_south_fromNorth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
     waitpoint_best_south_fromNorth.name = GET_VARIABLE_NAME(waitpoint_best_south_fromNorth);
 
-    waitpoint_best_south_fromSouth.gantry = {-11.4, 6.9, 0.88-PI}; // waitpoint_best_south_fromSouth
-    waitpoint_best_south_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
-    waitpoint_best_south_fromSouth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    // waitpoint_best_south_fromSouth.gantry = {-11.4, 6.9, 0.88-PI}; // waitpoint_best_south_fromSouth
+    // waitpoint_best_south_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    // waitpoint_best_south_fromSouth.right_arm = {PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // right elbow bent more
+    // waitpoint_best_south_fromSouth.name = GET_VARIABLE_NAME(waitpoint_best_south_fromSouth);
+
+    waitpoint_best_south_fromSouth.gantry = {-11.4, 6.9, PI/2}; // waitpoint_best_south_fromSouth
+    // waitpoint_best_south_fromSouth.gantry = {-11.4, 6.9, 0.88-PI}; // waitpoint_best_south_fromSouth
+    // waitpoint_best_south_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    waitpoint_best_south_fromSouth.left_arm = {0.0, -3.58, 2.87, -4.65, -PI/2, 0.00}; // left elbow bent more
+    waitpoint_best_south_fromSouth.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
     waitpoint_best_south_fromSouth.name = GET_VARIABLE_NAME(waitpoint_best_south_fromSouth);
 
     // joint positions to go to agv2
@@ -1465,12 +1518,15 @@ void RWAImplementation::initPresetLocs()
     };
 
     WaitPathingLookupDictionary = {
-        {{"start_a", "shelf8_fromSouth_far"}, std::vector<PresetLocation>{start_a, agv2_a, waitpoint_best_south_fromSouth, mid_8_11_intersection_fromSouth, shelf8_fromSouth_near, shelf8_fromSouth_far}},
-        {{"shelf8_fromSouth_far", "start_a"}, std::vector<PresetLocation>{shelf8_fromSouth_far, shelf8_fromSouth_near, mid_8_11_intersection_fromSouth, waitpoint_best_south_fromSouth, agv2_a, start_a}},
+        // {{"start_a", "shelf8_fromSouth_far"}, std::vector<PresetLocation>{start_a, agv2_a, waitpoint_best_south_fromSouth, mid_8_11_intersection_fromSouth, shelf8_fromSouth_near, shelf8_fromSouth_far}},
+        {{"start_a", "shelf8_fromSouth_far"}, std::vector<PresetLocation>{start_a, agv2_a, waitpoint_best_south_fromSouth, mid_8_11_intersection_fromSouth, shelf8_fromSouth_far}},
+        // {{"shelf8_fromSouth_far", "start_a"}, std::vector<PresetLocation>{shelf8_fromSouth_far, shelf8_fromSouth_near, mid_8_11_intersection_fromSouth, waitpoint_best_south_fromSouth, agv2_a, start_a}},
+        {{"shelf8_fromSouth_far", "start_a"}, std::vector<PresetLocation>{shelf8_fromSouth_far, mid_8_11_intersection_fromSouth, waitpoint_best_south_fromSouth, agv2_a, start_a}},
 
 
         {{"agv1_staging_a", "shelf8_fromSouth_far"}, std::vector<PresetLocation>{agv1_staging_a, agv2_a, waitpoint_best_south_fromSouth, mid_8_11_intersection_fromSouth, shelf8_fromSouth_near, shelf8_fromSouth_far}},
         {{"agv2_a", "shelf8_fromSouth_far"}, std::vector<PresetLocation>{agv2_a, waitpoint_best_south_fromSouth, mid_8_11_intersection_fromSouth, shelf8_fromSouth_near, shelf8_fromSouth_far}},
+        {{"agv2_a", "shelf8_fromSouth_far"}, std::vector<PresetLocation>{agv2_a, waitpoint_best_south_fromSouth, mid_8_11_intersection_fromSouth, shelf8_fromSouth_far}},
 
 
     };

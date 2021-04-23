@@ -26,11 +26,11 @@
           $(arg gui_args)
           $(arg load_moveit_args)
           $(arg fill_demo_shipment_args)
-          -f $(find rwa5_group_2)/config/sample_obstacles.yaml
+          -f $(find rwa5_group_2)/config/rwa5-sample-speedgrab.yaml
           $(find rwa5_group_2)/config/rwa5_sensor_group2.yaml
           " required="true" output="screen" />
 
- <!--<group ns='ariac/gantry'>
+ <!-- <group ns='ariac/gantry'>
    <include file="$(find gantry_moveit_config)/launch/moveit_rviz.launch">
      <arg name="rviz_config" value="$(find gantry_moveit_config)/launch/moveit.rviz"/>
    </include>

@@ -41,16 +41,16 @@ orders:
         pose:
           xyz: [0.0, 0.15, 0]
           rpy: ['pi', 0, 0]
-      product_0:
+      product_1:
         type: gasket_part_green
         pose:
           xyz: [-0.1, -0.2, 0]
           rpy: [0, 0, '-pi/4']
-      # product_2:
-      #   type: piston_rod_part_red
-      #   pose:
-      #     xyz: [0.15, -0.2, 0]
-      #     rpy: [0, 0, 'pi/4']
+      product_2:
+        type: piston_rod_part_red
+        pose:
+          xyz: [0.15, -0.2, 0]
+          rpy: [0, 0, 'pi/4']
 
 models_over_bins:
   bin1:
@@ -59,8 +59,8 @@ models_over_bins:
         xyz_start: [0.1, 0.1, 0.0]
         xyz_end: [0.45, 0.45, 0.0]
         rpy: [0, 0, 0]
-        num_models_x: 3
-        num_models_y: 3
+        num_models_x: 2
+        num_models_y: 2
   bin13:
     models:
       piston_rod_part_red:
@@ -80,13 +80,13 @@ models_over_shelves:
         num_models_x: 6
         num_models_y: 1
 
-# sensor_blackout:
-#   product_count: 2
-#   duration: 50
+sensor_blackout:
+  product_count: 2
+  duration: 50
 
-# faulty_products:
-#   - pulley_part_blue_3
-#   - piston_rod_part_red_2
-#   - piston_rod_part_red_6
-#   - gasket_part_green_4
+faulty_products:
+  - pulley_part_blue_3
+  - piston_rod_part_red_2
+  - piston_rod_part_red_6
+  - gasket_part_green_4
 time_limit: -1

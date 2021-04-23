@@ -18,7 +18,7 @@ sensors:
   breakbeam_2:
     type: break_beam
     pose:
-      xyz: [-12.75, -3.64, 0.1]
+      xyz: [-15.00, -3.64, 0.1]
       rpy: [0, 0, -1.557900] 
       
   # Mid-right lane
@@ -31,7 +31,7 @@ sensors:
   breakbeam_4:
     type: break_beam
     pose:
-      xyz: [-12.75, -2.4, 0.1]
+      xyz: [-15.00, -2.4, 0.1]
       rpy: [0, 0, 1.557900]
 
   # Mid-left lane
@@ -44,7 +44,7 @@ sensors:
   breakbeam_6:
     type: break_beam
     pose:
-      xyz: [-12.75, 2.4, 0.1]
+      xyz: [-15.00, 2.4, 0.1]
       rpy: [0, 0, -1.557900] 
 
   # Left-most lane
@@ -57,7 +57,7 @@ sensors:
   breakbeam_8:
     type: break_beam
     pose:
-      xyz: [-12.75, 3.66, 0.1]
+      xyz: [-15.00, 3.66, 0.1]
       rpy: [0, 0, 1.557900]
 
   # -------------- Logical Cameras -------------- #

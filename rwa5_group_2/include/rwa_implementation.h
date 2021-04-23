@@ -240,6 +240,7 @@ public:
     double calcDistanceInXYTorso(PresetLocation pLocation, std::vector<double> joint_positions);
     PresetLocation getNearesetPresetLocation();
     std::vector<PresetLocation> getPresetLocationVector(PresetLocation target_preset_location);
+    std::vector<PresetLocation> getPresetLocationVectorWithWait(PresetLocation target_preset_location);
     std::vector<PresetLocation> getPresetLocationVectorUsingString(std::string target_preset_location_string, std::string wait_string);
     bool executeVectorOfPresetLocations( std::vector<PresetLocation> path_to_execute );
     bool executeVectorOfPresetLocationsWithWait( std::vector<PresetLocation> path_to_execute );
