@@ -391,6 +391,11 @@ void RWAImplementation::buildKit()
     {                                                                 // any other camera
         ROS_INFO_STREAM("Any Other Camera Case Reached");
 
+        if (!region_dict_defined_) {
+            ROS_INFO_STREAM("Wait till lanes are known.");
+            return;
+        }
+
         ///////////////////////////////////////////////////////////////////////////////////////
         std:: string shelf_and_upper_or_lower_string = isPartInUpperOrLowerRegionOfWhichShelf(my_part, discovered_cam_idx); // ie. "shelf5upper"
         ROS_INFO_STREAM("executed isPartInUpperOrLowerRegionOfWhichShelf successfully ");
@@ -634,12 +639,11 @@ bool RWAImplementation::executeVectorOfPresetLocationsWithWait(std::vector<Prese
 
         if(std::find(wait_preset_locations_list_.begin(), wait_preset_locations_list_.end(), psetlocation.name) != wait_preset_locations_list_.end()) {
             /* v contains x */
-            if( gaps[2] == "gap_end")
-                lane_handler.waitForOpening(2);// Call Dani's wait function ***********************************************
-            else
-                lane_handler.waitForOpening(1);
-            
-            ROS_INFO_STREAM("Call Dani's wait-till-time-to-go function *******************************************************************************");
+            auto gant_pos = gantry_->getGantryPose();
+            int lane{};
+            if (gant_pos.position.y > 0) lane = 1;
+            else lane = 2;
+            lane_handler.waitForOpening(lane);
         } else {
             /* v does not contain x */
             ;// do nothing, no need to wait, pass
@@ -883,6 +887,8 @@ bool RWAImplementation::checkAndCorrectPose(std::string agv_id)
         }
     }
 
+    if (list_from_camera.size() == 0) return false;
+
     ROS_INFO("GO TO PRESET LOCATION");
     PresetLocation agv = agv_id == "agv1" ? gantry_->agv1_ : gantry_->agv2_;
     gantry_->goToPresetLocation(agv);
@@ -922,7 +928,8 @@ bool RWAImplementation::checkAndCorrectPose(std::string agv_id)
 }
 
 bool RWAImplementation::competition_over() {
-    if (competition_started_ && task_queue_.empty()){
+    if (competition_started_ && task_queue_.top().empty()){
+        ros::Duration(15).sleep();
         ROS_INFO_STREAM("Competition ending...");
         return true;
     }
@@ -1092,6 +1099,7 @@ void RWAImplementation::initPresetLocs()
     conveyor_belt.left_arm = {-0.2, -PI / 4, PI / 2, -PI / 4, PI / 2 - 0.2, 0};
     conveyor_belt.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     conveyor_belt.name = GET_VARIABLE_NAME(conveyor_belt);
+
     // joint positions to go to start location
     start_a.gantry = {0, 0, 0};
     start_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
@@ -1104,14 +1112,11 @@ void RWAImplementation::initPresetLocs()
     bin3_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     bin3_a.name = GET_VARIABLE_NAME(bin3_a);
 
-
     // joint positions to go to bin11 (and all 8 bins in the entire grouping)
     bin11_a.gantry = {4.0, -1.1, 0.}; // the exact same as bin311_a
     bin11_a.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     bin11_a.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
     bin11_a.name = GET_VARIABLE_NAME(bin11_a);
-
-
 
     // rename this to general far pick
     shelf11_south_far.gantry = {-13.52-0.172656, 1.96, -PI/2}; // WORKS FOR LEFT SHELF PULLEY NOT RIGHT
@@ -1390,6 +1395,7 @@ void RWAImplementation::initPresetLocs()
         {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
         {{"start_a", "shelf11_a"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_a, shelf11_a}},
         {{"start_a", "bin11_a"}, std::vector<PresetLocation>{start_a, bin11_a}},
+        {{"start_a", "start_a"}, std::vector<PresetLocation>{start_a, start_a}},
 
         {{"bin3_a", "start_a"}, std::vector<PresetLocation>{bin3_a, start_a}},
         {{"agv2_a", "start_a"}, std::vector<PresetLocation>{agv2_a, start_a}},

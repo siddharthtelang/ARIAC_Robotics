@@ -121,6 +121,7 @@ void CameraListener::sort_camera_parts_list()
     for (auto type : types_)
     {
       // ROS_INFO_STREAM("\n====================== " << color << " " << type << " ======================");
+      ROS_INFO_STREAM(ordered_color_type[color][type].size() << " " << color << " " << type << " in environment.");
       for (auto model : ordered_color_type[color][type])
       {
         // ROS_INFO_STREAM(model.id);

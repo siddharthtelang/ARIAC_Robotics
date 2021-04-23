@@ -61,7 +61,8 @@ std::array<bool, 5> AllLanesHandler::clearLanes() {
 
 bool AllLanesHandler::waitForOpening(int lane) {
         auto dir = lanes_[lane].queryPair();
-        while(dir == 0 || lanes_[lane].prev_hit_ == 1) {
+        while(ros::ok()) {
+                if(dir == 1 && lanes_[lane].prev_hit_ == 1) break;
                 ros::Duration(0.1).sleep();
                 dir = lanes_[lane].queryPair();
         }

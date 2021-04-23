@@ -119,12 +119,6 @@ private:
 
     //////////// End Shelf Preset Locations
 
-
-
-
-
-
-
     std::vector<PresetLocation> preset_locations_list_; // lookup list to compare distances with
     std::vector<std::string> wait_preset_locations_list_;
 
@@ -160,6 +154,8 @@ public:
         lane_handler.setNode(node);
 
         breakbeam_sub_ = node_->subscribe<nist_gear::Proximity>("/ariac/breakbeam_0_change", 10, &CameraListener::breakbeam_callback, cam_listener_);
+        
+        ros::Duration(1).sleep();
         cam_listener_->fetchParts(*node_);
         cam_listener_->sort_camera_parts_list();
         sorted_map = cam_listener_->sortPartsByDist();

@@ -60,7 +60,7 @@ public:
         // return "true" if "p1" is ordered before "p2", for example:
         auto dist1 = std::sqrt(std::pow(lhs.world_pose.position.x, 2) + std::pow(lhs.world_pose.position.y, 2));
         auto dist2 = std::sqrt(std::pow(rhs.world_pose.position.x, 2) + std::pow(rhs.world_pose.position.y, 2));
-        return dist1 < dist2;
+        return dist1 > dist2;
     }
   };
 
