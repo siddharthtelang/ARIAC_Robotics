@@ -57,6 +57,8 @@ void CameraListener::logical_camera_callback(
       std::string delimiter = "_";
 
       temp_model.type = color.substr(0, color.find(delimiter));
+      if (temp_model.type == "piston")
+          temp_model.type = "piston_rod";
 
       if (part_count.find(msg->models[i].type) == part_count.end())
       {
@@ -194,8 +196,9 @@ std::array<std::vector<CameraListener::ModelInfo>, 17> CameraListener::fetchPart
 
 //std::vector<CameraListener::ModelInfo> CameraListener::checkFaulty(ros::NodeHandle &node,std::string agv_id)
 //bool CameraListener::checkFaulty(ros::NodeHandle &node,std::string agv_id)
-void CameraListener::checkFaulty(ros::NodeHandle &node, std::string agv_id)
+bool CameraListener::checkFaulty(ros::NodeHandle &node, std::string agv_id)
 {
+  queried = false;
   int q_sensor = 1;
   ROS_INFO("Subscribing to Quality Sensor above %s", agv_id.c_str());
   if (agv_id == "agv1")
@@ -212,15 +215,16 @@ void CameraListener::checkFaulty(ros::NodeHandle &node, std::string agv_id)
   ROS_INFO("Param is set. Query the Quality Control camera");
   //    ros::spinOnce();
   ros::Duration(1.2).sleep();
-  //    return faulty_parts;
+  return queried;
 }
 
 void CameraListener::quality_control_callback(
     const nist_gear::LogicalCameraImage::ConstPtr &msg, int q_sensor)
-{
+{ 
+  queried = true;
   std::string sensor_tf_frame = "quality_control_sensor_" + std::to_string(q_sensor) + "_frame";
   if (msg->models.size() > 0)
-  {
+  { faulty_parts_list.clear();
     ROS_INFO("Detected faulty part(s)! ");
     faulty_parts = true;
     for (auto model : msg->models)

@@ -232,6 +232,7 @@ public:
         }
     };
 
+    std::vector<Product> checkLater;
 
     std::unordered_map<std::vector<std::string>, std::vector<PresetLocation>, container_hash<std::vector<std::string>> > PathingLookupDictionary;
     std::unordered_map<std::vector<std::string>, std::vector<PresetLocation>, container_hash<std::vector<std::string>> > WaitPathingLookupDictionary;

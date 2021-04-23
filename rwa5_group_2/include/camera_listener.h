@@ -93,7 +93,7 @@ public:
   * \param: agv id
   * \result: Applies callback function below
   */
-  void checkFaulty(ros::NodeHandle &node,std::string agv_id);
+  bool checkFaulty(ros::NodeHandle &node,std::string agv_id);
 
   /**
   * \brief: Callback function for AGV faulty part check
@@ -140,9 +140,10 @@ public:
   const float conveyor_spd_{0.2}; // m/s
   std::queue<ros::Time> load_time_on_conveyor_;
   std::array<std::string, 3> colors_{"red", "blue", "green"};
-  std::array<std::string, 4> types_{"disk", "pulley", "gasket", "piston"};
+  std::array<std::string, 4> types_{"disk", "pulley", "gasket", "piston_rod"};
   std::deque<CameraListener::ModelInfo> parts_on_conveyor_;
   //ros::Subscriber logical_camera_subscriber;
+  bool queried; // to check if the quality control sensor is queried
 
 };
 

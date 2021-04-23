@@ -45,6 +45,8 @@ void RWAImplementation::processOrder()
             product.agv_id = agv_id;
             std::string color = product.type;
             std::string type = color.substr(0, color.find(delimiter));
+            if (type == "piston")
+                type = "piston_rod";
             int pos{};
             product.shipment_type = shipment_type;
 
@@ -760,56 +762,122 @@ void RWAImplementation::checkAgvErrors()
         std::cout << "[Faulty Parts]: No parts to check" << std::endl;
         return;
     }
-    Product product = task_queue_.top().front()[0];
-    cam_listener_->checkFaulty(*node_, product.agv_id);
+    auto product = task_queue_.top().front()[0];
+    ros::Duration(2.0).sleep();
+    bool isQueried = cam_listener_->checkFaulty(*node_, product.agv_id);
+    //if the quality control sensor is not queried due to bleckout, save the Product and come later to check
+    if (!isQueried)
+    {
+        ROS_INFO_STREAM("Quality control sensor could not be queried, save the product for future reference");
+        checkLater.push_back(task_queue_.top().front()[0]);
+    }
     ros::Duration(0.5).sleep(); // make sure it actually goes back to start, instead of running into shelves
 
     int camera_index = product.agv_id == "agv1" ? 0 : 1;
 
     if (cam_listener_->faulty_parts)
     {
-        ROS_INFO("Detected Faulty Part");
-        for (int f_p = 0; f_p < cam_listener_->faulty_parts_list.size(); ++f_p)
+        ROS_INFO("Detected Faulty Part(s)");
+        int n_faulty = cam_listener_->faulty_parts_list.size();
+        ROS_INFO_STREAM("Total faulty parts = " << n_faulty);
+        std::vector<part> to_replace;
+        int i, j, k;
+
+        //check the type of part to be replaced by matching world pose with parts placed in tray
+        for (i = 0; i < n_faulty; i++)
         {
-            CameraListener::ModelInfo faulty = cam_listener_->faulty_parts_list.at(2);
-            Part faulty_part;
-            faulty_part.pose = faulty.model_pose;
-            ROS_INFO_STREAM("Faulty product pose:" << faulty_part.pose);
-            faulty_part.type = product.type;
-            faulty_part.pose = product.pose;
-            ROS_INFO_STREAM("Faulty Part:" << faulty_part.type);
-            cam_listener_->faulty_parts_list.clear();
-            bool success = gantry_->replaceFaultyPart(faulty_part, product.agv_id, "left_arm");
-            if (success)
+            CameraListener::ModelInfo faulty = cam_listener_->faulty_parts_list[i];
+            part faulty_part;
+            faulty_part.target_pose = faulty.world_pose;
+            for (j = 0; j < parts_in_tray[camera_index].size(); j++)
             {
-                cam_listener_->faulty_parts_list.clear();
-                // look for the new part
-                if (!sorted_map[product.designated_model.color][product.designated_model.type].empty())
+                double x = std::abs(std::abs(parts_in_tray[camera_index][j].target_pose.position.x) - std::abs(faulty_part.target_pose.position.x));
+                double y = std::abs(std::abs(parts_in_tray[camera_index][j].target_pose.position.y) - std::abs(faulty_part.target_pose.position.y));
+                ROS_INFO_STREAM("Deltas = " << x <<" and " <<y);
+                if (x < 0.03 && y < 0.03)
                 {
-                    //update the designated model
-                    product.designated_model = sorted_map[product.designated_model.color][product.designated_model.type].top();
-                    //pick new model
-                    sorted_map[product.designated_model.color][product.designated_model.type].pop();
+                    faulty_part = parts_in_tray[camera_index][j];
+                    //faulty_part.target_pose = faulty.world_pose;//test-----------------
+                    ROS_INFO_STREAM("Faulty part matched - type = " << faulty_part.type << "\n, Pose = " << faulty_part.pose);
+                    to_replace.push_back(faulty_part);
+                    //remove the part from the placed parts on tray
+                    parts_in_tray[camera_index].erase(parts_in_tray[camera_index].begin()+j);
+                    j--;
                 }
-                else
-                    product.get_from_conveyor = true;
-                // remove the faulty product
-                task_queue_.top().front().erase(task_queue_.top().front().begin());
-                // look for the replacement product
-                task_queue_.top().front().insert(task_queue_.top().front().begin(), product);
-                //parts_in_tray[camera] needs to be popped if faulty
-                parts_in_tray[camera_index].pop_back();
-                // go back to start
-                gantry_->goToPresetLocation(start_a);
             }
-            else
-                gantry_->goToPresetLocation(start_a);
         }
+
+        bool foundInTaskQueue = false;
+        //Now go through each part to be replaced and find corresponding entry in task_queue_ to update
+        //and then finally discard the faulty part
+        for (i = 0; i < to_replace.size(); i++)
+        {
+            foundInTaskQueue = false;
+            gantry_->goToPresetLocation(product.agv_id == "agv1" ? gantry_->agv1_ : gantry_->agv2_);
+
+            for (j = 0; j < task_queue_.top().front().size(); j++)
+            {
+                if (task_queue_.top().front()[j].type == to_replace[i].type)
+                {
+                    double x,y;
+                    auto temp = task_queue_.top().front()[j];
+                    auto check = to_replace[i];
+                    x = std::abs(temp.pose.position.x - check.pose.position.x);
+                    y = std::abs(temp.pose.position.y - check.pose.position.y);
+                    ROS_INFO_STREAM("Target pose tray diff = " << x <<" , " << y << "; if more than 0.1, continue");
+                    if (!(x < 0.1 && y < 0.1))
+                        continue;
+                    foundInTaskQueue = true;
+                    auto Product = task_queue_.top().front()[j];
+                    if (!sorted_map[Product.designated_model.color][Product.designated_model.type].empty())
+                    {
+                        ROS_INFO("Faulty part detected, proceed to get new one");
+                        //pick new model
+                        Product.designated_model = sorted_map[Product.designated_model.color][Product.designated_model.type].top();
+                        sorted_map[Product.designated_model.color][Product.designated_model.type].pop();
+
+                    }
+                    else
+                        Product.get_from_conveyor = true;
+
+                    task_queue_.top().front()[j] = Product;
+                    //break;
+                }
+            }
+            /* if the product is not found in the task queue, that means it is already removed from the
+                task queue and not detected as faulty due to sensor blackout. In that case, add the product back */
+            if (foundInTaskQueue == false)
+            {
+                for (k = 0; k < checkLater.size(); k++)
+                {
+                    if (checkLater[k].type == to_replace[i].type &&
+                         checkLater[k].pose.position.x == to_replace[i].pose.position.x &&
+                           checkLater[k].pose.position.y == to_replace[i].pose.position.y)
+                    {
+                        auto Product = checkLater[k];
+                        ROS_INFO_STREAM("Sensor blackout prevented " <<to_replace[i].type << " to be checked for faulty and is found faulty.");
+                        ROS_INFO("Throw away this part and update the task queue to add replacement part");
+                        if (!sorted_map[Product.designated_model.color][Product.designated_model.type].empty())
+                        {
+                            ROS_INFO("Assign new model");
+                            Product.designated_model = sorted_map[Product.designated_model.color][Product.designated_model.type].top();
+                            sorted_map[Product.designated_model.color][Product.designated_model.type].pop();
+                            //checkLater[k] = Product;
+                            task_queue_.top().front().push_back(Product);
+                        }
+                    }
+                }
+            }
+            //to_replace[i].pose = product.pose; //test----------
+            bool success = gantry_->replaceFaultyPart(to_replace[i], product.agv_id, "left_arm");
+            //TODO - if not success, we can not do anything - leave the part as is and empty the task queue
+        }
+        checkLater.clear();
     }
 
     bool poseUpdated = false;
     if (!cam_listener_->faulty_parts)
-    {
+    {   ROS_INFO("Erasing product from task queue");
         /* if no faulty part, check for poses, if correctly placed then pop from task_queue_.top(),
         pop the products from current shipment list  */
         poseUpdated = checkAndCorrectPose(product.agv_id);
@@ -817,16 +885,36 @@ void RWAImplementation::checkAgvErrors()
     }
 
     if (task_queue_.top().front().empty())
-    {
-        ros::Duration(1.0).sleep(); // add delay
-        // one shipment completed. Send to AGV
-        AGVControl agv_control(*node_);
-        std::string kit_id = (product.agv_id == "agv1" ? "kit_tray_1" : "kit_tray_2");
-        agv_control.sendAGV(product.shipment_type, kit_id);
-        task_queue_.top().pop();
+    {   
+        ROS_INFO("Task queue is now empty");
+        if(!isQueried)
+        {
+            ROS_INFO("Quality control was not queried due to sensor blackout. But the task queue is empty.");
+            ROS_INFO("AGV Can not be sent untill the part is checked for faulty, wait and re-recheck");
+            ROS_INFO("Fill in the task queue with the last Product and re-check");
+            task_queue_.top().front().push_back(product);
+            //check again for agv errors - give sufficient sleep to allow sensors to return back
+            ros::Duration(5.0).sleep();
+            checkAgvErrors();
+        }
+        // recheck again, as we just had one recursion and we do not want to send agv before faulty parts have been replaced
+        if (task_queue_.top().front().empty())
+        {
+            ros::Duration(1.0).sleep(); // add delay
+            // one shipment completed. Send to AGV
+            AGVControl agv_control(*node_);
+            std::string kit_id = (product.agv_id == "agv1" ? "kit_tray_1" : "kit_tray_2");
+            ROS_INFO_STREAM("Sending AGV for shipment id " << product.shipment_type);
+            agv_control.sendAGV(product.shipment_type, kit_id);
+            task_queue_.top().pop();
 
-        if(task_queue_.top().empty()) 
-            task_queue_.top();
+            if(task_queue_.top().empty()) 
+                task_queue_.top();
+        }
+        else
+        {
+            ROS_INFO_STREAM("Get the replacement for faulty parts - task queue size = " << task_queue_.top().front().size());
+        }
     }
 
     gantry_->goToPresetLocation(start_a);

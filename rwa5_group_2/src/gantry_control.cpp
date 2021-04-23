@@ -235,7 +235,7 @@ bool GantryControl::pickPart(part part, std::string arm)
     part.pose.orientation.y = currentPose.orientation.y;
     part.pose.orientation.z = currentPose.orientation.z;
     part.pose.orientation.w = currentPose.orientation.w;
-    //    ROS_INFO_STREAM("["<< part.type<<"]= " << part.pose.position.x << ", " << part.pose.position.y << "," << part.pose.position.z << "," << part.pose.orientation.x << "," << part.pose.orientation.y << "," << part.pose.orientation.z << "," << part.pose.orientation.w);
+       ROS_INFO_STREAM("["<< part.type<<"]= " << part.pose.position.x << ", " << part.pose.position.y << "," << part.pose.position.z << "," << part.pose.orientation.x << "," << part.pose.orientation.y << "," << part.pose.orientation.z << "," << part.pose.orientation.w);
 
     auto state = getGripperState(arm);
     //keep trying till state is enabled
@@ -499,7 +499,7 @@ void GantryControl::placePartAtCorrectPose(part part, std::string agv, std::stri
 
     auto target_pose_in_tray = getTargetWorldPose(part.pose, agv);
 
-    //ros::Duration(2.0).sleep();
+    ros::Duration(0.5).sleep();
 
     if (agv == "agv2")
     {
@@ -576,13 +576,14 @@ void GantryControl::placePartAtCorrectPose(part part, std::string agv, std::stri
 bool GantryControl::replaceFaultyPart(part Part, std::string agv, std::string arm)
 {
     auto target_pose_in_tray = getTargetWorldPose(Part.pose, agv);
+    ROS_INFO_STREAM("To replace world position = " << target_pose_in_tray << " and agv =  " << agv);
     part partToPick = Part;
     partToPick.pose = target_pose_in_tray;
     bool success = pickPart(partToPick, arm);
     if (success)
     {
         ROS_INFO("Pick faulty part success, now proceed to throw");
-	goToPresetLocation(agv == "agv1" ? agv1_ : agv2_);
+	    goToPresetLocation(agv == "agv1" ? agv1_ : agv2_);
         goToPresetLocation(start_);
         ROS_INFO("Drop Part Now");
         deactivateGripper(arm);
