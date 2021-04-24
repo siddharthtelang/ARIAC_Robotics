@@ -85,6 +85,10 @@ public:
   */
   void sort_camera_parts_list();
 
+  /**
+  * \brief: Sorts the camera parts by distance
+  * \result: Returns hash map with ordered parts
+  */
   std::unordered_map<std::string, std::unordered_map<std::string, std::priority_queue<CameraListener::ModelInfo, std::vector<CameraListener::ModelInfo>, CameraListener::CompareDists>>> sortPartsByDist();
 
   /**
@@ -127,6 +131,10 @@ public:
 
   ros::NodeHandle node_;
 
+ /**
+ * \brief: Getter the nested parts map with parts color and type as keys
+ * \result: returns hash map of the parts
+ */
   std::unordered_map<std::string, std::unordered_map<std::string, std::vector<ModelInfo>>> getPartsMap(){
       return ordered_color_type;
   }

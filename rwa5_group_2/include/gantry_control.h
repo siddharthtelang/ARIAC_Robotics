@@ -135,7 +135,10 @@ class GantryControl {
      */
     geometry_msgs::Pose getTargetWorldPose(geometry_msgs::Pose target, std::string agv);
 
-
+    /**
+     * \brief: Method to get the gantry joint positions
+     * \result: vector of double values
+     */
     std::vector<double> getGantryJointPositionsDoubleVector()
     {
 

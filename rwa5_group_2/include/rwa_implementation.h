@@ -142,11 +142,11 @@ private:
     bool competition_started_{false};
     bool region_dict_defined_{false};
 
-/**
- * \brief :A separate RWAImplentation class to have all the functionalities
- * \param :references of node, camera listener, gantry controller, and agv control classes
- */
 public:
+    /**
+     * \brief :A Constructor for the RWAImplentation class
+     * \param :references of node, camera listener, gantry controller, and agv control classes
+     */
     RWAImplementation(ros::NodeHandle& node, CameraListener& camera_listener, GantryControl& gantry, Competition& competition, AGVControl& agv_control) :
         node_{&node}, cam_listener_{&camera_listener}, gantry_{&gantry}, competition_{&competition}, agv_control_{&agv_control}
     {
@@ -206,16 +206,25 @@ public:
 
     /**
      * \brief: check if the part needs to be flipped and flip if required
+     * \param: part in the tray to be check for flipping
+     * \param: product in the tray to be checked for flipping
      * \result: true/false
      */
     bool checkForFlip(part &part_in_tray, Product product);
 
+    /**
+     * \brief: Method to detect gaps in shelf locations
+     * \result: true if detected, false otherwise
+     */
     bool detectGaps();
 
-    // build regionDictionary, which maps regions which indicate shelf and upper/lower, to a preset location string and wait/nowait string.
+    /**
+     * \brief: Method to build regionDictionary, which maps regions which indicate shelf and upper/lower, to a preset location string and wait/nowait string.
+     * \result: regionDictionary is defined
+     */
     void InitRegionDictionaryDependingOnSituation();
 
-    // regionDictionary, key is string indicating shelf and upper/lower, value is vector of strings, ie. ["shelf5_fromsouth_near", "nowait"]
+   // regionDictionary, key is string indicating shelf and upper/lower, value is vector of strings, ie. ["shelf5_fromsouth_near", "nowait"]
     std::unordered_map<std::string, std::vector<std::string> > regionDictionary;
 
 
@@ -261,6 +270,12 @@ public:
         return true;
     }
 
+    /**
+     * \brief: Method to detect the current part belongs to which shelf
+     * \param: part to be located
+     * \param: camera index that identified the part
+     * \result: string with information about part location
+     */
     std::string isPartInUpperOrLowerRegionOfWhichShelf(part my_part, int discovered_cam_idx) {
         std::string shelf_string = cam_to_shelf_string[discovered_cam_idx]; // ie. "shelf5"
 

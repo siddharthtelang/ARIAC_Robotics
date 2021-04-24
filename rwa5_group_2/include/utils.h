@@ -175,6 +175,11 @@ class AllLanesHandler {
 public:
     AllLanesHandler() : lanes_{} {}
 
+    /**
+     * \brief: Method to subscribe to breakbeam sensors in shelf lanes
+     * \param: Nodehandle
+     * \result: creates subscriber to the desired sensors
+     */
     void setNode(ros::NodeHandle& node)
     {
         lanes_[LEFT].subscribePair(node, 7,8);
@@ -185,6 +190,12 @@ public:
 
     std::array<int, 4> queryLanes();
     std::array<bool, 5> clearLanes();
+
+    /**
+     * \brief: Method to check if gantry needs to wait to enter a shelf lane
+     * \param: the lane integer we need to check
+     * \result: true if need to wait
+     */
     bool waitForOpening(int lane);
     enum LaneNumbers{LEFT, MID_LEFT, MID_RIGHT, RIGHT};
 
