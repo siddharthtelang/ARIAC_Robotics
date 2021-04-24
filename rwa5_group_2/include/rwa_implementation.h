@@ -183,7 +183,7 @@ public:
      * \brief: build kit functionality
      * \result: void
      */
-    void buildKit();
+    bool buildKit();
 
     /**
      * \brief: check for agv errors: faulty part, call check pose

@@ -88,7 +88,7 @@ int main(int argc, char ** argv) {
 
         rwa.InitRegionDictionaryDependingOnSituation(); // Initialize region (shelf + upper or lower) dictionary depending on situation.
         if (rwa.checkConveyor()) continue;       
-        rwa.buildKit();
+        if (rwa.buildKit()) continue;
         rwa.checkAgvErrors();
         ros::Duration(0.5).sleep();
         if (rwa.competition_over()) break;

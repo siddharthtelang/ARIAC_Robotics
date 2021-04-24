@@ -294,12 +294,12 @@ void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void RWAImplementation::buildKit()
+bool RWAImplementation::buildKit()
 {
     if (task_queue_.top().empty())
     {
         ROS_INFO("Task queue is empty. Return");
-        return;
+        return false;
     }
     // // may need to uncomment this, but likely not. do not need to be at start to pick, only to place,
     // // (since place part returns to start)
@@ -336,7 +336,7 @@ void RWAImplementation::buildKit()
         ROS_INFO_STREAM("Deal with conveyor part _______________________");
         std::vector<CameraListener::ModelInfo> cam_parts_repoll = cam_listener_->fetchPartsFromCamera(*node_, 7);
 
-        if(cam_parts_repoll.empty()) return;
+        if(cam_parts_repoll.empty()) return false;
         CameraListener::ModelInfo model_info_conveyor_part = cam_parts_repoll[0]; // todo deal with not enough saved up conveyor parts
 
         my_part.pose.position.x = model_info_conveyor_part.world_pose.position.x; // seems very redundant to store in the modelInfo and part
@@ -401,7 +401,7 @@ void RWAImplementation::buildKit()
 
         if (!region_dict_defined_) {
             ROS_INFO_STREAM("Wait till lanes are known.");
-            return;
+            return true;
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////
@@ -566,6 +566,7 @@ void RWAImplementation::buildKit()
     //    task_queue_.top().front().erase(task_queue_.top().front().begin());
     //    ROS_INFO("Popped element");
     //    gantry_->goToPresetLocation(start_a); // do not need to go back to start after placing part. only after picking part.
+    return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
