@@ -330,6 +330,9 @@ bool RWAImplementation::buildKit()
     
     ROS_INFO_STREAM(" x " << add_to_x << " y " << add_to_y);
 
+    bool moved_to_bin = false;
+    ROS_INFO_STREAM(" moved to bin === " << moved_to_bin);
+
     // if (false) // if part was moved from conveyor to the bin CRITICAL FOR TESTING ONLY, COMMENT THIS LINE
     if (product.get_from_conveyor == true)
     { // if part was moved from conveyor to the bin
@@ -364,8 +367,10 @@ bool RWAImplementation::buildKit()
 
         buffer_parts_collected--; // this should occur later in future, after part is actually picked up
     }
-    else if (discovered_cam_idx == 0 || discovered_cam_idx == 7 || discovered_cam_idx == 1 || discovered_cam_idx == 2)
+    else if (discovered_cam_idx == 0 || discovered_cam_idx == 7 || discovered_cam_idx == 1 || discovered_cam_idx == 2) // the bins
     {
+        moved_to_bin = true;
+        ROS_INFO_STREAM(" moved to bin block entered, should be true now -> === " << moved_to_bin);
 
         double add_to_x = 0.0;
         double add_to_y = 0.0;
@@ -537,6 +542,11 @@ bool RWAImplementation::buildKit()
         executeVectorOfPresetLocations(path);
         // ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves // Commented for speed Human Obstacles
     }
+    else if (moved_to_bin == true) { // deal with minor shelf bumping RWA5
+        std::vector<PresetLocation> path = getPresetLocationVector_Simple(start_a); // use simple gantry x and y euclidean distance only, not every joint
+        executeVectorOfPresetLocations(path);
+        ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves // Commented for speed Human Obstacles
+    }
     else { // if nowait, if any camera
         std::vector<PresetLocation> path = getPresetLocationVector(start_a);
         executeVectorOfPresetLocations(path);
@@ -616,9 +626,56 @@ PresetLocation RWAImplementation::getNearesetPresetLocation()
     return vector_of_structs[0].candidate_location;
 }
 
+//////////////////////////////// Get nearest preset location to current gantry position
+PresetLocation RWAImplementation::getNearesetPresetLocation_Simple()
+{
+    ROS_INFO_STREAM("Entered getNearesetPresetLocation_Simple++++++++++++++++++++++++++++++++++++++++++++++++++");
+
+    ////// Get current gantry position
+    geometry_msgs::Pose current_position = gantry_->getGantryPose();
+    // std::vector<double> joint_positions = gantry_->getGantryJointPositionsDoubleVector(); // instead of converting to Pose, use joint values directly
+
+    ////// Define custom struct (distance, PresetLocation), see https://www.cplusplus.com/articles/NhA0RXSz/
+
+    ////// Build vector of custom structs
+    std::vector<distance_and_PresetLocation_struct> vector_of_structs;
+
+    for (PresetLocation pset_location : preset_locations_list_)
+    {
+        geometry_msgs::Pose location_converted_to_pose = gantryXY2worldposeXY(pset_location);    // convert preset location to pose
+        double distance_i = calcDistanceInXYPlane(current_position, location_converted_to_pose); // euclidean dist in xy plane
+        // double distance_i = calcDistanceInXYTorso(pset_location, joint_positions);              // "score", aka distance, in gantry's joint 0, 1, 2 space
+        distance_and_PresetLocation_struct candidate_struct{distance_i, pset_location};          // make a struct
+        vector_of_structs.push_back(candidate_struct);                                           // put struct in list of structs
+    }
+
+    ////// Sort vector of custom structs by distance (need *another* function to do this, will define a lambda function)
+    std::sort(vector_of_structs.begin(), vector_of_structs.end(),
+              // Lambda expression begins,
+              [](const distance_and_PresetLocation_struct &lhs, const distance_and_PresetLocation_struct &rhs) {
+                  return (lhs.distance < rhs.distance);
+              } // end of lambda expression
+    );
+
+    ROS_INFO_STREAM("sorted vector successfully");
+
+    ////// Return the nearest PresetLocation
+    return vector_of_structs[0].candidate_location;
+}
+
 std::vector<PresetLocation> RWAImplementation::getPresetLocationVector(PresetLocation target_preset_location)
 {
     PresetLocation approximate_current_position = getNearesetPresetLocation();
+    std::vector<std::string> key = {{approximate_current_position.name, target_preset_location.name}};
+    ROS_INFO_STREAM("key executed! =====" << key[0] << " " << key[1]);
+    std::vector<PresetLocation> path_to_execute = PathingLookupDictionary.at(key);
+    ROS_INFO_STREAM("path_to_execute lookup executed!");
+    return path_to_execute;
+}
+
+std::vector<PresetLocation> RWAImplementation::getPresetLocationVector_Simple(PresetLocation target_preset_location)
+{
+    PresetLocation approximate_current_position = getNearesetPresetLocation_Simple();
     std::vector<std::string> key = {{approximate_current_position.name, target_preset_location.name}};
     ROS_INFO_STREAM("key executed! =====" << key[0] << " " << key[1]);
     std::vector<PresetLocation> path_to_execute = PathingLookupDictionary.at(key);
@@ -1542,6 +1599,9 @@ void RWAImplementation::initPresetLocs()
     preset_locations_list_ = {start_a, bin3_a, agv2_a, agv1_staging_a,
                               bottom_left_staging_a, shelf8_a, shelf11_a, bin11_a, shelf5_a, shelf8_fromSouth_far}; // do not have mid_xyz anything here for now
 
+    preset_locations_list_simple_ = {bin3_a, agv2_a, agv1_staging_a,
+                              bottom_left_staging_a, shelf8_a, shelf11_a, bin11_a, shelf5_a, shelf8_fromSouth_far}; // do not have mid_xyz anything here for now
+
     wait_preset_locations_list_ = {waitpoint_best_south_fromSouth.name, waitpoint_best_south_fromNorth.name, waitpoint_best_north_fromSouth.name, waitpoint_best_north_fromNorth.name};
 
     PathingLookupDictionary = {
@@ -1552,7 +1612,8 @@ void RWAImplementation::initPresetLocs()
         {{"start_a", "shelf8_a"}, std::vector<PresetLocation>{start_a, mid_5_8_staging_a, shelf8_a}},
         {{"start_a", "shelf11_a"}, std::vector<PresetLocation>{start_a, mid_8_11_staging_a, shelf11_a}},
         {{"start_a", "bin11_a"}, std::vector<PresetLocation>{start_a, bin11_a}},
-        {{"start_a", "start_a"}, std::vector<PresetLocation>{start_a, start_a}},
+        // {{"start_a", "start_a"}, std::vector<PresetLocation>{start_a, start_a}},
+        {{"start_a", "start_a"}, std::vector<PresetLocation>{bin11_a,start_a, start_a, start_a, start_a, start_a, start_a, start_a}}, // GO to start_a, do not path simplify.
 
         {{"bin3_a", "start_a"}, std::vector<PresetLocation>{bin3_a, start_a}},
         {{"agv2_a", "start_a"}, std::vector<PresetLocation>{agv2_a, start_a}},

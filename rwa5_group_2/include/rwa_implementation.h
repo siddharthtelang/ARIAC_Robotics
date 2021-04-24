@@ -120,6 +120,7 @@ private:
     //////////// End Shelf Preset Locations
 
     std::vector<PresetLocation> preset_locations_list_; // lookup list to compare distances with
+    std::vector<PresetLocation> preset_locations_list_simple_; // lookup list to compare distances with
     std::vector<std::string> wait_preset_locations_list_;
 
     /* ===================== Conveyor Variables ===================== */
@@ -249,7 +250,9 @@ public:
     double calcDistanceInXYPlane(geometry_msgs::Pose a, geometry_msgs::Pose b);
     double calcDistanceInXYTorso(PresetLocation pLocation, std::vector<double> joint_positions);
     PresetLocation getNearesetPresetLocation();
+    PresetLocation getNearesetPresetLocation_Simple();
     std::vector<PresetLocation> getPresetLocationVector(PresetLocation target_preset_location);
+    std::vector<PresetLocation> getPresetLocationVector_Simple(PresetLocation target_preset_location);
     std::vector<PresetLocation> getPresetLocationVectorWithWait(PresetLocation target_preset_location);
     std::vector<PresetLocation> getPresetLocationVectorUsingString(std::string target_preset_location_string, std::string wait_string);
     bool executeVectorOfPresetLocations( std::vector<PresetLocation> path_to_execute );
