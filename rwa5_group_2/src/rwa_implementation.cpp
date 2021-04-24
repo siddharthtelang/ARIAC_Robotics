@@ -778,7 +778,7 @@ void RWAImplementation::checkAgvErrors()
     ros::Duration(0.5).sleep(); // make sure it actually goes back to start, instead of running into shelves
 
     int camera_index = product.agv_id == "agv1" ? 0 : 1;
-    bool override = true; // override erase top element from task queue 
+    bool override = false; // override erase top element from task queue
     if (cam_listener_->faulty_parts)
     {
         ROS_INFO("Detected Faulty Part(s)");
