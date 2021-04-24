@@ -120,6 +120,7 @@ typedef struct Product {
     std::string shipment_type;
     CameraListener::ModelInfo designated_model;
     bool get_from_conveyor{false};
+    bool replacement{false};
 } product;
 
 

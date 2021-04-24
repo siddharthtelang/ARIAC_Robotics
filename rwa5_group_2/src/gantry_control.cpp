@@ -262,7 +262,7 @@ bool GantryControl::pickPart(part part, std::string arm)
 
             // goToPresetLocation(start_); // having this line here is great, but does not work for shelf, since path is impeded
             // move this to main code, but maybe let's keep the delay below?
-            ros::Duration(1.0).sleep(); // try to get it to actually go to start....
+            //ros::Duration(1.0).sleep(); // try to get it to actually go to start....
             return true;
         }
         else
@@ -583,12 +583,15 @@ bool GantryControl::replaceFaultyPart(part Part, std::string agv, std::string ar
     if (success)
     {
         ROS_INFO("Pick faulty part success, now proceed to throw");
-	    goToPresetLocation(agv == "agv1" ? agv1_ : agv2_);
+	    //goToPresetLocation(agv == "agv1" ? agv1_ : agv2_);
+        //ros::Duration(0.5).sleep();
         goToPresetLocation(start_);
+        //ros::Duration(0.5).sleep();
         ROS_INFO("Drop Part Now");
         deactivateGripper(arm);
     }
     return success;
+
 }
 
 ////////////////////////////

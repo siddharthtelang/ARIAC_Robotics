@@ -763,6 +763,10 @@ void RWAImplementation::checkAgvErrors()
         return;
     }
     auto product = task_queue_.top().front()[0];
+    // make replacement as false if true before
+    if (task_queue_.top().front()[0].replacement)
+        task_queue_.top().front()[0].replacement = false;
+
     ros::Duration(2.0).sleep();
     bool isQueried = cam_listener_->checkFaulty(*node_, product.agv_id);
     //if the quality control sensor is not queried due to bleckout, save the Product and come later to check
@@ -774,7 +778,7 @@ void RWAImplementation::checkAgvErrors()
     ros::Duration(0.5).sleep(); // make sure it actually goes back to start, instead of running into shelves
 
     int camera_index = product.agv_id == "agv1" ? 0 : 1;
-
+    bool override = true; // override erase top element from task queue 
     if (cam_listener_->faulty_parts)
     {
         ROS_INFO("Detected Faulty Part(s)");
@@ -797,6 +801,12 @@ void RWAImplementation::checkAgvErrors()
                 if (x < 0.03 && y < 0.03)
                 {
                     faulty_part = parts_in_tray[camera_index][j];
+                    if (faulty_part.type.find("piston") == 0 || faulty_part.type.find("gasket") == 0)
+                    {
+                        ROS_INFO("Found gasket or piston as faulty, unable to replace for now. Skip");
+                        override = true;
+                        continue;
+                    }
                     //faulty_part.target_pose = faulty.world_pose;//test-----------------
                     ROS_INFO_STREAM("Faulty part matched - type = " << faulty_part.type << "\n, Pose = " << faulty_part.pose);
                     to_replace.push_back(faulty_part);
@@ -840,6 +850,7 @@ void RWAImplementation::checkAgvErrors()
                     else
                         Product.get_from_conveyor = true;
 
+                    Product.replacement = true;
                     task_queue_.top().front()[j] = Product;
                     //break;
                 }
@@ -876,12 +887,15 @@ void RWAImplementation::checkAgvErrors()
     }
 
     bool poseUpdated = false;
-    if (!cam_listener_->faulty_parts)
+    if (!cam_listener_->faulty_parts || override)
     {   ROS_INFO("Erasing product from task queue");
         /* if no faulty part, check for poses, if correctly placed then pop from task_queue_.top(),
         pop the products from current shipment list  */
         poseUpdated = checkAndCorrectPose(product.agv_id);
-        task_queue_.top().front().erase(task_queue_.top().front().begin());
+        if (task_queue_.top().front()[0].replacement)
+            ROS_INFO("Front product in task queue is replacement, do not remove from task queue");
+        else
+            task_queue_.top().front().erase(task_queue_.top().front().begin());
     }
 
     if (task_queue_.top().front().empty())
@@ -894,7 +908,7 @@ void RWAImplementation::checkAgvErrors()
             ROS_INFO("Fill in the task queue with the last Product and re-check");
             task_queue_.top().front().push_back(product);
             //check again for agv errors - give sufficient sleep to allow sensors to return back
-            ros::Duration(5.0).sleep();
+            ros::Duration(8.0).sleep();
             checkAgvErrors();
         }
         // recheck again, as we just had one recursion and we do not want to send agv before faulty parts have been replaced
