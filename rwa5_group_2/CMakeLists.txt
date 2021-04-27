@@ -170,6 +170,7 @@ add_executable(rwa5_node
         src/agv_control.cpp
         src/camera_listener.cpp
         src/rwa_implementation.cpp
+        src/initpresets.cpp
         )
 
 ## Rename C++ executable without prefix
