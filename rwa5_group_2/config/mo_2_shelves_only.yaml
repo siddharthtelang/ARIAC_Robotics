@@ -72,6 +72,11 @@ orders:
         pose:
           xyz: [0.15, -0.2, 0]
           rpy: [0, 0, '-pi/4']
+      part_1:
+        type: pulley_part_red
+        pose:
+          xyz: [0.15, -0.2, 0]
+          rpy: [0, 0, '-pi/4']
       # part_3:
       #   type: gasket_part_red
       #   pose:

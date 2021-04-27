@@ -117,6 +117,10 @@ private:
 
     PresetLocation agv2_a;
 
+    ///////////// Miscellaneous (all rows)
+    PresetLocation waitpoint_best_south_fromSouth_near;
+    PresetLocation mid_8_11_intersection_fromSouth_near;
+
     //////////// End Shelf Preset Locations
 
     std::vector<PresetLocation> preset_locations_list_; // lookup list to compare distances with
