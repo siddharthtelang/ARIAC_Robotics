@@ -215,7 +215,8 @@ void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
         ROS_INFO_STREAM(" Human Obstacles not initialized, Error, need to add some code here ************************************************");
         // auto clear = lane_handler.clearLanes();                 // [Northernmost Lane Row .......... Southermost Lane Row]
         // if(!clear[4]) return;                                   // "clear[4] == true" means that exactly two lanes are known to have obstacles
-        std::array<bool, 5> clear = {true, true ,false ,true, false};
+        // std::array<bool, 5> clear = {true, true ,false ,true, false};
+        std::array<bool, 5> clear = {true, true ,true ,true, false};
 
 
         region_dict_defined_ = true;
@@ -592,14 +593,14 @@ double RWAImplementation::calcDistanceInXYPlane(geometry_msgs::Pose a, geometry_
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 double RWAImplementation::calcDistanceInXYTorso(PresetLocation pLocation, std::vector<double> joint_positions)
 {
-    ROS_INFO_STREAM("calcDistanceInXYTorso entered");
+    // ROS_INFO_STREAM("calcDistanceInXYTorso entered");
     return std::sqrt(std::pow(pLocation.gantry[0] - joint_positions[0], 2) + std::pow(pLocation.gantry[1] - joint_positions[1], 2) + std::pow(pLocation.gantry[2] - joint_positions[2], 2) ); // euclidean distance
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 double RWAImplementation::calcDistanceInXYTorso_Accurate(PresetLocation pLocation, std::vector<double> joint_positions)
 {
-    ROS_INFO_STREAM("calcDistanceInXYTorso_Accurate entered");
+    // ROS_INFO_STREAM("calcDistanceInXYTorso_Accurate entered");
     // return std::sqrt(std::pow(pLocation.gantry[0] - joint_positions[0], 2) + std::pow(pLocation.gantry[1] - joint_positions[1], 2) + std::pow(pLocation.gantry[2] - joint_positions[2], 2 )
     // + std::pow(pLocation.left_arm[0] - joint_positions[3], 2 )
     // + std::pow(pLocation.left_arm[1] - joint_positions[4], 2 )
@@ -629,7 +630,7 @@ double RWAImplementation::calcDistanceInXYTorso_Accurate(PresetLocation pLocatio
     + std::pow(pLocation.right_arm[5] - joint_positions[14], 2 )
     ); // euclidean distance
 
-    ROS_INFO_STREAM("euclidean_score is: " << euclidean_score);
+    // ROS_INFO_STREAM("euclidean_score is: " << euclidean_score);
     return euclidean_score;
 }
 
