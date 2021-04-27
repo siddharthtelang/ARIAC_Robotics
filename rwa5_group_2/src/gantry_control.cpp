@@ -251,7 +251,8 @@ bool GantryControl::pickPart(part part, std::string arm)
         temp_arm_group->setPoseTarget(part.pose);
         temp_arm_group->move();
         auto state = getGripperState(arm);
-        ros::Duration(0.5).sleep(); // Commented for speed Human Obstacles
+        // ros::Duration(0.5).sleep(); // Commented for speed Human Obstacles
+        ros::Duration(1.0).sleep(); // Commented for speed Human Obstacles
         if (state.attached)
         {
             ROS_INFO_STREAM("[Gripper] = object attached");
@@ -259,6 +260,8 @@ bool GantryControl::pickPart(part part, std::string arm)
             temp_arm_group->setPoseTarget(currentPose);
             temp_arm_group->move();
             ros::Duration(0.5).sleep(); // try to get it to lift before doing anything else! // Commented for speed Human Obstacles
+
+            ROS_INFO_STREAM("Part Picked Successfully!");
 
             // goToPresetLocation(start_); // having this line here is great, but does not work for shelf, since path is impeded
             // move this to main code, but maybe let's keep the delay below?

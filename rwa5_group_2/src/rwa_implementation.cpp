@@ -212,9 +212,11 @@ void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
 
     if (!region_dict_defined_) 
     {
-        // ROS_INFO_STREAM(" Human Obstacles not initialized, Error, need to add some code here ************************************************");
-        auto clear = lane_handler.clearLanes();                 // [Northernmost Lane Row .......... Southermost Lane Row]
+        ROS_INFO_STREAM(" Human Obstacles not initialized, Error, need to add some code here ************************************************");
+        // auto clear = lane_handler.clearLanes();                 // [Northernmost Lane Row .......... Southermost Lane Row]
         // if(!clear[4]) return;                                   // "clear[4] == true" means that exactly two lanes are known to have obstacles
+        std::array<bool, 5> clear = {true, true ,false ,true, false};
+
 
         region_dict_defined_ = true;
         if (clear[0] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "nowait", "fromNorth", "near"}; }
@@ -590,7 +592,45 @@ double RWAImplementation::calcDistanceInXYPlane(geometry_msgs::Pose a, geometry_
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 double RWAImplementation::calcDistanceInXYTorso(PresetLocation pLocation, std::vector<double> joint_positions)
 {
+    ROS_INFO_STREAM("calcDistanceInXYTorso entered");
     return std::sqrt(std::pow(pLocation.gantry[0] - joint_positions[0], 2) + std::pow(pLocation.gantry[1] - joint_positions[1], 2) + std::pow(pLocation.gantry[2] - joint_positions[2], 2) ); // euclidean distance
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+double RWAImplementation::calcDistanceInXYTorso_Accurate(PresetLocation pLocation, std::vector<double> joint_positions)
+{
+    ROS_INFO_STREAM("calcDistanceInXYTorso_Accurate entered");
+    // return std::sqrt(std::pow(pLocation.gantry[0] - joint_positions[0], 2) + std::pow(pLocation.gantry[1] - joint_positions[1], 2) + std::pow(pLocation.gantry[2] - joint_positions[2], 2 )
+    // + std::pow(pLocation.left_arm[0] - joint_positions[3], 2 )
+    // + std::pow(pLocation.left_arm[1] - joint_positions[4], 2 )
+    // + std::pow(pLocation.left_arm[2] - joint_positions[5], 2 )
+    // + std::pow(pLocation.left_arm[3] - joint_positions[6], 2 )
+    // + std::pow(pLocation.left_arm[4] - joint_positions[7], 2 )
+    // + std::pow(pLocation.left_arm[5] - joint_positions[8], 2 )
+    // + std::pow(pLocation.right_arm[0] - joint_positions[9], 2 )
+    // + std::pow(pLocation.right_arm[1] - joint_positions[10], 2 )
+    // + std::pow(pLocation.right_arm[2] - joint_positions[11], 2 )
+    // + std::pow(pLocation.right_arm[3] - joint_positions[12], 2 )
+    // + std::pow(pLocation.right_arm[4] - joint_positions[13], 2 )
+    // + std::pow(pLocation.right_arm[5] - joint_positions[14], 2 )
+    //  ); // euclidean distance
+    double euclidean_score = std::sqrt(std::pow(pLocation.gantry[0] - joint_positions[0], 2) + std::pow(pLocation.gantry[1] - joint_positions[1], 2) + std::pow(pLocation.gantry[2] - joint_positions[2], 2 )
+    + std::pow(pLocation.left_arm[0] - joint_positions[3], 2 )
+    + std::pow(pLocation.left_arm[1] - joint_positions[4], 2 )
+    + std::pow(pLocation.left_arm[2] - joint_positions[5], 2 )
+    + std::pow(pLocation.left_arm[3] - joint_positions[6], 2 )
+    + std::pow(pLocation.left_arm[4] - joint_positions[7], 2 )
+    + std::pow(pLocation.left_arm[5] - joint_positions[8], 2 )
+    + std::pow(pLocation.right_arm[0] - joint_positions[9], 2 )
+    + std::pow(pLocation.right_arm[1] - joint_positions[10], 2 )
+    + std::pow(pLocation.right_arm[2] - joint_positions[11], 2 )
+    + std::pow(pLocation.right_arm[3] - joint_positions[12], 2 )
+    + std::pow(pLocation.right_arm[4] - joint_positions[13], 2 )
+    + std::pow(pLocation.right_arm[5] - joint_positions[14], 2 )
+    ); // euclidean distance
+
+    ROS_INFO_STREAM("euclidean_score is: " << euclidean_score);
+    return euclidean_score;
 }
 
 //////////////////////////////// Get nearest preset location to current gantry position
@@ -599,6 +639,8 @@ PresetLocation RWAImplementation::getNearesetPresetLocation()
     ////// Get current gantry position
     // geometry_msgs::Pose current_position = gantry_->getGantryPose();
     std::vector<double> joint_positions = gantry_->getGantryJointPositionsDoubleVector(); // instead of converting to Pose, use joint values directly
+
+    ROS_INFO_STREAM("Length of joint_positions double vector is: " << joint_positions.size());
 
     ////// Define custom struct (distance, PresetLocation), see https://www.cplusplus.com/articles/NhA0RXSz/
 
@@ -609,7 +651,7 @@ PresetLocation RWAImplementation::getNearesetPresetLocation()
     {
         // geometry_msgs::Pose location_converted_to_pose = gantryXY2worldposeXY(pset_location);    // convert preset location to pose
         // double distance_i = calcDistanceInXYPlane(current_position, location_converted_to_pose); // euclidean dist in xy plane
-        double distance_i = calcDistanceInXYTorso(pset_location, joint_positions);              // "score", aka distance, in gantry's joint 0, 1, 2 space
+        double distance_i = calcDistanceInXYTorso_Accurate(pset_location, joint_positions);              // "score", aka distance, in gantry's joint 0, 1, 2 space
         distance_and_PresetLocation_struct candidate_struct{distance_i, pset_location};          // make a struct
         vector_of_structs.push_back(candidate_struct);                                           // put struct in list of structs
     }

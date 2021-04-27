@@ -249,6 +249,7 @@ public:
 
     double calcDistanceInXYPlane(geometry_msgs::Pose a, geometry_msgs::Pose b);
     double calcDistanceInXYTorso(PresetLocation pLocation, std::vector<double> joint_positions);
+    double calcDistanceInXYTorso_Accurate(PresetLocation pLocation, std::vector<double> joint_positions);
     PresetLocation getNearesetPresetLocation();
     PresetLocation getNearesetPresetLocation_Simple();
     std::vector<PresetLocation> getPresetLocationVector(PresetLocation target_preset_location);

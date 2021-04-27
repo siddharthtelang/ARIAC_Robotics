@@ -315,7 +315,9 @@ void RWAImplementation::initPresetLocs()
     // and tries to find the closest one to it. That approximate location then serves as the beginning location for any move lookup.
     preset_locations_list_ = {start_a, bin3_a, agv2_a, agv1_staging_a,
                               bottom_left_staging_a, shelf8_a, shelf11_a, bin11_a, shelf5_a, shelf8_fromSouth_far,
-                              shelf11_fromSouth_near, shelf8_fromSouth_near, shelf11_fromNorth_near, shelf8_fromNorth_near, shelf5_fromNorth_near, shelf5_fromSouth_near}; // do not have mid_xyz anything here for now
+                              shelf11_fromSouth_near, shelf8_fromSouth_near, shelf11_fromNorth_near, shelf8_fromNorth_near, shelf5_fromNorth_near, shelf5_fromSouth_near, // working for near picks! 0500
+                              shelf11_fromSouth_far, shelf8_fromSouth_far, shelf11_fromNorth_far, shelf8_fromNorth_far, shelf5_fromNorth_far, shelf5_fromSouth_far,
+                              }; // do not have mid_xyz anything here for now
 
     preset_locations_list_simple_ = {bin3_a, agv2_a, agv1_staging_a,
                               bottom_left_staging_a, shelf8_a, shelf11_a, bin11_a, shelf5_a, shelf8_fromSouth_far}; // do not have mid_xyz anything here for now
@@ -396,9 +398,10 @@ void RWAImplementation::initPresetLocs()
         {{"start_a", "waitpoint_best_south_fromSouth"}, std::vector<PresetLocation>{start_a, agv2_a, waitpoint_best_south_fromSouth}},
 
 
-        ////////////////////////////////////////////////////////////////////////////////////////////////// Row by row, left to right REVERSED
-        {{"shelf8_fromSouth_far", "start_a"}, std::vector<PresetLocation>{shelf8_fromSouth_far, shelf8_fromSouth_near, mid_8_11_intersection_fromSouth, waitpoint_best_south_fromSouth, agv2_a, start_a}},
+        ////////////////////////////////////////////////////////////////////////////////////////////////// shelf8_fromSouth_far (organize this)
+        // {{"shelf8_fromSouth_far", "start_a"}, std::vector<PresetLocation>{shelf8_fromSouth_far, shelf8_fromSouth_near, mid_8_11_intersection_fromSouth, waitpoint_best_south_fromSouth, agv2_a, start_a}},
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////// Row by row, left to right REVERSED, NEAR
 
         {{"shelf11_fromSouth_near", "start_a"}, std::vector<PresetLocation>{shelf11_fromSouth_near, southwest_corner_staging, agv2_a, start_a}},
         {{"shelf8_fromSouth_near", "start_a"}, std::vector<PresetLocation>{shelf8_fromSouth_near, mid_8_11_staging_fromSouth, start_a}},
@@ -407,15 +410,7 @@ void RWAImplementation::initPresetLocs()
         {{"shelf5_fromNorth_near", "start_a"}, std::vector<PresetLocation>{shelf5_fromNorth_near, bottom_left_staging_a, agv1_staging_a, start_a}},
         {{"shelf5_fromSouth_near", "start_a"}, std::vector<PresetLocation>{shelf5_fromSouth_near, mid_5_8_staging_fromSouth, start_a}},
 
-
-        {{"shelf11_fromSouth_near", "start_a"}, std::vector<PresetLocation>{shelf11_fromSouth_near, southwest_corner_staging, agv2_a, start_a}}, 
-        {{"shelf8_fromSouth_near", "start_a"}, std::vector<PresetLocation>{shelf8_fromSouth_near, mid_8_11_staging_fromSouth, start_a}},
-        {{"shelf11_fromNorth_near", "start_a"}, std::vector<PresetLocation>{shelf11_fromNorth_near, shelf11_fromNorth_near, mid_8_11_staging_fromNorth, start_a}},
-        {{"shelf8_fromNorth_near", "start_a"}, std::vector<PresetLocation>{shelf8_fromNorth_near, mid_5_8_staging_fromNorth, start_a}},
-        {{"shelf5_fromNorth_near", "start_a"}, std::vector<PresetLocation>{shelf5_fromNorth_near, bottom_left_staging_a, agv1_staging_a, start_a}},
-        {{"shelf5_fromSouth_near", "start_a"}, std::vector<PresetLocation>{shelf5_fromSouth_near, mid_5_8_staging_fromSouth, start_a}},
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////// Row by row, left to right
+        ////////////////////////////////////////////////////////////////////////////////////////////////// AGV to near or far shelf picks directly
 
         {{"agv1_staging_a", "shelf5_fromNorth_near"}, std::vector<PresetLocation>{agv1_staging_a, agv1_staging_a, bottom_left_staging_a, shelf5_fromNorth_near}},
         {{"agv1_staging_a", "shelf5_fromNorth_far"}, std::vector<PresetLocation>{agv1_staging_a, agv1_staging_a, bottom_left_staging_a, shelf5_fromNorth_far}},
@@ -444,6 +439,14 @@ void RWAImplementation::initPresetLocs()
         {{"agv2_a", "shelf11_fromSouth_near"}, std::vector<PresetLocation>{agv2_a, agv2_a, southwest_corner_staging, shelf11_fromSouth_near}},
         {{"agv2_a", "shelf11_fromSouth_far"}, std::vector<PresetLocation>{agv2_a, agv2_a, southwest_corner_staging, shelf11_fromSouth_far}},
         {{"agv2_a", "southwest_corner_staging"}, std::vector<PresetLocation>{agv2_a, agv2_a, southwest_corner_staging}},
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////// Row by row, left to right REVERSED, FAR
+        {{"shelf11_fromSouth_far", "start_a"}, std::vector<PresetLocation>{shelf11_fromSouth_far, southwest_corner_staging, agv2_a, start_a}}, // only this one, do not go back to near position first
+        {{"shelf8_fromSouth_far", "start_a"}, std::vector<PresetLocation>{shelf8_fromSouth_far, shelf8_fromSouth_near, mid_8_11_staging_fromSouth, start_a}},
+        {{"shelf11_fromNorth_far", "start_a"}, std::vector<PresetLocation>{shelf11_fromNorth_far, shelf11_fromNorth_near, shelf11_fromNorth_near, mid_8_11_staging_fromNorth, start_a}},
+        {{"shelf8_fromNorth_far", "start_a"}, std::vector<PresetLocation>{shelf8_fromNorth_far, shelf8_fromNorth_near, mid_5_8_staging_fromNorth, start_a}},
+        {{"shelf5_fromNorth_far", "start_a"}, std::vector<PresetLocation>{shelf5_fromNorth_far, shelf5_fromNorth_near, bottom_left_staging_a, agv1_staging_a, start_a}},
+        {{"shelf5_fromSouth_far", "start_a"}, std::vector<PresetLocation>{shelf5_fromSouth_far, shelf5_fromSouth_near, mid_5_8_staging_fromSouth, start_a}},
 
 
 
