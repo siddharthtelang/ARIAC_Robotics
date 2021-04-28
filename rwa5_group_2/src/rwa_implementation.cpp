@@ -530,6 +530,7 @@ bool RWAImplementation::buildKit()
     }
     else
     {
+        ROS_INFO_STREAM("Cam Idx: " << discovered_cam_idx);
         ROS_INFO_STREAM("error, the camera idx is not equal to an expected number!!");
     }
 

@@ -172,6 +172,7 @@ std::array<std::vector<CameraListener::ModelInfo>, 17> CameraListener::fetchPart
   std::array<ros::Subscriber, num_cams> logical_camera_subscriber{};
   for (int i = 0; i < num_cams; i++)
   {
+    if(i == 5) continue;
     logical_camera_subscriber[i] = node.subscribe<nist_gear::LogicalCameraImage>(
         "/ariac/logical_camera_" + std::to_string(i), 10,
         boost::bind(&CameraListener::logical_camera_callback, this, _1, i));
