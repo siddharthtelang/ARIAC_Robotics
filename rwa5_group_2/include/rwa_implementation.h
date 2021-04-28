@@ -43,6 +43,7 @@ private:
     ros::Subscriber breakbeam_sub_;
 
     /* ===================== Preset Locations ===================== */
+    std::queue<PresetLocation> empty_bins_;
     PresetLocation conveyor_belt;
     PresetLocation start_a;
 
@@ -286,6 +287,8 @@ public:
     std::array<std::string, 3> gaps; //either "gap_conveyor" or "gap_end"
 
     PresetLocation getNearestBinPresetLocation();
+
+    void rankEmptyBins();
 
     /**
      * \brief: simple drop functionlity

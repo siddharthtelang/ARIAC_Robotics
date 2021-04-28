@@ -23,6 +23,7 @@ void RWAImplementation::processOrder()
 
     auto order = order_list.back();
 
+    int count{0};
     std::queue<std::vector<Product>> order_task_queue;
     for (const auto &shipment : order.shipments)
     {
@@ -40,6 +41,7 @@ void RWAImplementation::processOrder()
         std::vector<Product> shipment_task_queue;
         for (auto &product : products)
         { ////////// FOR PRODUCT IN PRODUCTS
+            count++;
             ROS_INFO_STREAM("Product type = " << product.type);
             product.agv_id = agv_id;
             auto color_type = cam_listener_->getColorType(product.type);
@@ -54,14 +56,16 @@ void RWAImplementation::processOrder()
                 product.designated_model = sorted_map[color][type].top();
                 sorted_map[color][type].pop();
                 shipment_task_queue.push_back(product);
-                ROS_INFO_STREAM(" !sorted_map[color][type].empty() if case entered ");
+                ROS_INFO_STREAM(" Product found on map ");
+                ROS_INFO_STREAM(" Designated Model ID: " << product.designated_model.id);
             }
+            
             else if (full_type == conveyor_type_)
             {
                 product.get_from_conveyor = true;
                 // product.get_from_conveyor = false; // CRITICAL CHANGE FOR TESTING DELETE/COMMENT THIS LINE
                 conveyor_parts.push(product);
-                ROS_INFO_STREAM(" full_type == conveyor_type if case entered ");
+                ROS_INFO_STREAM(" Type is conveyor type ");
             }
             else
             {
@@ -69,7 +73,7 @@ void RWAImplementation::processOrder()
                 // product.get_from_conveyor = false; // CRITICAL CHANGE FOR TESTING DELETE/COMMENT THIS LINE
                 conveyor_type_ = full_type;
                 conveyor_parts.push(product);
-                ROS_INFO_STREAM(" else case entered ");
+                ROS_INFO_STREAM(" No objects found on map! Assuming that it will show up on conveyor... ");
             }
             // total_products[color][type].push(product);
         }
@@ -113,7 +117,7 @@ void RWAImplementation::processOrder()
     //     needs_pair.pop();
     // }
     task_queue_.push(order_task_queue);
-    ROS_INFO_STREAM("Completed order processing. All parts on task queue.");
+    ROS_INFO_STREAM("Completed order processing. " << count << " parts on task queue.");
 
     // // CANNOT ITERATE OVER QUEUE. THIS PART IS JUST FOR TESTING. WILL NOT WORK IF UNCOMMENTED DURING EXECUTION
 //     ROS_INFO_STREAM("");
@@ -493,8 +497,10 @@ bool RWAImplementation::buildKit()
         gantry_->goToPresetLocation(Bump(cam_to_presetlocation[discovered_cam_idx], add_to_x, add_to_y, 0));
         ROS_INFO_STREAM("goToPresetLocation with bump executed! " << cam_to_presetlocation[discovered_cam_idx].name  << " .");
     }
-    else if ((discovered_cam_idx != 0 || discovered_cam_idx != 7 || discovered_cam_idx != 1 || discovered_cam_idx != 2) && discovered_cam_idx >= 0 && discovered_cam_idx <= 16) // Any other camera
+    
+    else if (discovered_cam_idx == 6 || discovered_cam_idx == 8 || discovered_cam_idx == 9 || discovered_cam_idx == 11 || discovered_cam_idx == 12 || discovered_cam_idx == 16) // 6,9,8,12,16,11
     {                                                                 // any other camera
+        ROS_INFO_STREAM("discovered_cam_idx: " << discovered_cam_idx);
         ROS_INFO_STREAM("Any Other Camera Case Reached");
 
         if (!region_dict_defined_) {
@@ -1006,55 +1012,97 @@ geometry_msgs::Pose RWAImplementation::gantryXY2worldposeXY(PresetLocation prese
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-PresetLocation RWAImplementation::getNearestBinPresetLocation()
-{
+void RWAImplementation::rankEmptyBins() {
     // [xlow, xhigh, ylow, yhigh]
     std::vector<std::vector<double>> TwoPointsList = {
-        {2.3, 2.957942, 1.842058, 2.5},
-        {2.3, 2.957942, 1.0, 1.657942},
-        {2.3, 2.957942, -1.657942, -1.0},
-        {2.3, 2.957942, -2.5, -1.842058},
+        {2.3, 2.957942, 1.842058, 2.5}, // bin 5
+        {2.3, 2.957942, 1.0, 1.657942}, // bin 1
+        {2.3, 2.957942, -1.657942, -1.0}, // bin 9
+        {2.3, 2.957942, -2.5, -1.842058}, // bin 13
 
-        {3.14, 3.797, 1.842058, 2.5},
-        {3.14, 3.797, 1.0, 1.657942},
-        {3.14, 3.797, -1.657942, -1.0},
-        {3.14, 3.797, -2.5, -1.842058},
+        {3.14, 3.797, 1.842058, 2.5}, // bin 6
+        {3.14, 3.797, 1.0, 1.657942}, // bin 2
+        {3.14, 3.797, -1.657942, -1.0}, // bin 10
+        {3.14, 3.797, -2.5, -1.842058}, // bin 14
 
-        {3.98, 4.638, 1.842058, 2.5},
-        {3.98, 4.638, 1.0, 1.657942},
-        {3.98, 4.638, -1.657942, -1.0},
-        {3.98, 4.638, -2.5, -1.842058},
+        {3.98, 4.638, 1.842058, 2.5}, // bin 7
+        {3.98, 4.638, 1.0, 1.657942}, // bin 3
+        {3.98, 4.638, -1.657942, -1.0}, // bin 11
+        {3.98, 4.638, -2.5, -1.842058}, // bin 15
 
-        {4.82, 5.478, 1.842058, 2.5},
-        {4.82, 5.478, 1.0, 1.657942},
-        {4.82, 5.478, -1.657942, -1.0},
-        {4.82, 5.478, -2.5, -1.842058},
+        {4.82, 5.478, 1.842058, 2.5}, // bin 8
+        {4.82, 5.478, 1.0, 1.657942}, // bin 4
+        {4.82, 5.478, -1.657942, -1.0}, // bin 12
+        {4.82, 5.478, -2.5, -1.842058}, // bin 16
     };
+    std::vector<int> bin_order{5,1,9,13,6,2,10,14,7,3,11,15,8,4,12,16};
 
-    // poll cameras
+        // poll cameras
     auto cam_parts = cam_listener_->fetchParts(*node_); //  returns std::array<std::vector<CameraListener::ModelInfo>, 17>
 
     // create a flat parts list vector
+    int count{0};
     std::vector<CameraListener::ModelInfo> flat_parts_list;
     for (auto cam_part_array : cam_parts)
     {
         for (auto model_info : cam_part_array)
         {
             flat_parts_list.push_back(model_info);
+            count++;
         }
     }
+    ROS_INFO_STREAM(count << " parts, array has " << flat_parts_list.size() << " parts");
 
-    std::vector<std::vector<double>> ValidPointsList = TwoPointsList;
+    int counter{0};
+    for (auto vec : TwoPointsList) {
+        double box_xlow = vec[0];
+        double box_xhigh = vec[1];
+        double box_ylow = vec[2];
+        double box_yhigh = vec[3];
+        ROS_INFO_STREAM("=========");
+        ROS_INFO_STREAM("x range: (" << box_xlow << ", " << box_xhigh << ")");
+        ROS_INFO_STREAM("y range: (" << box_ylow << ", " << box_yhigh << ")");
+        ROS_INFO_STREAM("=========");
+        bool empty{true};
+        for (auto model_info : flat_parts_list) {
+            double part_x = model_info.world_pose.position.x;
+            double part_y = model_info.world_pose.position.y;
+            
+            ROS_INFO_STREAM("---------");;
+            ROS_INFO_STREAM("Part x: " << part_x << ", part y: " << part_y);
+            ROS_INFO_STREAM("---------");;
 
-    PresetLocation dropPresetLocation;
-    // dropPresetLocation.gantry = {ValidPointsList[0][0] + 0.3, (ValidPointsList[0][2])*-1.0 , 0.0}; // xlow+.3, (ylow+.3)*-1, no spin
-    // dropPresetLocation.gantry = {ValidPointsList[0][0] + 0.0, (ValidPointsList[0][2])*-1.0 , 0.0}; // xlow+.3, (ylow+.3)*-1, no spin
-    dropPresetLocation.gantry = {2.3 - 0.3, (1.842058) * -1.0, 0.0}; // xlow+.3, (ylow+.3)*-1, no spin
-    dropPresetLocation.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    dropPresetLocation.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+            if( (part_x >= box_xlow) && (part_x <= box_xhigh) && (part_y >= box_ylow) && (part_y <= box_yhigh)) {
+                ROS_INFO_STREAM("Part in bin " << bin_order[counter]);
+                empty = false;
+                break;
+            }
+        }
+        if (empty) {
+            PresetLocation dropPresetLocation;
+            dropPresetLocation.gantry = {vec[0] - 0.3, (vec[2])*-1.0 , 0.0}; // xlow+.3, (ylow+.3)*-1, no spin
+            dropPresetLocation.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+            dropPresetLocation.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
+            dropPresetLocation.name = "dropPresetLocation";
+            ROS_INFO_STREAM("target [xlow,xhigh,ylow,yhigh]] == " << vec[0] << " " << vec[1] << " " << vec[2] << " " << vec[3]);
+            empty_bins_.push(dropPresetLocation);
+        }
+        counter++;
+    }
+}
 
-    // ROS_INFO_STREAM( "target Xcoord == " << ValidPointsList[0][0] + 0.0 << " target Ycoord == " << (ValidPointsList[0][2])*-1.0);
-    ROS_INFO_STREAM("target [xlow,xhigh,ylow,yhigh]] == " << ValidPointsList[0][0] << " " << ValidPointsList[0][1] << " " << ValidPointsList[0][2] << " " << ValidPointsList[0][3]);
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+PresetLocation RWAImplementation::getNearestBinPresetLocation()
+{
+    if (empty_bins_.empty()) {
+        ROS_INFO_STREAM("No known empty bins. Attempting to find...");
+        rankEmptyBins();
+    }
+    ROS_INFO_STREAM("Selecting empty bin... " << empty_bins_.size() << " to choose from.");
+    auto dropPresetLocation{empty_bins_.front()};
+    ROS_INFO_STREAM("Selected " << dropPresetLocation.name);
+    empty_bins_.pop();
 
     return dropPresetLocation;
 }
