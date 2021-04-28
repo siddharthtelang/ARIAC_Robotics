@@ -216,12 +216,12 @@ void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
         // auto clear = lane_handler.clearLanes();                 // [Northernmost Lane Row .......... Southermost Lane Row]
         // if(!clear[4]) return;                                   // "clear[4] == true" means that exactly two lanes are known to have obstacles
         // std::array<bool, 5> clear = {true, true ,false ,true, false};
-        std::array<bool, 5> clear = {true, false ,false ,true, true};
+        std::array<bool, 5> clear = {false, true ,true ,true, false};
 
 
         region_dict_defined_ = true;
         if (clear[0] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "nowait", "fromNorth", "near"}; }
-        else if (clear[1] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "nowait", "fromNorth"}; }
+        else if (clear[1] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromSouth_far", "nowait", "fromSouth", "far"}; }
         else if (clear[0] == false && clear[1] == false) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "wait", "fromNorth", "near"}; }
 
 
@@ -292,6 +292,13 @@ void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
         if (clear[3] == true) { regionDictionary["shelf11lower"] = {"shelf11_fromSouth_near", "nowait", "fromSouth", "near"}; }
         else if (clear[2] == true) { regionDictionary["shelf11lower"] = {"shelf11_fromNorth_far", "nowait", "fromNorth", "far"}; }
         else if (clear[2] == false && clear[3] == false) { regionDictionary["shelf11lower"] = {"shelf11_fromNorth_near", "wait", "fromNorth", "near"}; }
+
+
+        ////////////////////// Shelves 1 and 2 //////////////////////////////////
+        regionDictionary["shelf1upper"] = {"shelf1_fromSouth_far", "nowait", "fromSouth", "far"};
+        regionDictionary["shelf1lower"] = {"shelf1_fromSouth_near", "nowait", "fromSouth", "near"};
+        regionDictionary["shelf2upper"] = {"shelf2_fromNorth_near", "nowait", "fromNorth", "near"};
+        regionDictionary["shelf2lower"] = {"shelf2_fromNorth_far", "nowait", "fromNorth", "far"};
     }
 }
 
@@ -336,6 +343,8 @@ bool RWAImplementation::buildKit()
     ROS_INFO_STREAM(" moved to bin === " << moved_to_bin);
     std::string near_or_far_string = "near"; // assume near unless shown otherwise
 
+    bool moved_to_shelf_1_or_2 = false;
+
     // if (false) // if part was moved from conveyor to the bin CRITICAL FOR TESTING ONLY, COMMENT THIS LINE
     if (product.get_from_conveyor == true)
     { // if part was moved from conveyor to the bin
@@ -371,6 +380,80 @@ bool RWAImplementation::buildKit()
 
         buffer_parts_collected--; // this should occur later in future, after part is actually picked up
     }
+    else if (discovered_cam_idx == 10 || discovered_cam_idx == 13 || discovered_cam_idx == 14 || discovered_cam_idx == 15 ) // shelves 1 and 2
+    {
+        //////////////////////////////////////////////////////////// Begin Shelf 1 or 2 Case ////////////////////////////////////////////////////////////
+
+        moved_to_shelf_1_or_2 = true;
+        ROS_INFO_STREAM(" moved to shelf 1 or 2 block entered, should be true now -> === " << moved_to_shelf_1_or_2);
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        std:: string shelf_and_upper_or_lower_string = isPartInUpperOrLowerRegionOfWhichShelf(my_part, discovered_cam_idx); // ie. "shelf2upper"
+        ROS_INFO_STREAM("shelf_and_upper_or_lower_string: " << shelf_and_upper_or_lower_string);
+        ROS_INFO_STREAM("executed isPartInUpperOrLowerRegionOfWhichShelf successfully ");
+
+        std::vector<std::string> information_string_vector = regionDictionary[shelf_and_upper_or_lower_string]; // ie. ["shelf5_fromNorth_near", "nowait", "fromNorth", "near"]
+        std::string preset_location_string = information_string_vector[0]; // ie. "shelf1_fromSouth_near"
+        wait_or_nowait_string = information_string_vector[1]; // ie. "nowait"
+        std::string fromNorth_or_fromSouth_string = information_string_vector[2]; // ie. "fromSouth"
+        near_or_far_string = information_string_vector[3]; // ie. "near"
+
+
+        // Create Bump() offsets, 4 possible scenarios
+        ROS_INFO_STREAM("Calculating offsets...");
+        double add_to_x_shelf = my_part.pose.position.x - -13.522081; // constant is perfect bin red pulley x
+        double add_to_y_shelf = my_part.pose.position.y - 3.446263; // constant is perfect bin red pulley y
+        double add_to_torso = 0.0;
+
+        if (near_or_far_string == "near" && fromNorth_or_fromSouth_string == "fromSouth") {
+            ROS_INFO_STREAM("Case 1 fromSouth near encountered for offsets...");
+
+            add_to_x_shelf = my_part.pose.position.x - -13.522081      + 1.795838; // red pulley + offset to account for spin
+            add_to_y_shelf = my_part.pose.position.y - 3.446263        - 1.707474; // constant is perfect bin red pulley y
+            add_to_torso = -PI; // spin torso
+            // add_to_torso = 0.0; // spin torso
+        }
+        else if (near_or_far_string == "near" && fromNorth_or_fromSouth_string == "fromNorth") {
+            ROS_INFO_STREAM("Case 2 fromNorth near encountered for offsets...");
+
+            add_to_x_shelf = my_part.pose.position.x - -13.522081; // red pulley
+            add_to_y_shelf = my_part.pose.position.y - 3.446263; // red pulley
+            add_to_torso = 0.0;
+        }
+        else if (near_or_far_string == "far" && fromNorth_or_fromSouth_string == "fromNorth") {
+            ROS_INFO_STREAM("Case 3 fromNorth far encountered for offsets...");
+            add_to_x_shelf = my_part.pose.position.x - -13.522081; // red pulley
+            add_to_y_shelf = my_part.pose.position.y - -3.523814; // Blue Pulley
+            add_to_torso = 0.0;
+        }
+        else if (near_or_far_string == "far" && fromNorth_or_fromSouth_string == "fromSouth") {
+            ROS_INFO_STREAM("Case 4 fromSouth far encountered for offsets...");
+            add_to_x_shelf = my_part.pose.position.x - -13.522081       + 0.34115; // blue pulley + account for spin
+            add_to_y_shelf = my_part.pose.position.y - -3.523814        - 3.127628; // blue pulley + account for spin
+            add_to_torso = PI; // spin torso
+        }
+        else {
+            // code should not reach here
+            ROS_INFO_STREAM("error, Shelf 1 or 2, and unknown condition found for near_or_far_string and fromNorth_or_fromSouth_string"); 
+        }
+
+        ROS_INFO_STREAM("Shelf 1 and 2 condtion encountered");
+        // Lookup PresetLocation in noWaitDictionary
+        std::vector<PresetLocation> path = getPresetLocationVectorUsingString(preset_location_string, wait_or_nowait_string); // initialize with no wait
+        ROS_INFO_STREAM("getPresetLocationVector executed!");
+
+        executeVectorOfPresetLocations(path);
+        ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
+
+        if (near_or_far_string == "near") { gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, add_to_torso)); }
+        else if (near_or_far_string == "far") { gantry_->goToPresetLocation(Bump(shelf11_south_far, add_to_x_shelf, add_to_y_shelf, add_to_torso));}
+
+
+        //////////////////////////////////////////////////////////// End Shelf 1 or 2 Case ////////////////////////////////////////////////////////////
+
+
+    }
+
     else if (discovered_cam_idx == 0 || discovered_cam_idx == 7 || discovered_cam_idx == 1 || discovered_cam_idx == 2) // the bins
     {
         moved_to_bin = true;
@@ -562,6 +645,12 @@ bool RWAImplementation::buildKit()
     }
     else if (moved_to_bin == true) { // deal with minor shelf bumping RWA5
         std::vector<PresetLocation> path = getPresetLocationVector_Simple(start_a); // use simple gantry x and y euclidean distance only, not every joint
+        executeVectorOfPresetLocations(path);
+        ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves // Commented for speed Human Obstacles
+    }
+    else if (moved_to_shelf_1_or_2 == true) { // Shelves 1 and 2 (this code is a bit redundant, but just to be safe)
+        // std::vector<PresetLocation> path = getPresetLocationVector(start_a);
+        std::vector<PresetLocation> path = getPresetLocationVectorUsingString_Specific(start_a.name, "nowait", shelf_1_or_2_preset_locations_list_);
         executeVectorOfPresetLocations(path);
         ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves // Commented for speed Human Obstacles
     }

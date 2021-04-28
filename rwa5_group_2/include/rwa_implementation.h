@@ -124,12 +124,21 @@ private:
     PresetLocation waitpoint_best_north_fromNorth_near;
     PresetLocation mid_5_8_intersection_fromNorth_near;
 
+    //////////// Shelves 1 and 2
+    // shelf1_fromSouth_far, shelf1_fromSouth_near, shelf2_fromNorth_near, shelf2_fromNorth_far
+    PresetLocation shelf1_fromSouth_far;
+    PresetLocation shelf1_fromSouth_near;
+    PresetLocation shelf2_fromNorth_near;
+    PresetLocation shelf2_fromNorth_far;
+
+
     //////////// End Shelf Preset Locations
 
     std::vector<PresetLocation> preset_locations_list_; // lookup list to compare distances with
     std::vector<PresetLocation> preset_locations_list_simple_; // lookup list to compare distances with
     std::vector<std::string> wait_preset_locations_list_;
     std::vector<PresetLocation> inner_fast_preset_locations_list_;
+    std::vector<PresetLocation> shelf_1_or_2_preset_locations_list_;
 
     /* ===================== Conveyor Variables ===================== */
     const float dx_ = 6.6;
@@ -293,7 +302,10 @@ public:
      * \result: string with information about part location
      */
     std::string isPartInUpperOrLowerRegionOfWhichShelf(part my_part, int discovered_cam_idx) {
+        // ROS_INFO_STREAM("Entered isPartInUpperOrLowerRegionOfWhichShelf, discovered_cam_idx is:" << discovered_cam_idx);
         std::string shelf_string = cam_to_shelf_string[discovered_cam_idx]; // ie. "shelf5"
+
+        ROS_INFO_STREAM("shelf_string is: " << shelf_string);
 
         double product_y_coord = my_part.pose.position.y;
         double camera_y_coord = cam_to_y_coordinate[discovered_cam_idx];
