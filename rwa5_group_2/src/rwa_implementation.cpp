@@ -150,7 +150,14 @@ PresetLocation Bump(PresetLocation location_to_modify, double small_rail, double
 bool RWAImplementation::checkConveyor()
 {
     bool continue_ = false;
+    ROS_INFO_STREAM("===========================================");
     ROS_INFO_STREAM("Checking conveyor...");
+
+    ROS_INFO_STREAM("Waiting for part: " << waiting_for_part_);
+    ROS_INFO_STREAM("Load time on conveyor size: " << cam_listener_->load_time_on_conveyor_.size());
+    ROS_INFO_STREAM("Parts on conveyor size: " << cam_listener_->parts_on_conveyor_.size());
+    ROS_INFO_STREAM("buffer parts collected: " << buffer_parts_collected);
+
 
     if (!waiting_for_part_ && !cam_listener_->load_time_on_conveyor_.empty() && !cam_listener_->parts_on_conveyor_.empty())
     {
@@ -160,7 +167,7 @@ bool RWAImplementation::checkConveyor()
         cam_listener_->load_time_on_conveyor_.pop();
         cam_listener_->parts_on_conveyor_.pop_front();
     }
-    if (buffer_parts_collected < buffer_parts_ && waiting_for_part_)
+    if ((buffer_parts_collected < buffer_parts_) && waiting_for_part_)
     {
         ROS_INFO_STREAM("Get Cam Part, buffer parts count: " << buffer_parts_collected);
         if ((ros::Time::now() - current_part_load_time_).toSec() > dx_ / cam_listener_->conveyor_spd_ - 4)
@@ -199,6 +206,7 @@ bool RWAImplementation::checkConveyor()
         buffer_parts_collected++;
         continue_ = true;
     }
+    ROS_INFO_STREAM("===========================================");
     return continue_;
 }
 
@@ -1070,7 +1078,7 @@ void RWAImplementation::checkAgvErrors()
             task_queue_.top().pop();
 
             if(task_queue_.top().empty()) 
-                task_queue_.top();
+                task_queue_.pop();
         }
         else
         {
@@ -1209,7 +1217,7 @@ bool RWAImplementation::checkAndCorrectPose(std::string agv_id)
 }
 
 bool RWAImplementation::competition_over() {
-    if (competition_started_ && task_queue_.top().empty()){
+    if (competition_started_ && task_queue_.empty()){
         ros::Duration(15).sleep();
         ROS_INFO_STREAM("Competition ending...");
         return true;
