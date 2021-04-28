@@ -62,6 +62,8 @@ class GantryControl {
     
 
     bool pickPartFast(part part, std::string arm);
+    
+    bool pickPartFast_Near(part part, std::string arm);
 
     /**
      * \brief: Returns true or false depending on whether part was successfully placed.

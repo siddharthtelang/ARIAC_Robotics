@@ -213,10 +213,10 @@ void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
     if (!region_dict_defined_) 
     {
         ROS_INFO_STREAM(" Human Obstacles not initialized, Error, need to add some code here ************************************************");
-        auto clear = lane_handler.clearLanes();                 // [Northernmost Lane Row .......... Southermost Lane Row]
-        if(!clear[4]) return;                                   // "clear[4] == true" means that exactly two lanes are known to have obstacles
+        // auto clear = lane_handler.clearLanes();                 // [Northernmost Lane Row .......... Southermost Lane Row]
+        // if(!clear[4]) return;                                   // "clear[4] == true" means that exactly two lanes are known to have obstacles
         // std::array<bool, 5> clear = {true, true ,false ,true, false};
-        // std::array<bool, 5> clear = {true, false ,false ,true, true};
+        std::array<bool, 5> clear = {true, false ,false ,true, true};
 
 
         region_dict_defined_ = true;
@@ -249,7 +249,7 @@ void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
             }
             else if ( gaps[0] == "gap_end" ) { // Gap is between shelf 5 and shelf 4
                 ROS_INFO_STREAM(" gap_end [0] case shelf8upper");
-                regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near_fast", "wait", "fromNorth", "near"};
+                regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near", "wait", "fromNorth", "near"};
             }
             else {
                 ROS_INFO_STREAM(" Error gaps not found");
@@ -473,7 +473,7 @@ bool RWAImplementation::buildKit()
             ROS_INFO_STREAM("getPresetLocationVector executed!");
 
             executeVectorOfPresetLocationsWithWait(path); // Note the With Wait version is being called here
-            ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
+            ROS_INFO_STREAM("executeVectorOfPresetLocationsWithWait executed!");
 
             if (near_or_far_string == "near") { gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, add_to_torso)); }
             else if (near_or_far_string == "far") { gantry_->goToPresetLocation(Bump(shelf11_south_far, add_to_x_shelf, add_to_y_shelf, add_to_torso));}
@@ -533,7 +533,7 @@ bool RWAImplementation::buildKit()
     }
     else if (wait_or_nowait_string == "wait" && near_or_far_string == "near" ) { // wait and near pick (just lift up normally, avoid scraping on shelf lip)
         //--Go pick the part
-        if (!gantry_->pickPart(my_part, "left_arm") && wait_or_nowait_string == "nowait")
+        if (!gantry_->pickPartFast_Near(my_part, "left_arm") && wait_or_nowait_string == "nowait")
         {
             //pass
         }
@@ -793,6 +793,7 @@ bool RWAImplementation::executeVectorOfPresetLocations(std::vector<PresetLocatio
         ROS_INFO_STREAM("Moving to PresetLocation: >>>>> " << psetlocation.name);
         gantry_->goToPresetLocation(psetlocation);
         ros::Duration(0.25).sleep();
+        // ros::Duration(0.05).sleep();
     }
     return true;
 }

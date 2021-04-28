@@ -121,6 +121,9 @@ private:
     PresetLocation waitpoint_best_south_fromSouth_near;
     PresetLocation mid_8_11_intersection_fromSouth_near;
 
+    PresetLocation waitpoint_best_north_fromNorth_near;
+    PresetLocation mid_5_8_intersection_fromNorth_near;
+
     //////////// End Shelf Preset Locations
 
     std::vector<PresetLocation> preset_locations_list_; // lookup list to compare distances with

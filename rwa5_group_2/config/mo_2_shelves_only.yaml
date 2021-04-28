@@ -31,11 +31,11 @@ shelf_layout:
   row_1: ['base','base',0,'base'] #shelves: 3, 4, 5
   row_2: ['pipe','base',0,'base']   #shelves: 6, 7, 8
   # row_3: ['base','pipe',0,'collar'] #shelves: 9, 10, 11
-  row_3: ['base','pipe',0,'collar'] #shelves: 9, 10, 11
+  row_3: ['base',0,'pipe','collar'] #shelves: 9, 10, 11
 
 aisle_layout:
   person_1:
-    location: -1.57
+    location: 1.57
     start_time: 0.
     move_time: 9.
     wait_time: 7.
@@ -201,7 +201,7 @@ models_over_shelves:
   shelf8:
     models:
       pulley_part_green:
-        xyz_start: [1, -0.5, 0.0]
+        xyz_start: [1, 0.5, 0.0]
         xyz_end: [0., -0.4, 0]
         rpy: [0, 0, 'pi/4']
         num_models_x: 3
