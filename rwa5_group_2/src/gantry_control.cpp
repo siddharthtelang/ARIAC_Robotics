@@ -235,7 +235,7 @@ bool GantryControl::pickPart(part part, std::string arm)
     part.pose.orientation.y = currentPose.orientation.y;
     part.pose.orientation.z = currentPose.orientation.z;
     part.pose.orientation.w = currentPose.orientation.w;
-       ROS_INFO_STREAM("["<< part.type<<"]= " << part.pose.position.x << ", " << part.pose.position.y << "," << part.pose.position.z << "," << part.pose.orientation.x << "," << part.pose.orientation.y << "," << part.pose.orientation.z << "," << part.pose.orientation.w);
+    ROS_INFO_STREAM("["<< part.type<<"]= " << part.pose.position.x << ", " << part.pose.position.y << "," << part.pose.position.z << "," << part.pose.orientation.x << "," << part.pose.orientation.y << "," << part.pose.orientation.z << "," << part.pose.orientation.w);
 
     auto state = getGripperState(arm);
     //keep trying till state is enabled
@@ -252,14 +252,14 @@ bool GantryControl::pickPart(part part, std::string arm)
         temp_arm_group->move();
         auto state = getGripperState(arm);
         // ros::Duration(0.5).sleep(); // Commented for speed Human Obstacles
-        ros::Duration(1.0).sleep(); // Commented for speed Human Obstacles
+        //ros::Duration(1.0).sleep(); // Commented for speed Human Obstacles
         if (state.attached)
         {
             ROS_INFO_STREAM("[Gripper] = object attached");
             //--Move arm to previous position
             temp_arm_group->setPoseTarget(currentPose);
             temp_arm_group->move();
-            ros::Duration(0.5).sleep(); // try to get it to lift before doing anything else! // Commented for speed Human Obstacles
+            ros::Duration(2.0).sleep(); // try to get it to lift before doing anything else! // Commented for speed Human Obstacles
 
             ROS_INFO_STREAM("Part Picked Successfully!");
 
@@ -582,11 +582,48 @@ bool GantryControl::replaceFaultyPart(part Part, std::string agv, std::string ar
     ROS_INFO_STREAM("To replace world position = " << target_pose_in_tray << " and agv =  " << agv);
     part partToPick = Part;
     partToPick.pose = target_pose_in_tray;
+
+    if (partToPick.type.find("gasket") == 0)
+        partToPick.pose.position.z += 0.0275; // test------------------ gasket 0.0195 0.0275
+    else if (partToPick.type.find("piston") == 0)
+        partToPick.pose.position.z += 0.0295; // test------------------ 0.03both  piston 0.0325
+    else if (partToPick.type.find("pulley") == 0)
+        partToPick.pose.position.z += 0.02;
+    else
+        partToPick.pose.position.z += 0.025;
+
+    if (Part.pose.position.x < 0 && Part.pose.position.y < 0 && agv == "agv2")
+    {
+        auto temp = agv2_a;
+        temp.gantry = {0.3, 6.9, PI};
+        temp.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+        temp.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+        goToPresetLocation(temp);
+    }
+    else if (Part.pose.position.x > 0 && Part.pose.position.y < 0 && agv == "agv1")
+    {
+        auto temp = agv1_a;
+        temp.gantry = {-0.6, -6.9, PI};
+        temp.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+        temp.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+        goToPresetLocation(temp);
+        arm = "right_arm";
+    }
+    else if (Part.pose.position.x < 0 && Part.pose.position.y < 0 && agv == "agv1")
+    {
+        auto temp = agv1_a;
+        temp.gantry = {-0.3, -6.9, PI};
+        temp.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+        temp.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+        goToPresetLocation(temp);
+        arm = "right_arm";
+    }
+
     bool success = pickPart(partToPick, arm);
     if (success)
     {
         ROS_INFO("Pick faulty part success, now proceed to throw");
-	    //goToPresetLocation(agv == "agv1" ? agv1_ : agv2_);
+        //goToPresetLocation(agv == "agv1" ? agv1_ : agv2_);
         //ros::Duration(0.5).sleep();
         goToPresetLocation(start_);
         //ros::Duration(0.5).sleep();

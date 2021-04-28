@@ -944,6 +944,7 @@ void RWAImplementation::checkAgvErrors()
         }
 
         bool foundInTaskQueue = false;
+        bool success = false;
         //Now go through each part to be replaced and find corresponding entry in task_queue_ to update
         //and then finally discard the faulty part
         for (i = 0; i < to_replace.size(); i++)
@@ -964,21 +965,34 @@ void RWAImplementation::checkAgvErrors()
                     if (!(x < 0.1 && y < 0.1))
                         continue;
                     foundInTaskQueue = true;
-                    auto Product = task_queue_.top().front()[j];
-                    if (!sorted_map[Product.designated_model.color][Product.designated_model.type].empty())
-                    {
-                        ROS_INFO("Faulty part detected, proceed to get new one");
-                        //pick new model
-                        Product.designated_model = sorted_map[Product.designated_model.color][Product.designated_model.type].top();
-                        sorted_map[Product.designated_model.color][Product.designated_model.type].pop();
 
+                    // throw away part
+                    success = gantry_->replaceFaultyPart(to_replace[i], product.agv_id, "left_arm");
+
+                    auto Product = task_queue_.top().front()[j];
+                    if (success)
+                    {
+                        if (!sorted_map[Product.designated_model.color][Product.designated_model.type].empty())
+                        {
+                            ROS_INFO("Faulty part detected, proceed to get new one");
+                            //pick new model
+                            Product.designated_model = sorted_map[Product.designated_model.color][Product.designated_model.type].top();
+                            sorted_map[Product.designated_model.color][Product.designated_model.type].pop();
+
+                        }
+                        else
+                            Product.get_from_conveyor = true;
+
+                        Product.replacement = true;
+                        task_queue_.top().front()[j] = Product;
                     }
                     else
-                        Product.get_from_conveyor = true;
-
-                    Product.replacement = true;
-                    task_queue_.top().front()[j] = Product;
-                    //break;
+                    {
+                        ROS_INFO_STREAM("Faulty part could not be picked up from the tray.... just delete from the task queue");
+                        override = true;
+                        //TODO - you can also delete the product from task queue in this block....
+                        //If any bug is caught, directly remove from here.
+                    }
                 }
             }
             /* if the product is not found in the task queue, that means it is already removed from the
@@ -994,20 +1008,25 @@ void RWAImplementation::checkAgvErrors()
                         auto Product = checkLater[k];
                         ROS_INFO_STREAM("Sensor blackout prevented " <<to_replace[i].type << " to be checked for faulty and is found faulty.");
                         ROS_INFO("Throw away this part and update the task queue to add replacement part");
-                        if (!sorted_map[Product.designated_model.color][Product.designated_model.type].empty())
+                        // throw away part
+                        success = gantry_->replaceFaultyPart(to_replace[i], product.agv_id, "left_arm");
+
+                        if (success && !sorted_map[Product.designated_model.color][Product.designated_model.type].empty())
                         {
                             ROS_INFO("Assign new model");
                             Product.designated_model = sorted_map[Product.designated_model.color][Product.designated_model.type].top();
                             sorted_map[Product.designated_model.color][Product.designated_model.type].pop();
-                            //checkLater[k] = Product;
+
+                            //mark it as a replacement
+                            Product.replacement = true;
                             task_queue_.top().front().push_back(Product);
                         }
+                        // if not successful in picking up the part, leave it as is.
+                        if (!success)
+                            ROS_INFO_STREAM("Faulty part could not be picked up from tray...");
                     }
                 }
             }
-            //to_replace[i].pose = product.pose; //test----------
-            bool success = gantry_->replaceFaultyPart(to_replace[i], product.agv_id, "left_arm");
-            //TODO - if not success, we can not do anything - leave the part as is and empty the task queue
         }
         checkLater.clear();
     }
