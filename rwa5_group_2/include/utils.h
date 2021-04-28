@@ -173,7 +173,9 @@ private:
 class AllLanesHandler {
 
 public:
-    AllLanesHandler() : lanes_{} {}
+    AllLanesHandler() : lanes_{} {
+        start_time = ros::Time::now().toSec();
+    }
 
     /**
      * \brief: Method to subscribe to breakbeam sensors in shelf lanes
@@ -201,6 +203,8 @@ public:
 
 private:
     std::array<LaneBreakbeamPair, 4> lanes_{};
+    double start_time{};
+    const double wait_time{30};
     
 };
 

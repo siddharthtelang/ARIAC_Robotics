@@ -218,10 +218,9 @@ void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
         // std::array<bool, 5> clear = {true, true ,false ,true, false};
         // std::array<bool, 5> clear = {true, false ,false ,true, true};
 
-
         region_dict_defined_ = true;
         if (clear[0] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "nowait", "fromNorth", "near"}; }
-        else if (clear[1] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "nowait", "fromNorth"}; }
+        else if (clear[1] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "nowait", "fromNorth", "near"}; }
         else if (clear[0] == false && clear[1] == false) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "wait", "fromNorth", "near"}; }
 
 
@@ -414,12 +413,17 @@ bool RWAImplementation::buildKit()
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////
-        std:: string shelf_and_upper_or_lower_string = isPartInUpperOrLowerRegionOfWhichShelf(my_part, discovered_cam_idx); // ie. "shelf5upper"
+        std::string shelf_and_upper_or_lower_string = isPartInUpperOrLowerRegionOfWhichShelf(my_part, discovered_cam_idx); // ie. "shelf5upper"
+        ROS_INFO_STREAM("shelf_and_upper_or_lower_string: " << shelf_and_upper_or_lower_string);
         ROS_INFO_STREAM("executed isPartInUpperOrLowerRegionOfWhichShelf successfully ");
         std::vector<std::string> information_string_vector = regionDictionary[shelf_and_upper_or_lower_string]; // ie. ["shelf5_fromNorth_near", "nowait", "fromNorth", "near"]
+        ROS_INFO_STREAM("423");
         std::string preset_location_string = information_string_vector[0]; // ie. "shelf5_fromNorth_near"
+        ROS_INFO_STREAM("425");
         wait_or_nowait_string = information_string_vector[1]; // ie. "nowait"
+        ROS_INFO_STREAM("427");
         std::string fromNorth_or_fromSouth_string = information_string_vector[2]; // ie. "fromNorth"
+        ROS_INFO_STREAM("429");
         near_or_far_string = information_string_vector[3]; // ie. "near"
 
         // Create Bump() offsets, 4 possible scenarios

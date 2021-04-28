@@ -588,7 +588,7 @@ bool GantryControl::replaceFaultyPart(part Part, std::string agv, std::string ar
     else if (partToPick.type.find("piston") == 0)
         partToPick.pose.position.z += 0.0295; // test------------------ 0.03both  piston 0.0325
     else if (partToPick.type.find("pulley") == 0)
-        partToPick.pose.position.z += 0.02;
+        partToPick.pose.position.z += 0;
     else
         partToPick.pose.position.z += 0.025;
 
