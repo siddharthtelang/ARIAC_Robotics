@@ -933,12 +933,6 @@ void RWAImplementation::checkAgvErrors()
                 if (x < 0.03 && y < 0.03)
                 {
                     faulty_part = parts_in_tray[camera_index][j];
-                    if (faulty_part.type.find("piston") == 0 || faulty_part.type.find("gasket") == 0)
-                    {
-                        ROS_INFO("Found gasket or piston as faulty, unable to replace for now. Skip");
-                        override = true;
-                        continue;
-                    }
                     //faulty_part.target_pose = faulty.world_pose;//test-----------------
                     ROS_INFO_STREAM("Faulty part matched - type = " << faulty_part.type << "\n, Pose = " << faulty_part.pose);
                     to_replace.push_back(faulty_part);
