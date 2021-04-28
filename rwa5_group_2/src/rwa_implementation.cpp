@@ -361,7 +361,7 @@ bool RWAImplementation::buildKit()
         auto color_type = cam_listener_->getColorType(product.type);
         auto cam_parts_repoll = cam_listener_->ordered_color_type[color_type[0]][color_type[1]];
 
-        if(cam_parts_repoll.empty()) return false;
+        if(cam_parts_repoll.empty()) return true;
         CameraListener::ModelInfo model_info_conveyor_part = cam_parts_repoll[0]; // todo deal with not enough saved up conveyor parts
 
         my_part.pose.position.x = model_info_conveyor_part.world_pose.position.x; // seems very redundant to store in the modelInfo and part
@@ -1059,7 +1059,7 @@ void RWAImplementation::rankEmptyBins() {
         double box_xhigh = vec[1];
         double box_ylow = vec[2];
         double box_yhigh = vec[3];
-        ROS_INFO_STREAM("=========");
+        ROS_INFO_STREAM("==== " << bin_order[counter] <<"====");
         ROS_INFO_STREAM("x range: (" << box_xlow << ", " << box_xhigh << ")");
         ROS_INFO_STREAM("y range: (" << box_ylow << ", " << box_yhigh << ")");
         ROS_INFO_STREAM("=========");
@@ -1068,9 +1068,9 @@ void RWAImplementation::rankEmptyBins() {
             double part_x = model_info.world_pose.position.x;
             double part_y = model_info.world_pose.position.y;
             
-            ROS_INFO_STREAM("---------");;
-            ROS_INFO_STREAM("Part x: " << part_x << ", part y: " << part_y);
-            ROS_INFO_STREAM("---------");;
+            // ROS_INFO_STREAM("---------");
+            // ROS_INFO_STREAM("Part x: " << part_x << ", part y: " << part_y);
+            // ROS_INFO_STREAM("---------");
 
             if( (part_x >= box_xlow) && (part_x <= box_xhigh) && (part_y >= box_ylow) && (part_y <= box_yhigh)) {
                 ROS_INFO_STREAM("Part in bin " << bin_order[counter]);
@@ -1080,7 +1080,7 @@ void RWAImplementation::rankEmptyBins() {
         }
         if (empty) {
             PresetLocation dropPresetLocation;
-            dropPresetLocation.gantry = {vec[0] - 0.3, (vec[2])*-1.0 , 0.0}; // xlow+.3, (ylow+.3)*-1, no spin
+            dropPresetLocation.gantry = {vec[0], (vec[2]*-1.0)-0.63-0.63/2.0 , 0.0}; // xlow+.3, (ylow+.3)*-1, no spin
             dropPresetLocation.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
             dropPresetLocation.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
             dropPresetLocation.name = "dropPresetLocation";
