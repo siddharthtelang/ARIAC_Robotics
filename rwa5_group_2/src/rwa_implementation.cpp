@@ -202,6 +202,7 @@ bool RWAImplementation::checkConveyor()
         PresetLocation drop_location = getNearestBinPresetLocation();
         gantry_->goToPresetLocation(Bump(drop_location, 0.0, -0.8, 0));
         simpleDropPart();
+        gantry_->goToPresetLocation(start_a);
 
         buffer_parts_collected++;
         continue_ = true;
