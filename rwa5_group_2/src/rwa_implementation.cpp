@@ -999,25 +999,25 @@ PresetLocation RWAImplementation::getNearestBinPresetLocation()
 {
     // [xlow, xhigh, ylow, yhigh]
     std::vector<std::vector<double>> TwoPointsList = {
-        {2.3, 2.957942, 1.842058, 2.5},
-        {2.3, 2.957942, 1.0, 1.657942},
-        {2.3, 2.957942, -1.657942, -1.0},
-        {2.3, 2.957942, -2.5, -1.842058},
+        {2.3, 2.957942, 1.842058, 2.5}, // bin 5
+        {2.3, 2.957942, 1.0, 1.657942}, // bin 1
+        {2.3, 2.957942, -1.657942, -1.0}, // bin 9
+        {2.3, 2.957942, -2.5, -1.842058}, // bin 13
 
-        {3.14, 3.797, 1.842058, 2.5},
-        {3.14, 3.797, 1.0, 1.657942},
-        {3.14, 3.797, -1.657942, -1.0},
-        {3.14, 3.797, -2.5, -1.842058},
+        {3.14, 3.797, 1.842058, 2.5}, // bin 6
+        {3.14, 3.797, 1.0, 1.657942}, // bin 2
+        {3.14, 3.797, -1.657942, -1.0}, // bin 10
+        {3.14, 3.797, -2.5, -1.842058}, // bin 14
 
-        {3.98, 4.638, 1.842058, 2.5},
-        {3.98, 4.638, 1.0, 1.657942},
-        {3.98, 4.638, -1.657942, -1.0},
-        {3.98, 4.638, -2.5, -1.842058},
+        {3.98, 4.638, 1.842058, 2.5}, // bin 7
+        {3.98, 4.638, 1.0, 1.657942}, // bin 3
+        {3.98, 4.638, -1.657942, -1.0}, // bin 11
+        {3.98, 4.638, -2.5, -1.842058}, // bin 15
 
-        {4.82, 5.478, 1.842058, 2.5},
-        {4.82, 5.478, 1.0, 1.657942},
-        {4.82, 5.478, -1.657942, -1.0},
-        {4.82, 5.478, -2.5, -1.842058},
+        {4.82, 5.478, 1.842058, 2.5}, // bin 8
+        {4.82, 5.478, 1.0, 1.657942}, // bin 4
+        {4.82, 5.478, -1.657942, -1.0}, // bin 12
+        {4.82, 5.478, -2.5, -1.842058}, // bin 16
     };
 
     // poll cameras
@@ -1033,17 +1033,73 @@ PresetLocation RWAImplementation::getNearestBinPresetLocation()
         }
     }
 
-    std::vector<std::vector<double>> ValidPointsList = TwoPointsList;
+    std::vector<std::vector<double>> vector = TwoPointsList;
+
+    // std::vector<std::string>::iterator iter; // https://stackoverflow.com/questions/1604588/iterate-vector-remove-certain-items-as-i-go loop through vector, remove certain items
+    // for (iter = ValidPointsList.begin(); iter != ValidPointsList.end(); ) {
+    //     if (::DeleteFile(iter->c_str()))
+    //         iter = ValidPointsList.erase(iter);
+    //     else
+    //         ++iter;
+    // }
+
+    // https://stackoverflow.com/questions/4713131/removing-item-from-vector-while-iterating
+
+    double part_x = 0.0;
+    double part_y = 0.0;
+
+    double box_xlow = 0.0;
+    double box_xhigh = 0.0;
+    double box_ylow = 0.0;
+    double box_yhigh = 0.0;
+
+    int size = vector.size();
+    for (int i = 0; i < size; ++i) { // for every bin
+
+        for (auto model_info : flat_parts_list) {
+
+            assert(i > -1 && i < (int)vector.size());
+
+            part_x = model_info.world_pose.position.x;
+            part_y = model_info.world_pose.position.y;
+
+            double box_xlow = vector[i][0];
+            double box_xhigh = vector[i][1];
+            double box_ylow = vector[i][2];
+            double box_yhigh = vector[i][3];
+
+            if( part_x >= box_xlow && part_x <= box_xhigh && part_y >= box_ylow && part_y <= box_yhigh)
+            {
+                // printf("Removing %d, %d\n",vector[i],i);
+                ROS_INFO_STREAM("Deleting Bin from available bins, part found inside of it");
+                vector.erase(vector.begin() + i);
+            }
+
+            if (size != (int)vector.size())
+            {
+                --i;
+                size = vector.size();
+                printf("Go back %d\n",size);
+            }
+        }
+
+
+    }
 
     PresetLocation dropPresetLocation;
     // dropPresetLocation.gantry = {ValidPointsList[0][0] + 0.3, (ValidPointsList[0][2])*-1.0 , 0.0}; // xlow+.3, (ylow+.3)*-1, no spin
     // dropPresetLocation.gantry = {ValidPointsList[0][0] + 0.0, (ValidPointsList[0][2])*-1.0 , 0.0}; // xlow+.3, (ylow+.3)*-1, no spin
-    dropPresetLocation.gantry = {2.3 - 0.3, (1.842058) * -1.0, 0.0}; // xlow+.3, (ylow+.3)*-1, no spin
-    dropPresetLocation.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    dropPresetLocation.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+
+    // dropPresetLocation.gantry = {2.3 - 0.3, (1.842058) * -1.0, 0.0}; // xlow+.3, (ylow+.3)*-1, no spin
+    // dropPresetLocation.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+    // dropPresetLocation.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
+
+    dropPresetLocation.gantry = {vector[0][0] + 0.3, (vector[0][2])*-1.0 , 0.0}; // xlow+.3, (ylow+.3)*-1, no spin
+
 
     // ROS_INFO_STREAM( "target Xcoord == " << ValidPointsList[0][0] + 0.0 << " target Ycoord == " << (ValidPointsList[0][2])*-1.0);
-    ROS_INFO_STREAM("target [xlow,xhigh,ylow,yhigh]] == " << ValidPointsList[0][0] << " " << ValidPointsList[0][1] << " " << ValidPointsList[0][2] << " " << ValidPointsList[0][3]);
+    // ROS_INFO_STREAM("target [xlow,xhigh,ylow,yhigh]] == " << ValidPointsList[0][0] << " " << ValidPointsList[0][1] << " " << ValidPointsList[0][2] << " " << ValidPointsList[0][3]);
+    ROS_INFO_STREAM("target [xlow,xhigh,ylow,yhigh]] == " << vector[0][0] << " " << vector[0][1] << " " << vector[0][2] << " " << vector[0][3]);
 
     return dropPresetLocation;
 }

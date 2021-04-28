@@ -81,6 +81,7 @@ int main(int argc, char ** argv) {
         gaps_found = rwa.detectGaps();
     }
     
+    ros::Duration(5.0).sleep();
     while(ros::ok()) {
         ROS_INFO_STREAM("Starting while loop...");
         rwa.processOrder();

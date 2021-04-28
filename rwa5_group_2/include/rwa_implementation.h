@@ -142,7 +142,7 @@ private:
 
     /* ===================== Conveyor Variables ===================== */
     const float dx_ = 6.6;
-    const int buffer_parts_{1};
+    const int buffer_parts_{2};
     int buffer_parts_collected{0};
     bool waiting_for_part_{false};
     std::string conveyor_type_{""};
