@@ -121,11 +121,24 @@ private:
     PresetLocation waitpoint_best_south_fromSouth_near;
     PresetLocation mid_8_11_intersection_fromSouth_near;
 
+    PresetLocation waitpoint_best_north_fromNorth_near;
+    PresetLocation mid_5_8_intersection_fromNorth_near;
+
+    //////////// Shelves 1 and 2
+    // shelf1_fromSouth_far, shelf1_fromSouth_near, shelf2_fromNorth_near, shelf2_fromNorth_far
+    PresetLocation shelf1_fromSouth_far;
+    PresetLocation shelf1_fromSouth_near;
+    PresetLocation shelf2_fromNorth_near;
+    PresetLocation shelf2_fromNorth_far;
+
+
     //////////// End Shelf Preset Locations
 
     std::vector<PresetLocation> preset_locations_list_; // lookup list to compare distances with
     std::vector<PresetLocation> preset_locations_list_simple_; // lookup list to compare distances with
     std::vector<std::string> wait_preset_locations_list_;
+    std::vector<PresetLocation> inner_fast_preset_locations_list_;
+    std::vector<PresetLocation> shelf_1_or_2_preset_locations_list_;
 
     /* ===================== Conveyor Variables ===================== */
     const float dx_ = 6.6;
@@ -257,12 +270,15 @@ public:
     double calcDistanceInXYTorso_Accurate(PresetLocation pLocation, std::vector<double> joint_positions);
     PresetLocation getNearesetPresetLocation();
     PresetLocation getNearesetPresetLocation_Simple();
+    PresetLocation getNearesetPresetLocation_Specific(std::vector<PresetLocation> preset_vector_to_lookup_in);
     std::vector<PresetLocation> getPresetLocationVector(PresetLocation target_preset_location);
     std::vector<PresetLocation> getPresetLocationVector_Simple(PresetLocation target_preset_location);
     std::vector<PresetLocation> getPresetLocationVectorWithWait(PresetLocation target_preset_location);
     std::vector<PresetLocation> getPresetLocationVectorUsingString(std::string target_preset_location_string, std::string wait_string);
     std::vector<PresetLocation> getPresetLocationVectorUsingStringNoWait(std::string target_preset_location_string, std::string wait_string);
+    std::vector<PresetLocation> getPresetLocationVectorUsingString_Specific(std::string target_preset_location_string, std::string wait_string, std::vector<PresetLocation> pset_location_vector_to_use);
     bool executeVectorOfPresetLocations( std::vector<PresetLocation> path_to_execute );
+    bool executeVectorOfPresetLocations_Fast( std::vector<PresetLocation> path_to_execute );
     bool executeVectorOfPresetLocationsWithWait( std::vector<PresetLocation> path_to_execute );
     geometry_msgs::Pose gantryXY2worldposeXY(PresetLocation preset_location_2_convert);
     // preset locations from start to safe location for three shelf rows starting from agv1 side
@@ -288,6 +304,8 @@ public:
      */
     std::string isPartInUpperOrLowerRegionOfWhichShelf(part my_part, int discovered_cam_idx) {
         std::string shelf_string = cam_to_shelf_string[discovered_cam_idx]; // ie. "shelf5"
+
+        ROS_INFO_STREAM("shelf_string is: " << shelf_string);
 
         double product_y_coord = my_part.pose.position.y;
         double camera_y_coord = cam_to_y_coordinate[discovered_cam_idx];

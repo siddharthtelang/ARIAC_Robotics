@@ -51,10 +51,19 @@ void RWAImplementation::initPresetLocs()
     bottom_left_staging_a.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
     bottom_left_staging_a.name = GET_VARIABLE_NAME(bottom_left_staging_a);
 
-    waitpoint_best_north_fromNorth.gantry = {-11.4, -6.9, 0.88}; // waitpoint_best_north_fromNorth
-    waitpoint_best_north_fromNorth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    // waitpoint_best_north_fromNorth.gantry = {-11.4, -6.9, 0.88}; // waitpoint_best_north_fromNorth
+    // waitpoint_best_north_fromNorth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    // waitpoint_best_north_fromNorth.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
+    // waitpoint_best_north_fromNorth.name = GET_VARIABLE_NAME(waitpoint_best_north_fromNorth);
+
+    waitpoint_best_north_fromNorth.gantry = {-11.4, -6.9, -PI/2}; // shelf8_fromSouth_far //tuned for kick
+    // waitpoint_best_north_fromNorth.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    waitpoint_best_north_fromNorth.left_arm = {0.0, -3.58, 2.87, -4.65, -PI/2, 0.00}; // stowed fast
+    // shelf8_fromSouth_far.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
     waitpoint_best_north_fromNorth.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
     waitpoint_best_north_fromNorth.name = GET_VARIABLE_NAME(waitpoint_best_north_fromNorth);
+
+    
 
     waitpoint_best_north_fromSouth.gantry = {-11.4, -6.9, 0.88-PI}; // waitpoint_best_north_fromSouth
     waitpoint_best_north_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
@@ -85,6 +94,8 @@ void RWAImplementation::initPresetLocs()
     shelf5_fromNorth_far.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
     shelf5_fromNorth_far.name = GET_VARIABLE_NAME(shelf5_fromNorth_far);
 
+    
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////// Row 3
     shelf8_a.gantry = {-14.22, -1.5, 0.00};
     shelf8_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
@@ -98,7 +109,7 @@ void RWAImplementation::initPresetLocs()
     shelf5_fromSouth_near.name = GET_VARIABLE_NAME(shelf5_fromSouth_near);
 
 
-    shelf5_fromSouth_far.gantry = {-13.52-0.172656, -1.5, -PI/2}; // shelf5_fromSouth_far
+    shelf5_fromSouth_far.gantry = {-13.52-0.172656, -1.5, PI/2}; // shelf5_fromSouth_far
     shelf5_fromSouth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
     shelf5_fromSouth_far.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
     shelf5_fromSouth_far.name = GET_VARIABLE_NAME(shelf5_fromSouth_far);
@@ -110,11 +121,24 @@ void RWAImplementation::initPresetLocs()
     shelf8_fromNorth_near.name = GET_VARIABLE_NAME(shelf8_fromNorth_near);
 
 
-    shelf8_fromNorth_far.gantry = {-13.52-0.172656, -1.5, -PI/2}; // shelf8_fromNorth_far
-    shelf8_fromNorth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    // shelf8_fromNorth_far.gantry = {-13.52-0.172656, -1.5, -PI/2}; // shelf8_fromNorth_far
+    // shelf8_fromNorth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    // shelf8_fromNorth_far.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
+    // shelf8_fromNorth_far.name = GET_VARIABLE_NAME(shelf8_fromNorth_far);
+    
+
+
+    // shelf8_fromNorth_far.gantry = {-13.52-0.172656, -1.7, -PI/2}; // shelf8_fromNorth_far
+    // shelf8_fromNorth_far.left_arm = {0.0, -3.58, 2.87, -4.65, -PI/2, 0.00}; // stowed fast
+    // shelf8_fromNorth_far.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
+    // shelf8_fromNorth_far.name = GET_VARIABLE_NAME(shelf8_fromNorth_far);
+
+    shelf8_fromNorth_far.gantry = {-13.52-0.172656, -1.7, -PI/2}; // shelf8_fromSouth_far //tuned for kick
+    // shelf8_fromSouth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf8_fromNorth_far.left_arm = {0.0, -3.58, 2.87, -4.65, -PI/2, 0.00}; // stowed fast
+    // shelf8_fromSouth_far.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
     shelf8_fromNorth_far.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
     shelf8_fromNorth_far.name = GET_VARIABLE_NAME(shelf8_fromNorth_far);
-
 
 
     mid_5_8_intersection_fromNorth.gantry = {-11.4, -1.5, 0.88}; // Intersection!
@@ -126,6 +150,13 @@ void RWAImplementation::initPresetLocs()
     mid_5_8_intersection_fromSouth.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
     mid_5_8_intersection_fromSouth.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
     mid_5_8_intersection_fromSouth.name = GET_VARIABLE_NAME(mid_5_8_intersection_fromSouth);
+
+    mid_5_8_intersection_fromNorth.gantry = {-11.4, -1.5, -PI/2}; // shelf8_fromSouth_far //tuned for kick
+    // shelf8_fromSouth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    mid_5_8_intersection_fromNorth.left_arm = {0.0, -3.58, 2.87, -4.65, -PI/2, 0.00}; // stowed fast
+    // shelf8_fromSouth_far.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
+    mid_5_8_intersection_fromNorth.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
+    mid_5_8_intersection_fromNorth.name = GET_VARIABLE_NAME(mid_5_8_intersection_fromNorth);
 
     mid_5_8_staging_a.gantry = {0.0, -1.5, 0.00};
     mid_5_8_staging_a.left_arm = {-PI / 2, -1.01, 2.09, -1.13, 0.00, 0.00};
@@ -216,6 +247,13 @@ void RWAImplementation::initPresetLocs()
     shelf11_fromSouth_far.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
     shelf11_fromSouth_far.name = GET_VARIABLE_NAME(shelf11_fromSouth_far);
 
+    //     shelf8_fromSouth_far.gantry = {-13.52-0.172656, 1.7, PI/2}; // shelf8_fromSouth_far //tuned for kick
+    // // shelf8_fromSouth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    // shelf8_fromSouth_far.left_arm = {0.0, -3.58, 2.87, -4.65, -PI/2, 0.00}; // stowed fast
+    // // shelf8_fromSouth_far.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
+    // shelf8_fromSouth_far.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
+    // shelf8_fromSouth_far.name = GET_VARIABLE_NAME(shelf8_fromSouth_far);
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////// Row 6
 
     southwest_corner_staging.gantry = {-14.22, 6.9, PI}; // southwest_corner_staging
@@ -260,6 +298,51 @@ void RWAImplementation::initPresetLocs()
     mid_8_11_intersection_fromSouth_near.name = GET_VARIABLE_NAME(mid_8_11_intersection_fromSouth_near);
 
 
+    waitpoint_best_north_fromNorth_near.gantry = {-11.4, -6.9, 0.88}; // shelf8_fromNorth_near
+    waitpoint_best_north_fromNorth_near.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    waitpoint_best_north_fromNorth_near.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
+    waitpoint_best_north_fromNorth_near.name = GET_VARIABLE_NAME(waitpoint_best_north_fromNorth_near);
+
+
+
+    mid_5_8_intersection_fromNorth_near.gantry = {-11.4, -1.5, 0.88}; // shelf8_fromNorth_near
+    mid_5_8_intersection_fromNorth_near.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    mid_5_8_intersection_fromNorth_near.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
+    mid_5_8_intersection_fromNorth_near.name = GET_VARIABLE_NAME(mid_5_8_intersection_fromNorth_near);
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////// Shelf 1 and 2
+    // shelf1_fromSouth_far, shelf1_fromSouth_near, shelf2_fromNorth_near, shelf2_fromNorth_far
+
+    // modified from shelf5_fromSouth_far
+    shelf1_fromSouth_far.gantry = {-13.52-0.172656   +18.561708   , -1.5     -0.578742, PI/2}; // shelf5_fromSouth_far
+    shelf1_fromSouth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf1_fromSouth_far.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
+    shelf1_fromSouth_far.name = GET_VARIABLE_NAME(shelf1_fromSouth_far);
+
+
+    // modified from shelf5_fromSouth_near
+    shelf1_fromSouth_near.gantry = {-14.22   +18.561708, -1.5    -0.578742, 0.88-PI}; // shelf5_fromSouth_near
+    shelf1_fromSouth_near.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    shelf1_fromSouth_near.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
+    shelf1_fromSouth_near.name = GET_VARIABLE_NAME(shelf1_fromSouth_near);
+
+
+    // modified from shelf11_fromNorth_near
+    shelf2_fromNorth_near.gantry = {-14.22   +18.561708, 1.5    +0.578742, 0.88}; // shelf11_fromNorth_near
+    shelf2_fromNorth_near.left_arm = {-PI / 2, -1.01, 2.76, -1.13, 0.00, 0.00}; // left elbow bent more
+    shelf2_fromNorth_near.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
+    shelf2_fromNorth_near.name = GET_VARIABLE_NAME(shelf2_fromNorth_near);
+
+
+    // modified from shelf11_fromNorth_far
+    shelf2_fromNorth_far.gantry = {-13.52-0.172656   +18.561708, 1.5    +0.578742, -PI/2}; // shelf11_fromNorth_far
+    shelf2_fromNorth_far.left_arm = {0.00, -3.25, 2.09, -2.02, -PI/2, 0.0};     // try to raise arm a little, use exact pi! better picks
+    shelf2_fromNorth_far.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
+    shelf2_fromNorth_far.name = GET_VARIABLE_NAME(shelf2_fromNorth_far);
+
+
+
     //////////// End Shelf Preset Locations
     ////////////
     
@@ -282,10 +365,10 @@ void RWAImplementation::initPresetLocs()
         {3, 6.582773},
         {4, -7.175601},
         {5, 4.2},
-        {10, -3.024268},
-        {13, 3.78},
-        {14, -3.024268},
-        {15, 3.78},
+        {10, -3.637},
+        {13, 3.63},
+        {14, -3.637},
+        {15, 3.63},
         {16, 0.000000},
     };
 
@@ -318,6 +401,10 @@ void RWAImplementation::initPresetLocs()
         {11, "shelf11"},
         // {1, "bin11_a"},
         // {2, "bin11_a"},
+        {13, "shelf1"},
+        {15, "shelf1"},
+        {14, "shelf2"},
+        {10, "shelf2"},
     };
 
     agv_to_camera = {
@@ -327,16 +414,23 @@ void RWAImplementation::initPresetLocs()
     // vector of some of the locations, when gantry moves anywhere, it first searches through these possible locations,
     // and tries to find the closest one to it. That approximate location then serves as the beginning location for any move lookup.
     preset_locations_list_ = {start_a, bin3_a, agv2_a, agv1_staging_a,
-                              bottom_left_staging_a, shelf8_a, shelf11_a, bin11_a, shelf5_a, shelf8_fromSouth_far,
+                              bottom_left_staging_a, shelf11_a, bin11_a, shelf5_a, shelf8_fromSouth_far, // recently removed shelf8_a
                               shelf11_fromSouth_near, shelf8_fromSouth_near, shelf11_fromNorth_near, shelf8_fromNorth_near, shelf5_fromNorth_near, shelf5_fromSouth_near, // working for near picks! 0500
                               shelf11_fromSouth_far, shelf8_fromSouth_far, shelf11_fromNorth_far, shelf8_fromNorth_far, shelf5_fromNorth_far, shelf5_fromSouth_far,
+                              shelf8_fromNorth_far,
                               }; // do not have mid_xyz anything here for now
+
+    inner_fast_preset_locations_list_ = {shelf8_fromNorth_far, shelf8_fromSouth_far};
 
     preset_locations_list_simple_ = {bin3_a, agv2_a, agv1_staging_a,
                               bottom_left_staging_a, shelf8_a, shelf11_a, bin11_a, shelf5_a, shelf8_fromSouth_far}; // do not have mid_xyz anything here for now
 
     wait_preset_locations_list_ = {waitpoint_best_south_fromSouth.name, waitpoint_best_south_fromNorth.name, waitpoint_best_north_fromSouth.name, waitpoint_best_north_fromNorth.name,
-                                    waitpoint_best_south_fromSouth_near.name};
+                                    waitpoint_best_south_fromSouth_near.name,
+                                    waitpoint_best_north_fromNorth_near.name};
+
+    shelf_1_or_2_preset_locations_list_ = {shelf1_fromSouth_far, shelf1_fromSouth_near, shelf2_fromNorth_near, shelf2_fromNorth_far};
+
 
     PathingLookupDictionary = {
         {{"start_a", "bin3_a"}, std::vector<PresetLocation>{start_a, bin3_a}},
@@ -462,6 +556,18 @@ void RWAImplementation::initPresetLocs()
         {{"shelf5_fromNorth_far", "start_a"}, std::vector<PresetLocation>{shelf5_fromNorth_far, shelf5_fromNorth_near, bottom_left_staging_a, agv1_staging_a, start_a}},
         {{"shelf5_fromSouth_far", "start_a"}, std::vector<PresetLocation>{shelf5_fromSouth_far, shelf5_fromSouth_near, mid_5_8_staging_fromSouth, start_a}},
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////// Shelves 1 and 2
+        // shelf1_fromSouth_far, shelf1_fromSouth_near, shelf2_fromNorth_near, shelf2_fromNorth_far
+        {{"shelf1_fromSouth_far", "start_a"}, std::vector<PresetLocation>{shelf1_fromSouth_far, shelf1_fromSouth_near, start_a}},
+        {{"shelf1_fromSouth_near", "start_a"}, std::vector<PresetLocation>{shelf1_fromSouth_near, start_a}},
+        {{"shelf2_fromNorth_near", "start_a"}, std::vector<PresetLocation>{shelf2_fromNorth_near, start_a}},
+        {{"shelf2_fromNorth_far", "start_a"}, std::vector<PresetLocation>{shelf2_fromNorth_far, shelf2_fromNorth_near, start_a}},
+
+        {{"start_a", "shelf1_fromSouth_far"}, std::vector<PresetLocation>{start_a, shelf1_fromSouth_near, shelf1_fromSouth_far}},
+        {{"start_a", "shelf1_fromSouth_near"}, std::vector<PresetLocation>{start_a, shelf1_fromSouth_near}},
+        {{"start_a", "shelf2_fromNorth_near"}, std::vector<PresetLocation>{start_a, shelf2_fromNorth_near}},
+        {{"start_a", "shelf2_fromNorth_far"}, std::vector<PresetLocation>{start_a, shelf2_fromNorth_near, shelf2_fromNorth_far}},
+
 
     };
 
@@ -478,8 +584,13 @@ void RWAImplementation::initPresetLocs()
 
 
         {{"start_a", "shelf8_fromSouth_near"}, std::vector<PresetLocation>{start_a, agv2_a, waitpoint_best_south_fromSouth_near, mid_8_11_intersection_fromSouth_near, shelf8_fromSouth_near}},
-        {{"shelf8_fromSouth_near", "start_a"}, std::vector<PresetLocation>{shelf8_fromSouth_near, mid_8_11_intersection_fromSouth_near, waitpoint_best_south_fromSouth_near, agv2_a, start_a}},
+        {{"shelf8_fromSouth_near", "start_a"}, std::vector<PresetLocation>{mid_8_11_intersection_fromSouth_near, waitpoint_best_south_fromSouth_near, agv2_a, start_a}}, // go faster, go to mid intersection immediately
 
+        {{"start_a", "shelf8_fromNorth_near"}, std::vector<PresetLocation>{start_a, agv1_staging_a, waitpoint_best_north_fromNorth_near, mid_5_8_intersection_fromNorth_near, shelf8_fromNorth_near}},
+        {{"shelf8_fromNorth_near", "start_a"}, std::vector<PresetLocation>{mid_5_8_intersection_fromNorth_near, waitpoint_best_north_fromNorth_near, agv1_staging_a, start_a}}, // go faster, go to mid intersection immediately
+
+        {{"start_a", "shelf8_fromNorth_far"}, std::vector<PresetLocation>{start_a, agv1_staging_a, waitpoint_best_north_fromNorth, mid_5_8_intersection_fromNorth, shelf8_fromNorth_far}},
+        {{"shelf8_fromNorth_far", "start_a"}, std::vector<PresetLocation>{shelf8_fromNorth_far, mid_5_8_intersection_fromNorth, waitpoint_best_north_fromNorth, agv1_staging_a, start_a}}, // go faster, go to mid intersection immediately
 
 
     };

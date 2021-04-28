@@ -224,7 +224,7 @@ void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
 
         region_dict_defined_ = true;
         if (clear[0] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "nowait", "fromNorth", "near"}; }
-        else if (clear[1] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "nowait", "fromNorth", "near"}; }
+        else if (clear[1] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromSouth_far", "nowait", "fromSouth", "far"}; }
         else if (clear[0] == false && clear[1] == false) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "wait", "fromNorth", "near"}; }
 
 
@@ -252,7 +252,7 @@ void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
             }
             else if ( gaps[0] == "gap_end" ) { // Gap is between shelf 5 and shelf 4
                 ROS_INFO_STREAM(" gap_end [0] case shelf8upper");
-                regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near_fast", "wait", "fromNorth", "near"};
+                regionDictionary["shelf8upper"] = {"shelf8_fromNorth_near", "wait", "fromNorth", "near"};
             }
             else {
                 ROS_INFO_STREAM(" Error gaps not found");
@@ -295,6 +295,13 @@ void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
         if (clear[3] == true) { regionDictionary["shelf11lower"] = {"shelf11_fromSouth_near", "nowait", "fromSouth", "near"}; }
         else if (clear[2] == true) { regionDictionary["shelf11lower"] = {"shelf11_fromNorth_far", "nowait", "fromNorth", "far"}; }
         else if (clear[2] == false && clear[3] == false) { regionDictionary["shelf11lower"] = {"shelf11_fromNorth_near", "wait", "fromNorth", "near"}; }
+
+
+        ////////////////////// Shelves 1 and 2 //////////////////////////////////
+        regionDictionary["shelf1upper"] = {"shelf1_fromSouth_far", "nowait", "fromSouth", "far"};
+        regionDictionary["shelf1lower"] = {"shelf1_fromSouth_near", "nowait", "fromSouth", "near"};
+        regionDictionary["shelf2upper"] = {"shelf2_fromNorth_near", "nowait", "fromNorth", "near"};
+        regionDictionary["shelf2lower"] = {"shelf2_fromNorth_far", "nowait", "fromNorth", "far"};
     }
 }
 
@@ -339,6 +346,8 @@ bool RWAImplementation::buildKit()
     ROS_INFO_STREAM(" moved to bin === " << moved_to_bin);
     std::string near_or_far_string = "near"; // assume near unless shown otherwise
 
+    bool moved_to_shelf_1_or_2 = false;
+
     // if (false) // if part was moved from conveyor to the bin CRITICAL FOR TESTING ONLY, COMMENT THIS LINE
     if (product.get_from_conveyor == true)
     { // if part was moved from conveyor to the bin
@@ -377,6 +386,80 @@ bool RWAImplementation::buildKit()
 
         buffer_parts_collected--; // this should occur later in future, after part is actually picked up
     }
+    else if (discovered_cam_idx == 10 || discovered_cam_idx == 13 || discovered_cam_idx == 14 || discovered_cam_idx == 15 ) // shelves 1 and 2
+    {
+        //////////////////////////////////////////////////////////// Begin Shelf 1 or 2 Case ////////////////////////////////////////////////////////////
+
+        moved_to_shelf_1_or_2 = true;
+        ROS_INFO_STREAM(" moved to shelf 1 or 2 block entered, should be true now -> === " << moved_to_shelf_1_or_2);
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        std:: string shelf_and_upper_or_lower_string = isPartInUpperOrLowerRegionOfWhichShelf(my_part, discovered_cam_idx); // ie. "shelf2upper"
+        ROS_INFO_STREAM("shelf_and_upper_or_lower_string: " << shelf_and_upper_or_lower_string);
+        ROS_INFO_STREAM("executed isPartInUpperOrLowerRegionOfWhichShelf successfully ");
+
+        std::vector<std::string> information_string_vector = regionDictionary[shelf_and_upper_or_lower_string]; // ie. ["shelf5_fromNorth_near", "nowait", "fromNorth", "near"]
+        std::string preset_location_string = information_string_vector[0]; // ie. "shelf1_fromSouth_near"
+        wait_or_nowait_string = information_string_vector[1]; // ie. "nowait"
+        std::string fromNorth_or_fromSouth_string = information_string_vector[2]; // ie. "fromSouth"
+        near_or_far_string = information_string_vector[3]; // ie. "near"
+
+
+        // Create Bump() offsets, 4 possible scenarios
+        ROS_INFO_STREAM("Calculating offsets...");
+        double add_to_x_shelf = my_part.pose.position.x - -13.522081; // constant is perfect bin red pulley x
+        double add_to_y_shelf = my_part.pose.position.y - 3.446263; // constant is perfect bin red pulley y
+        double add_to_torso = 0.0;
+
+        if (near_or_far_string == "near" && fromNorth_or_fromSouth_string == "fromSouth") {
+            ROS_INFO_STREAM("Case 1 fromSouth near encountered for offsets...");
+
+            add_to_x_shelf = my_part.pose.position.x - -13.522081      + 1.795838; // red pulley + offset to account for spin
+            add_to_y_shelf = my_part.pose.position.y - 3.446263        - 1.707474; // constant is perfect bin red pulley y
+            add_to_torso = -PI; // spin torso
+            // add_to_torso = 0.0; // spin torso
+        }
+        else if (near_or_far_string == "near" && fromNorth_or_fromSouth_string == "fromNorth") {
+            ROS_INFO_STREAM("Case 2 fromNorth near encountered for offsets...");
+
+            add_to_x_shelf = my_part.pose.position.x - -13.522081; // red pulley
+            add_to_y_shelf = my_part.pose.position.y - 3.446263; // red pulley
+            add_to_torso = 0.0;
+        }
+        else if (near_or_far_string == "far" && fromNorth_or_fromSouth_string == "fromNorth") {
+            ROS_INFO_STREAM("Case 3 fromNorth far encountered for offsets...");
+            add_to_x_shelf = my_part.pose.position.x - -13.522081; // red pulley
+            add_to_y_shelf = my_part.pose.position.y - -3.523814; // Blue Pulley
+            add_to_torso = 0.0;
+        }
+        else if (near_or_far_string == "far" && fromNorth_or_fromSouth_string == "fromSouth") {
+            ROS_INFO_STREAM("Case 4 fromSouth far encountered for offsets...");
+            add_to_x_shelf = my_part.pose.position.x - -13.522081       + 0.34115; // blue pulley + account for spin
+            add_to_y_shelf = my_part.pose.position.y - -3.523814        - 3.127628; // blue pulley + account for spin
+            add_to_torso = PI; // spin torso
+        }
+        else {
+            // code should not reach here
+            ROS_INFO_STREAM("error, Shelf 1 or 2, and unknown condition found for near_or_far_string and fromNorth_or_fromSouth_string"); 
+        }
+
+        ROS_INFO_STREAM("Shelf 1 and 2 condtion encountered");
+        // Lookup PresetLocation in noWaitDictionary
+        std::vector<PresetLocation> path = getPresetLocationVectorUsingString(preset_location_string, wait_or_nowait_string); // initialize with no wait
+        ROS_INFO_STREAM("getPresetLocationVector executed!");
+
+        executeVectorOfPresetLocations(path);
+        ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
+
+        if (near_or_far_string == "near") { gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, add_to_torso)); }
+        else if (near_or_far_string == "far") { gantry_->goToPresetLocation(Bump(shelf11_south_far, add_to_x_shelf, add_to_y_shelf, add_to_torso));}
+
+
+        //////////////////////////////////////////////////////////// End Shelf 1 or 2 Case ////////////////////////////////////////////////////////////
+
+
+    }
+
     else if (discovered_cam_idx == 0 || discovered_cam_idx == 7 || discovered_cam_idx == 1 || discovered_cam_idx == 2) // the bins
     {
         moved_to_bin = true;
@@ -410,7 +493,7 @@ bool RWAImplementation::buildKit()
         gantry_->goToPresetLocation(Bump(cam_to_presetlocation[discovered_cam_idx], add_to_x, add_to_y, 0));
         ROS_INFO_STREAM("goToPresetLocation with bump executed! " << cam_to_presetlocation[discovered_cam_idx].name  << " .");
     }
-    else if ((discovered_cam_idx != 0 && discovered_cam_idx != 7 && discovered_cam_idx != 1 && discovered_cam_idx != 2 && discovered_cam_idx != 13 && discovered_cam_idx != 15 && discovered_cam_idx != 14 && discovered_cam_idx != 10) && discovered_cam_idx >= 0 && discovered_cam_idx <= 16) // Any other camera
+    else if ((discovered_cam_idx != 0 || discovered_cam_idx != 7 || discovered_cam_idx != 1 || discovered_cam_idx != 2) && discovered_cam_idx >= 0 && discovered_cam_idx <= 16) // Any other camera
     {                                                                 // any other camera
         ROS_INFO_STREAM("Any Other Camera Case Reached");
 
@@ -483,7 +566,7 @@ bool RWAImplementation::buildKit()
             ROS_INFO_STREAM("getPresetLocationVector executed!");
 
             executeVectorOfPresetLocationsWithWait(path); // Note the With Wait version is being called here
-            ROS_INFO_STREAM("executeVectorOfPresetLocations executed!");
+            ROS_INFO_STREAM("executeVectorOfPresetLocationsWithWait executed!");
 
             if (near_or_far_string == "near") { gantry_->goToPresetLocation(Bump(shelf5_a, add_to_x_shelf, add_to_y_shelf, add_to_torso)); }
             else if (near_or_far_string == "far") { gantry_->goToPresetLocation(Bump(shelf11_south_far, add_to_x_shelf, add_to_y_shelf, add_to_torso));}
@@ -544,7 +627,7 @@ bool RWAImplementation::buildKit()
     }
     else if (wait_or_nowait_string == "wait" && near_or_far_string == "near" ) { // wait and near pick (just lift up normally, avoid scraping on shelf lip)
         //--Go pick the part
-        if (!gantry_->pickPart(my_part, "left_arm") && wait_or_nowait_string == "nowait")
+        if (!gantry_->pickPartFast_Near(my_part, "left_arm") && wait_or_nowait_string == "nowait")
         {
             //pass
         }
@@ -564,12 +647,21 @@ bool RWAImplementation::buildKit()
     // gantry_->goToPresetLocation(start_a);
     if (wait_or_nowait_string == "wait")
     { // if wait, any camera
-        std::vector<PresetLocation> path = getPresetLocationVectorWithWait(start_a); 
-        executeVectorOfPresetLocations(path);
+        // std::vector<PresetLocation> path = getPresetLocationVectorWithWait(start_a); 
+        std::vector<PresetLocation> path = getPresetLocationVectorUsingString_Specific(start_a.name, wait_or_nowait_string, inner_fast_preset_locations_list_); // call with wait
+
+        // executeVectorOfPresetLocations(path);
+        executeVectorOfPresetLocations_Fast(path); // no delays in-between moves
         // ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves // Commented for speed Human Obstacles
     }
     else if (moved_to_bin == true) { // deal with minor shelf bumping RWA5
         std::vector<PresetLocation> path = getPresetLocationVector_Simple(start_a); // use simple gantry x and y euclidean distance only, not every joint
+        executeVectorOfPresetLocations(path);
+        ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves // Commented for speed Human Obstacles
+    }
+    else if (moved_to_shelf_1_or_2 == true) { // Shelves 1 and 2 (this code is a bit redundant, but just to be safe)
+        // std::vector<PresetLocation> path = getPresetLocationVector(start_a);
+        std::vector<PresetLocation> path = getPresetLocationVectorUsingString_Specific(start_a.name, "nowait", shelf_1_or_2_preset_locations_list_);
         executeVectorOfPresetLocations(path);
         ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves // Commented for speed Human Obstacles
     }
@@ -692,6 +784,44 @@ PresetLocation RWAImplementation::getNearesetPresetLocation()
     return vector_of_structs[0].candidate_location;
 }
 
+
+//////////////////////////////// Get nearest preset location to current gantry position
+PresetLocation RWAImplementation::getNearesetPresetLocation_Specific(std::vector<PresetLocation> preset_vector_to_lookup_in)
+{
+    ////// Get current gantry position
+    // geometry_msgs::Pose current_position = gantry_->getGantryPose();
+    std::vector<double> joint_positions = gantry_->getGantryJointPositionsDoubleVector(); // instead of converting to Pose, use joint values directly
+
+    ROS_INFO_STREAM("Length of joint_positions double vector is: " << joint_positions.size());
+
+    ////// Define custom struct (distance, PresetLocation), see https://www.cplusplus.com/articles/NhA0RXSz/
+
+    ////// Build vector of custom structs
+    std::vector<distance_and_PresetLocation_struct> vector_of_structs;
+
+    for (PresetLocation pset_location : preset_vector_to_lookup_in)
+    {
+        // geometry_msgs::Pose location_converted_to_pose = gantryXY2worldposeXY(pset_location);    // convert preset location to pose
+        // double distance_i = calcDistanceInXYPlane(current_position, location_converted_to_pose); // euclidean dist in xy plane
+        double distance_i = calcDistanceInXYTorso_Accurate(pset_location, joint_positions);              // "score", aka distance, in gantry's joint 0, 1, 2 space
+        distance_and_PresetLocation_struct candidate_struct{distance_i, pset_location};          // make a struct
+        vector_of_structs.push_back(candidate_struct);                                           // put struct in list of structs
+    }
+
+    ////// Sort vector of custom structs by distance (need *another* function to do this, will define a lambda function)
+    std::sort(vector_of_structs.begin(), vector_of_structs.end(),
+              // Lambda expression begins,
+              [](const distance_and_PresetLocation_struct &lhs, const distance_and_PresetLocation_struct &rhs) {
+                  return (lhs.distance < rhs.distance);
+              } // end of lambda expression
+    );
+
+    ROS_INFO_STREAM("sorted vector successfully");
+
+    ////// Return the nearest PresetLocation
+    return vector_of_structs[0].candidate_location;
+}
+
 //////////////////////////////// Get nearest preset location to current gantry position
 PresetLocation RWAImplementation::getNearesetPresetLocation_Simple()
 {
@@ -778,6 +908,25 @@ std::vector<PresetLocation> RWAImplementation::getPresetLocationVectorUsingStrin
     return path_to_execute;
 }
 
+std::vector<PresetLocation> RWAImplementation::getPresetLocationVectorUsingString_Specific(std::string target_preset_location_string, std::string wait_string, std::vector<PresetLocation> pset_location_vector_to_use)
+{
+    PresetLocation approximate_current_position = getNearesetPresetLocation_Specific(pset_location_vector_to_use);
+    std::vector<std::string> key = {{approximate_current_position.name, target_preset_location_string}};
+    ROS_INFO_STREAM("key executed! =====" << key[0] << " " << key[1]);
+
+    // std::vector<PresetLocation> path_to_execute = PathingLookupDictionary.at(key); // this line error, cannot find wait preset locations
+    std::vector<PresetLocation> path_to_execute; // initialize empty, wait_string MUST be "wait" or "nowait"
+    if (wait_string == "wait") {
+        path_to_execute = WaitPathingLookupDictionary.at(key);
+    }
+    else {
+        path_to_execute = PathingLookupDictionary.at(key);
+    }
+
+    ROS_INFO_STREAM("path_to_execute lookup executed!");
+    return path_to_execute;
+}
+
 std::vector<PresetLocation> RWAImplementation::getPresetLocationVectorUsingStringNoWait(std::string target_preset_location_string, std::string wait_string)
 {
     PresetLocation approximate_current_position = getNearesetPresetLocation_Simple();
@@ -804,6 +953,19 @@ bool RWAImplementation::executeVectorOfPresetLocations(std::vector<PresetLocatio
         ROS_INFO_STREAM("Moving to PresetLocation: >>>>> " << psetlocation.name);
         gantry_->goToPresetLocation(psetlocation);
         ros::Duration(0.25).sleep();
+        // ros::Duration(0.05).sleep();
+    }
+    return true;
+}
+
+bool RWAImplementation::executeVectorOfPresetLocations_Fast(std::vector<PresetLocation> path_to_execute)
+{
+    for (PresetLocation psetlocation : path_to_execute)
+    {
+        ROS_INFO_STREAM("Moving to PresetLocation: >>>>> " << psetlocation.name);
+        gantry_->goToPresetLocation(psetlocation);
+        // ros::Duration(0.25).sleep(); // this version (Fast) has no delays
+        // ros::Duration(0.05).sleep();
     }
     return true;
 }

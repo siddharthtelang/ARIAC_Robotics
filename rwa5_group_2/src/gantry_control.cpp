@@ -407,6 +407,112 @@ bool GantryControl::pickPartFast(part part, std::string arm)
 }
 
 ////////////////////////////
+bool GantryControl::pickPartFast_Near(part part, std::string arm)
+{
+    moveit::planning_interface::MoveGroupInterface* temp_arm_group;
+    if (arm == "left_arm") temp_arm_group = &left_arm_group_;
+    else if (arm == "right_arm") temp_arm_group = &right_arm_group_;
+    else {
+        ROS_INFO_STREAM("Please select arm to use.");
+        throw 1;
+    }
+
+    //--Activate gripper
+    activateGripper(arm);
+    geometry_msgs::Pose currentPose = temp_arm_group->getCurrentPose().pose;
+
+    // update the z if the part if flipped
+    double roll, pitch, yaw;
+    tf2::Quaternion q_current(
+        part.pose.orientation.x,
+        part.pose.orientation.y,
+        part.pose.orientation.z,
+        part.pose.orientation.w);
+    tf2::Matrix3x3 m(q_current);
+    m.getRPY(roll, pitch, yaw);
+    if (std::abs(roll) > 3.0 && part.type.find("pulley") == 0)
+        part.pose.position.z = part.pose.position.z + GRIPPER_HEIGHT - EPSILON;
+    else
+        // part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - .0055; //const double EPSILON = 0.0065; // prevent mashing into and "deviated joint" error maybe // 60%
+        // part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - .0040; //const double EPSILON = 0.0065; // prevent mashing into and "deviated joint" error maybe //.0040 fails ik
+        // part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - .0030; //const double EPSILON = 0.0065; // prevent mashing into and "deviated joint" error maybe // have seen it work, but too slow
+        part.pose.position.z = part.pose.position.z + model_height.at(part.type) + GRIPPER_HEIGHT - .0030;  // const double EPSILON = 0.0065; // prevent mashing into and "deviated joint" error maybe // have seen it work, but too slow,
+                                                                                                            // (update: pick part, do not come back up, just go to next pose, is speedy enough)
+
+
+    part.pose.orientation.x = currentPose.orientation.x;
+    part.pose.orientation.y = currentPose.orientation.y;
+    part.pose.orientation.z = currentPose.orientation.z;
+    part.pose.orientation.w = currentPose.orientation.w;
+    //    ROS_INFO_STREAM("["<< part.type<<"]= " << part.pose.position.x << ", " << part.pose.position.y << "," << part.pose.position.z << "," << part.pose.orientation.x << "," << part.pose.orientation.y << "," << part.pose.orientation.z << "," << part.pose.orientation.w);
+
+    // auto state = getGripperState(arm);
+    // //keep trying till state is enabled
+    // while (!state.enabled)
+    // {
+    //     activateGripper(arm);
+    //     state = getGripperState(arm);
+    // }
+    // if (state.enabled) // Commented for speed Human Obstacles
+    if (true)
+    {
+        // ROS_INFO_STREAM("[Gripper] = enabled");
+        ROS_INFO_STREAM("Skipping Gripper enabled check for speed pickPartFast");
+        //--Move arm to part
+        temp_arm_group->setPoseTarget(part.pose);
+        temp_arm_group->move();
+
+        // auto state = getGripperState(arm);
+        // ros::Duration(0.5).sleep(); // Commented for speed Human Obstacles
+        // if (state.attached) // Commented for speed Human Obstacles
+        if (true) // Speed up pick
+        {
+            ROS_INFO_STREAM("[Gripper] = object attached");
+            //--Move arm to previous position
+            temp_arm_group->setPoseTarget(currentPose); // comment these 2 lines = speed up pick even more, do not even raise arm, just go to next presetlocation
+            temp_arm_group->move();
+
+            // ros::Duration(0.5).sleep(); // try to get it to lift before doing anything else! // Commented for speed Human Obstacles
+
+            // goToPresetLocation(start_); // having this line here is great, but does not work for shelf, since path is impeded
+            // move this to main code, but maybe let's keep the delay below?
+            // ros::Duration(1.0).sleep(); // try to get it to actually go to start.... // Commented for speed Human Obstacles
+            return true;
+        }
+        else
+        {
+            ROS_INFO_STREAM("[Gripper] = object not attached");
+            //modify max attempts to 2 from 5
+            int max_attempts{1}; // Commented for speed Human Obstacles changed to 1 attempt
+            int current_attempt{0};
+            //--try to pick up the part 5 times
+            while (current_attempt<max_attempts)
+            {
+                temp_arm_group->setPoseTarget(currentPose);
+                temp_arm_group->move();
+                // ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
+                temp_arm_group->setPoseTarget(part.pose);
+                temp_arm_group->move();
+                // ros::Duration(1.0).sleep(); // upped to 1.0 from 0.5 to keep red errors away
+                activateGripper(arm);
+                current_attempt++;
+                // state = getGripperState(arm);
+                // if (state.attached) return true;
+                return true;
+            }
+            temp_arm_group->setPoseTarget(currentPose);
+            temp_arm_group->move();
+            // ros::Duration(1.0).sleep(); // try to get it to lift before doing anything else! upped to 1.0 from 0.5
+        }
+    }
+    else
+    {
+        ROS_INFO_STREAM("[Gripper] = not enabled");
+    }
+    return false;
+}
+
+////////////////////////////
 void GantryControl::placePart(part part, std::string agv, std::string arm)
 {
     moveit::planning_interface::MoveGroupInterface *temp_arm_group;
@@ -588,7 +694,8 @@ bool GantryControl::replaceFaultyPart(part Part, std::string agv, std::string ar
     else if (partToPick.type.find("piston") == 0)
         partToPick.pose.position.z += 0.0295; // test------------------ 0.03both  piston 0.0325
     else if (partToPick.type.find("pulley") == 0)
-        partToPick.pose.position.z += 0;
+        // partToPick.pose.position.z += 0.02;
+        partToPick.pose.position.z += 0.0;
     else
         partToPick.pose.position.z += 0.025;
 
