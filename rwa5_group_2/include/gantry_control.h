@@ -56,44 +56,61 @@ class GantryControl {
     /**
      * \brief: Returns true or false depending on whether part was successfully picked.
      * \param: part to pick
+     * \param: string representing which arm to use to pick
      * \result: true false success boolean
      */
     bool pickPart(part part, std::string arm);
     
-
+    /**
+     * \brief: Returns true or false depending on whether part was successfully picked. (pickPart in case of moving obstacles)
+     * \param: part to pick
+     * \param: string representing which arm to use to pick
+     * \result: true false success boolean
+     */
     bool pickPartFast(part part, std::string arm);
-    
+
+    /**
+     * \brief: Returns true or false depending on whether part was successfully picked. (faster pickPart in case of near reach pick)
+     * \param: part to pick
+     * \param: string representing which arm to use to pick
+     * \result: true false success boolean
+     */
     bool pickPartFast_Near(part part, std::string arm);
 
     /**
      * \brief: Returns true or false depending on whether part was successfully placed.
      * \param: part to place
+     * \param: string representing which arm to use to pick
      * \result: true false success boolean
      */
     void placePart(part part, std::string agv, std::string arm);
 
     /**
      * \brief: places the part at correct pose when dropped anywhere in tray due to faulty fripper
-     * \param: part to pick, agv and arm
+     * \param: part to pick
+     * \param: string representing which agv has the part
+     * \param: string representing which arm to use to pick
      * \result: void
      */
     void placePartAtCorrectPose(part part, std::string agv, std::string arm);
 
     /**
      * \brief: Replacement of faulty part
-     * \param: part to pick, agv and arm
+     * \param: part to pick
+     * \param: string representing which agv has the part
+     * \param: string representing which arm to use to pick
      * \result: true false success boolean
      */
     bool replaceFaultyPart(part part, std::string agv, std::string arm);
 
     /**
      * \brief: To flip a part
-     * \param: part to pick, agv id
+     * \param: part to pick
+     * \param: string representing which agv has the part
      * \result: true false success boolean
      */
     bool flipPart(part part, std::string agv);
 
-    
     /**
      * \brief: Send command message to robot controller
      * \param: trajectory message
