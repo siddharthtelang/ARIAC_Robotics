@@ -553,8 +553,11 @@ bool RWAImplementation::buildKit()
     // gantry_->goToPresetLocation(start_a);
     if (wait_or_nowait_string == "wait")
     { // if wait, any camera
-        std::vector<PresetLocation> path = getPresetLocationVectorWithWait(start_a); 
-        executeVectorOfPresetLocations(path);
+        // std::vector<PresetLocation> path = getPresetLocationVectorWithWait(start_a); 
+        std::vector<PresetLocation> path = getPresetLocationVectorUsingString_Specific(start_a.name, wait_or_nowait_string, inner_fast_preset_locations_list_); // call with wait
+
+        // executeVectorOfPresetLocations(path);
+        executeVectorOfPresetLocations_Fast(path); // no delays in-between moves
         // ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves // Commented for speed Human Obstacles
     }
     else if (moved_to_bin == true) { // deal with minor shelf bumping RWA5
@@ -681,6 +684,44 @@ PresetLocation RWAImplementation::getNearesetPresetLocation()
     return vector_of_structs[0].candidate_location;
 }
 
+
+//////////////////////////////// Get nearest preset location to current gantry position
+PresetLocation RWAImplementation::getNearesetPresetLocation_Specific(std::vector<PresetLocation> preset_vector_to_lookup_in)
+{
+    ////// Get current gantry position
+    // geometry_msgs::Pose current_position = gantry_->getGantryPose();
+    std::vector<double> joint_positions = gantry_->getGantryJointPositionsDoubleVector(); // instead of converting to Pose, use joint values directly
+
+    ROS_INFO_STREAM("Length of joint_positions double vector is: " << joint_positions.size());
+
+    ////// Define custom struct (distance, PresetLocation), see https://www.cplusplus.com/articles/NhA0RXSz/
+
+    ////// Build vector of custom structs
+    std::vector<distance_and_PresetLocation_struct> vector_of_structs;
+
+    for (PresetLocation pset_location : preset_vector_to_lookup_in)
+    {
+        // geometry_msgs::Pose location_converted_to_pose = gantryXY2worldposeXY(pset_location);    // convert preset location to pose
+        // double distance_i = calcDistanceInXYPlane(current_position, location_converted_to_pose); // euclidean dist in xy plane
+        double distance_i = calcDistanceInXYTorso_Accurate(pset_location, joint_positions);              // "score", aka distance, in gantry's joint 0, 1, 2 space
+        distance_and_PresetLocation_struct candidate_struct{distance_i, pset_location};          // make a struct
+        vector_of_structs.push_back(candidate_struct);                                           // put struct in list of structs
+    }
+
+    ////// Sort vector of custom structs by distance (need *another* function to do this, will define a lambda function)
+    std::sort(vector_of_structs.begin(), vector_of_structs.end(),
+              // Lambda expression begins,
+              [](const distance_and_PresetLocation_struct &lhs, const distance_and_PresetLocation_struct &rhs) {
+                  return (lhs.distance < rhs.distance);
+              } // end of lambda expression
+    );
+
+    ROS_INFO_STREAM("sorted vector successfully");
+
+    ////// Return the nearest PresetLocation
+    return vector_of_structs[0].candidate_location;
+}
+
 //////////////////////////////// Get nearest preset location to current gantry position
 PresetLocation RWAImplementation::getNearesetPresetLocation_Simple()
 {
@@ -767,6 +808,25 @@ std::vector<PresetLocation> RWAImplementation::getPresetLocationVectorUsingStrin
     return path_to_execute;
 }
 
+std::vector<PresetLocation> RWAImplementation::getPresetLocationVectorUsingString_Specific(std::string target_preset_location_string, std::string wait_string, std::vector<PresetLocation> pset_location_vector_to_use)
+{
+    PresetLocation approximate_current_position = getNearesetPresetLocation_Specific(pset_location_vector_to_use);
+    std::vector<std::string> key = {{approximate_current_position.name, target_preset_location_string}};
+    ROS_INFO_STREAM("key executed! =====" << key[0] << " " << key[1]);
+
+    // std::vector<PresetLocation> path_to_execute = PathingLookupDictionary.at(key); // this line error, cannot find wait preset locations
+    std::vector<PresetLocation> path_to_execute; // initialize empty, wait_string MUST be "wait" or "nowait"
+    if (wait_string == "wait") {
+        path_to_execute = WaitPathingLookupDictionary.at(key);
+    }
+    else {
+        path_to_execute = PathingLookupDictionary.at(key);
+    }
+
+    ROS_INFO_STREAM("path_to_execute lookup executed!");
+    return path_to_execute;
+}
+
 std::vector<PresetLocation> RWAImplementation::getPresetLocationVectorUsingStringNoWait(std::string target_preset_location_string, std::string wait_string)
 {
     PresetLocation approximate_current_position = getNearesetPresetLocation_Simple();
@@ -793,6 +853,18 @@ bool RWAImplementation::executeVectorOfPresetLocations(std::vector<PresetLocatio
         ROS_INFO_STREAM("Moving to PresetLocation: >>>>> " << psetlocation.name);
         gantry_->goToPresetLocation(psetlocation);
         ros::Duration(0.25).sleep();
+        // ros::Duration(0.05).sleep();
+    }
+    return true;
+}
+
+bool RWAImplementation::executeVectorOfPresetLocations_Fast(std::vector<PresetLocation> path_to_execute)
+{
+    for (PresetLocation psetlocation : path_to_execute)
+    {
+        ROS_INFO_STREAM("Moving to PresetLocation: >>>>> " << psetlocation.name);
+        gantry_->goToPresetLocation(psetlocation);
+        // ros::Duration(0.25).sleep(); // this version (Fast) has no delays
         // ros::Duration(0.05).sleep();
     }
     return true;
