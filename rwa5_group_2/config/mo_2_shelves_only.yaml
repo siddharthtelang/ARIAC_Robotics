@@ -27,8 +27,10 @@ options:
     order_part3: pulley_part_red
 
 shelf_layout:
-  row_1: ['base',0,'base','base'] #shelves: 3, 4, 5
+  # row_1: ['base',0,'base','base'] #shelves: 3, 4, 5
+  row_1: ['base','base',0,'base'] #shelves: 3, 4, 5
   row_2: ['pipe','base',0,'base']   #shelves: 6, 7, 8
+  # row_3: ['base','pipe',0,'collar'] #shelves: 9, 10, 11
   row_3: ['base','pipe',0,'collar'] #shelves: 9, 10, 11
 
 aisle_layout:

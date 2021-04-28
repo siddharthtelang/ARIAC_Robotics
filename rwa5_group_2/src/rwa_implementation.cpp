@@ -415,6 +415,7 @@ bool RWAImplementation::buildKit()
 
         ///////////////////////////////////////////////////////////////////////////////////////
         std:: string shelf_and_upper_or_lower_string = isPartInUpperOrLowerRegionOfWhichShelf(my_part, discovered_cam_idx); // ie. "shelf5upper"
+        ROS_INFO_STREAM("shelf_and_upper_or_lower_string: " << shelf_and_upper_or_lower_string);
         ROS_INFO_STREAM("executed isPartInUpperOrLowerRegionOfWhichShelf successfully ");
         std::vector<std::string> information_string_vector = regionDictionary[shelf_and_upper_or_lower_string]; // ie. ["shelf5_fromNorth_near", "nowait", "fromNorth", "near"]
         std::string preset_location_string = information_string_vector[0]; // ie. "shelf5_fromNorth_near"
