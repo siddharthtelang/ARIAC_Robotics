@@ -128,6 +128,7 @@ public:
   * \result: returns camera part list for camera index
   */
   std::vector<ModelInfo> fetchPartsFromCamera(ros::NodeHandle &node, int cam_idx);
+  std::array<std::string, 2> getColorType(std::string full_type);
 
   ros::NodeHandle node_;
 

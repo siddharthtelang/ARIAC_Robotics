@@ -146,6 +146,7 @@ private:
     std::map<std::string, int> agv_to_camera;
     bool competition_started_{false};
     bool region_dict_defined_{false};
+    
 
 public:
     /**

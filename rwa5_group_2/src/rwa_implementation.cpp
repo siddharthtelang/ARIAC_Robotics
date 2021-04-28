@@ -42,17 +42,12 @@ void RWAImplementation::processOrder()
         { ////////// FOR PRODUCT IN PRODUCTS
             ROS_INFO_STREAM("Product type = " << product.type);
             product.agv_id = agv_id;
-            std::string color = product.type;
-            std::string type = color.substr(0, color.find(delimiter));
-            if (type == "piston")
-                type = "piston_rod";
-            int pos{};
+            auto color_type = cam_listener_->getColorType(product.type);
+            auto color{color_type[0]};
+            auto type{color_type[1]};
+
             product.shipment_type = shipment_type;
 
-            while ((pos = color.find(delimiter)) != std::string::npos)
-            {
-                color.erase(0, pos + delimiter.length());
-            }
             auto full_type = type + "_part_" + color;
             if (!sorted_map[color][type].empty())
             {
@@ -339,7 +334,10 @@ bool RWAImplementation::buildKit()
     if (product.get_from_conveyor == true)
     { // if part was moved from conveyor to the bin
         ROS_INFO_STREAM("Deal with conveyor part _______________________");
-        std::vector<CameraListener::ModelInfo> cam_parts_repoll = cam_listener_->fetchPartsFromCamera(*node_, 7);
+        cam_listener_->fetchParts(*node_);
+        cam_listener_->sort_camera_parts_list();
+        auto color_type = cam_listener_->getColorType(product.type);
+        auto cam_parts_repoll = cam_listener_->ordered_color_type[color_type[0]][color_type[1]];
 
         if(cam_parts_repoll.empty()) return false;
         CameraListener::ModelInfo model_info_conveyor_part = cam_parts_repoll[0]; // todo deal with not enough saved up conveyor parts
@@ -403,7 +401,7 @@ bool RWAImplementation::buildKit()
         gantry_->goToPresetLocation(Bump(cam_to_presetlocation[discovered_cam_idx], add_to_x, add_to_y, 0));
         ROS_INFO_STREAM("goToPresetLocation with bump executed! " << cam_to_presetlocation[discovered_cam_idx].name  << " .");
     }
-    else if ((discovered_cam_idx != 0 || discovered_cam_idx != 7 || discovered_cam_idx != 1 || discovered_cam_idx != 2) && discovered_cam_idx >= 0 && discovered_cam_idx <= 16) // Any other camera
+    else if ((discovered_cam_idx != 0 && discovered_cam_idx != 7 && discovered_cam_idx != 1 && discovered_cam_idx != 2 && discovered_cam_idx != 13 && discovered_cam_idx != 15 && discovered_cam_idx != 14 && discovered_cam_idx != 10) && discovered_cam_idx >= 0 && discovered_cam_idx <= 16) // Any other camera
     {                                                                 // any other camera
         ROS_INFO_STREAM("Any Other Camera Case Reached");
 
