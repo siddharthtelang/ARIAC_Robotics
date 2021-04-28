@@ -1114,6 +1114,24 @@ void RWAImplementation::checkAgvErrors()
                     parts_in_tray[camera_index].erase(parts_in_tray[camera_index].begin()+j);
                     j--;
                 }
+                else
+                {
+                    // Take care of Faulty gripper scenario
+                    std::string isFaultyGripper = "";
+                    ros::param::get("faulty_gripper", isFaultyGripper);
+                    if (to_replace.empty() && isFaultyGripper == "true")
+                    {
+                        ros::param::set("faulty_gripper", "false");
+                        ROS_INFO("Faulty gripper and Faulty part at the same time, pick the  part");
+                        faulty_part = parts_in_tray[camera_index][j];
+                        faulty_part.target_pose = faulty.world_pose;
+                        ROS_INFO_STREAM("Faulty part matched - type = " << faulty_part.type << "\n, Pose = " << faulty_part.pose);
+                        to_replace.push_back(faulty_part);
+                        parts_in_tray[camera_index].erase(parts_in_tray[camera_index].begin()+j);
+                        j--;
+                    }
+
+                }
             }
         }
 

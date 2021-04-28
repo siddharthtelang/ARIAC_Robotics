@@ -585,6 +585,7 @@ void GantryControl::placePart(part part, std::string agv, std::string arm)
     else
     {
         ROS_INFO("Object is not attached to gripper, do not move");
+        ros::param::set("faulty_gripper", "true");
     }
     /* End: Fix Bug - When there is a faulty gripper, gantry tries to place part on tray without any part on it */
 
@@ -684,9 +685,12 @@ void GantryControl::placePartAtCorrectPose(part part, std::string agv, std::stri
 
 bool GantryControl::replaceFaultyPart(part Part, std::string agv, std::string arm)
 {
-    auto target_pose_in_tray = getTargetWorldPose(Part.pose, agv);
-    ROS_INFO_STREAM("To replace world position = " << target_pose_in_tray << " and agv =  " << agv);
+    auto target_pose_in_tray =  Part.target_pose;
     part partToPick = Part;
+    // if it is a pulley get the updated pose, as we modify this if roll = pi to roll = 0 during flip
+    if (partToPick.type.find("pulley") == 0)
+        target_pose_in_tray =  getTargetWorldPose(Part.pose, agv);
+    ROS_INFO_STREAM("To replace world position = " << target_pose_in_tray << " and agv =  " << agv);
     partToPick.pose = target_pose_in_tray;
 
     if (partToPick.type.find("gasket") == 0)
