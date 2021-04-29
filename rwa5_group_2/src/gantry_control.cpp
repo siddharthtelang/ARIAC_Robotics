@@ -953,12 +953,13 @@ bool GantryControl::flipPart(part part, std::string agv)
 
     int max_attempts{10};
     int current_attempt{0};
+    ros::Duration(0.5).sleep();
     while (!state.attached && current_attempt < max_attempts)
     {
         ROS_INFO("Tring to activate right gripper");
         activateGripper("right_arm");
-        state = getGripperState("right_arm");
         ros::Duration(0.5).sleep();
+        state = getGripperState("right_arm");
         current_attempt++;
     }
     ros::Duration(0.5).sleep();

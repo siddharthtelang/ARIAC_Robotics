@@ -12,13 +12,31 @@ void RWAImplementation::processOrder()
     if (order_list.size() == prev_num_orders_)
         return;
 
-    prev_num_orders_++;
     ROS_INFO_STREAM("Processing Order...");
 
+    // if(prev_num_orders_ > 0) {
+    //     gantry_->goToPresetLocation(start_a);
+    //     auto agv1_parts = cam_listener_->fetchPartsFromCamera(*node_, agv_to_camera["agv1"]);
+    //     for(auto agv1_part : agv1_parts) {
+    //         gantry_->goToPresetLocation(agv1_staging_a);            
+    //         part temp_part;
+    //         temp_part.type = agv1_part.type + "_part_" + agv1_part.color;
+    //         temp_part.pose = agv1_part.world_pose;
+    //         if (!gantry_->pickPart(temp_part, "left_arm")) return;
+    //         gantry_->goToPresetLocation(start_a);
+    //         PresetLocation drop_location = getNearestBinPresetLocation();
+    //         gantry_->goToPresetLocation(Bump(drop_location, 0.0, -0.8, 0));
+    //         simpleDropPart();
+    //         gantry_->goToPresetLocation(start_a);
+
+    //     }
+    // }
+
+    prev_num_orders_++;
     std::unordered_map<std::string, std::unordered_map<std::string, std::queue<Product>>> total_products;
     std::queue<std::vector<Product>> shipments;
     std::string shipment_type;
-
+    std::string agv_id;
     std::string delimiter = "_";
 
     auto order = order_list.back();
@@ -28,7 +46,7 @@ void RWAImplementation::processOrder()
     for (const auto &shipment : order.shipments)
     {
         shipment_type = shipment.shipment_type;
-        std::string agv_id = shipment.agv_id;
+        agv_id = shipment.agv_id;
         std::vector<Product> products = shipment.products;
         std::queue<std::string> current_shipment;
 
@@ -116,6 +134,15 @@ void RWAImplementation::processOrder()
     //     order_task_queue.push(std::vector<Product>{needs_pair.front()});
     //     needs_pair.pop();
     // }
+
+    // check if there is any last order on the same AGV
+    if (!task_queue_.empty()){
+        if (agv_id == task_queue_.top().front()[0].agv_id) {
+            ROS_INFO("New High Priority Order is on the same AGV... Keep the parts somewhere else");
+            pickPartsFromAGV(agv_id);
+        }
+    } 
+
     task_queue_.push(order_task_queue);
     ROS_INFO_STREAM("Completed order processing. " << count << " parts on task queue.");
 
@@ -134,6 +161,25 @@ void RWAImplementation::processOrder()
 //         }
 //         task_queue.pop();
 //     }
+}
+
+void RWAImplementation::pickPartsFromAGV(std::string agv_id) {
+    int camera = (agv_id == "agv1" ? 0 : 1);
+    int camera_idx = agv_to_camera[agv_id];
+    // old_parts_in_tray = parts_in_tray[camera_idx];
+    parts_in_tray[camera].clear();
+    PresetLocation agv = (agv_id == "agv1" ? gantry_->agv1_ : gantry_->agv2_);
+    auto agv_parts = cam_listener_->fetchPartsFromCamera(*node_, camera_idx);
+    for(auto agv_part : agv_parts) {
+        part temp_part;
+        temp_part.type = agv_part.type + "_part_" + agv_part.color;
+        temp_part.pose = agv_part.world_pose;  
+        gantry_->goToPresetLocation(start_a);
+        gantry_->goToPresetLocation(agv);
+        ros::Duration(1.0).sleep();
+        gantry_->pickPart(temp_part, "left_arm");
+        gantry_->deactivateGripper("left_arm");
+    }
 }
 
 /**
@@ -221,10 +267,10 @@ void RWAImplementation::InitRegionDictionaryDependingOnSituation() {
     if (!region_dict_defined_) 
     {
         ROS_INFO_STREAM(" Human Obstacles not initialized, Error, need to add some code here ************************************************");
-        auto clear = lane_handler.clearLanes();                 // [Northernmost Lane Row .......... Southermost Lane Row]
-        if(!clear[4]) return;                                   // "clear[4] == true" means that exactly two lanes are known to have obstacles
+        // auto clear = lane_handler.clearLanes();                 // [Northernmost Lane Row .......... Southermost Lane Row]
+        // if(!clear[4]) return;                                   // "clear[4] == true" means that exactly two lanes are known to have obstacles
         // std::array<bool, 5> clear = {true, true ,false ,true, false};
-        // std::array<bool, 5> clear = {true, false ,false ,true, true};
+        std::array<bool, 5> clear = {true, true ,true ,true, true};
 
         region_dict_defined_ = true;
         if (clear[0] == true) { regionDictionary["shelf5upper"] = {"shelf5_fromNorth_near", "nowait", "fromNorth", "near"}; }
@@ -364,15 +410,10 @@ bool RWAImplementation::buildKit()
         if(cam_parts_repoll.empty()) return true;
         CameraListener::ModelInfo model_info_conveyor_part = cam_parts_repoll[0]; // todo deal with not enough saved up conveyor parts
 
-        my_part.pose.position.x = model_info_conveyor_part.world_pose.position.x; // seems very redundant to store in the modelInfo and part
-        my_part.pose.position.y = model_info_conveyor_part.world_pose.position.y;
-        my_part.pose.position.z = model_info_conveyor_part.world_pose.position.z;
-        my_part.pose.orientation.x = model_info_conveyor_part.world_pose.orientation.x;
-        my_part.pose.orientation.y = model_info_conveyor_part.world_pose.orientation.y;
-        my_part.pose.orientation.z = model_info_conveyor_part.world_pose.orientation.z;
-        my_part.pose.orientation.w = model_info_conveyor_part.world_pose.orientation.w;
-
+        product.designated_model = model_info_conveyor_part;
+        my_part.pose = model_info_conveyor_part.world_pose; // seems very redundant to store in the modelInfo and part
         part_in_tray.initial_pose = model_info_conveyor_part.world_pose; // save the initial pose
+        part_in_tray.target_pose = gantry_->getTargetWorldPose(part_in_tray.pose, product.agv_id);
 
         my_part.type = model_info_conveyor_part.type + "_part_" + model_info_conveyor_part.color; // correct mismatch later
         double add_to_x = my_part.pose.position.x - 4.365789 - 0.1;                         // constant is perfect bin red pulley x
@@ -387,7 +428,6 @@ bool RWAImplementation::buildKit()
         gantry_->goToPresetLocation(Bump(cam_to_presetlocation[7], add_to_x, add_to_y, 0));
         ROS_INFO_STREAM("goToPresetLocation with bump executed!");
         
-
         buffer_parts_collected--; // this should occur later in future, after part is actually picked up
     }
     else if (discovered_cam_idx == 10 || discovered_cam_idx == 13 || discovered_cam_idx == 14 || discovered_cam_idx == 15 ) // shelves 1 and 2
@@ -1080,7 +1120,7 @@ void RWAImplementation::rankEmptyBins() {
         }
         if (empty) {
             PresetLocation dropPresetLocation;
-            dropPresetLocation.gantry = {vec[0], (vec[2]*-1.0)-0.63-0.63/2.0 , 0.0}; // xlow+.3, (ylow+.3)*-1, no spin
+            dropPresetLocation.gantry = {vec[0]-0.63/2, (vec[2]*-1.0)-0.63-0.63/2.0 , 0.0}; // xlow+.3, (ylow+.3)*-1, no spin
             dropPresetLocation.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
             dropPresetLocation.right_arm = {0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // vertical up
             dropPresetLocation.name = "dropPresetLocation";
@@ -1309,6 +1349,7 @@ void RWAImplementation::checkAgvErrors()
 
             if(task_queue_.top().empty()) 
                 task_queue_.pop();
+                prev_num_orders_--;
         }
         else
         {

@@ -87,7 +87,7 @@ int main(int argc, char ** argv) {
         ros::Duration(1.0).sleep(); // added for RWA5, try to deal with incosistency conveyor==1 when not and also bouncing to agv1 and start
 
         rwa.InitRegionDictionaryDependingOnSituation(); // Initialize region (shelf + upper or lower) dictionary depending on situation.
-        if (rwa.checkConveyor()) continue;       
+        // if (rwa.checkConveyor()) continue;       
         if (rwa.buildKit()) continue;
         rwa.checkAgvErrors();
         ros::Duration(0.5).sleep();

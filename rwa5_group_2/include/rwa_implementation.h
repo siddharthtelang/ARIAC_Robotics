@@ -142,7 +142,7 @@ private:
     std::vector<PresetLocation> shelf_1_or_2_preset_locations_list_;
 
     /* ===================== Conveyor Variables ===================== */
-    const float dx_ = 6.6;
+    const float dx_ = 6.6-0.01;
     const int buffer_parts_{2};
     int buffer_parts_collected{0};
     bool waiting_for_part_{false};
@@ -247,6 +247,7 @@ public:
    // regionDictionary, key is string indicating shelf and upper/lower, value is vector of strings, ie. ["shelf5_fromsouth_near", "nowait"]
     std::unordered_map<std::string, std::vector<std::string> > regionDictionary;
 
+    void pickPartsFromAGV(std::string agv_id);
 
     struct distance_and_PresetLocation_struct
     {
