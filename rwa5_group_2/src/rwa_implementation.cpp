@@ -14,23 +14,12 @@ void RWAImplementation::processOrder()
 
     ROS_INFO_STREAM("Processing Order...");
 
-    // if(prev_num_orders_ > 0) {
-    //     gantry_->goToPresetLocation(start_a);
-    //     auto agv1_parts = cam_listener_->fetchPartsFromCamera(*node_, agv_to_camera["agv1"]);
-    //     for(auto agv1_part : agv1_parts) {
-    //         gantry_->goToPresetLocation(agv1_staging_a);            
-    //         part temp_part;
-    //         temp_part.type = agv1_part.type + "_part_" + agv1_part.color;
-    //         temp_part.pose = agv1_part.world_pose;
-    //         if (!gantry_->pickPart(temp_part, "left_arm")) return;
-    //         gantry_->goToPresetLocation(start_a);
-    //         PresetLocation drop_location = getNearestBinPresetLocation();
-    //         gantry_->goToPresetLocation(Bump(drop_location, 0.0, -0.8, 0));
-    //         simpleDropPart();
-    //         gantry_->goToPresetLocation(start_a);
-
-    //     }
-    // }
+    if (!task_queue_.empty()) {
+        Product product_temp = task_queue_.top().front()[0];
+        ROS_INFO_STREAM("product temp shipment type " << product_temp.shipment_type);
+        ROS_INFO_STREAM("order list shipment type: " << order_list.back().shipments[0].shipment_type);
+        if (product_temp.shipment_type == order_list.back().shipments[0].shipment_type)
+    }
 
     prev_num_orders_++;
     std::unordered_map<std::string, std::unordered_map<std::string, std::queue<Product>>> total_products;
@@ -138,7 +127,6 @@ void RWAImplementation::processOrder()
     // check if there is any last order on the same AGV
     if (!task_queue_.empty()){
         if (agv_id == task_queue_.top().front()[0].agv_id) {
-            ROS_INFO("New High Priority Order is on the same AGV... Keep the parts somewhere else");
             pickPartsFromAGV(agv_id);
         }
     } 
@@ -163,6 +151,8 @@ void RWAImplementation::processOrder()
 //     }
 }
 
+PresetLocation Bump(PresetLocation location_to_modify, double small_rail, double large_rail, double torso);
+
 void RWAImplementation::pickPartsFromAGV(std::string agv_id) {
     int camera = (agv_id == "agv1" ? 0 : 1);
     int camera_idx = agv_to_camera[agv_id];
@@ -178,7 +168,11 @@ void RWAImplementation::pickPartsFromAGV(std::string agv_id) {
         gantry_->goToPresetLocation(agv);
         ros::Duration(1.0).sleep();
         gantry_->pickPart(temp_part, "left_arm");
-        gantry_->deactivateGripper("left_arm");
+        gantry_->goToPresetLocation(start_a);
+        PresetLocation drop_location = getNearestBinPresetLocation();
+        gantry_->goToPresetLocation(Bump(drop_location, 0.0, -0.8, 0));
+        simpleDropPart();
+        gantry_->goToPresetLocation(start_a);
     }
 }
 
@@ -1349,7 +1343,6 @@ void RWAImplementation::checkAgvErrors()
 
             if(task_queue_.top().empty()) 
                 task_queue_.pop();
-                prev_num_orders_--;
         }
         else
         {
