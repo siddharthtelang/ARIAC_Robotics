@@ -18,10 +18,13 @@ void RWAImplementation::processOrder()
         Product product_temp = task_queue_.top().front()[0];
         ROS_INFO_STREAM("product temp shipment type " << product_temp.shipment_type);
         ROS_INFO_STREAM("order list shipment type: " << order_list.back().shipments[0].shipment_type);
-        if (product_temp.shipment_type == order_list.back().shipments[0].shipment_type)
-    }
-
-    prev_num_orders_++;
+        if (product_temp.shipment_type == order_list.back().shipments[0].shipment_type) {
+            task_queue_.pop();
+            cam_listener_->fetchParts(*node_);
+            cam_listener_->sort_camera_parts_list();
+            sorted_map = cam_listener_->sortPartsByDist();
+        }
+    } else prev_num_orders_++;
     std::unordered_map<std::string, std::unordered_map<std::string, std::queue<Product>>> total_products;
     std::queue<std::vector<Product>> shipments;
     std::string shipment_type;
