@@ -93,6 +93,12 @@ void Competition::competition_clock_callback(const rosgraph_msgs::Clock::ConstPt
   competition_clock_ = msg->clock;
 }
 
+
+////////////////////////
+//void Competition::pop_order_list_back() {
+//    order_list_.pop_back();
+//}
+
 ////////////////////////
 void Competition::processOrder(){
   auto current_order = order_list_.front();

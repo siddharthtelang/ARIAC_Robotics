@@ -31,69 +31,62 @@ void RWAImplementation::processOrder()
     std::string agv_id;
     std::string delimiter = "_";
 
-    auto order = order_list.back();
+//    auto order = order_list.back();
 
     int count{0};
     std::queue<std::vector<Product>> order_task_queue;
-    for (const auto &shipment : order.shipments)
-    {
-        shipment_type = shipment.shipment_type;
-        agv_id = shipment.agv_id;
-        std::vector<Product> products = shipment.products;
-        std::queue<std::string> current_shipment;
+    for (auto order: order_list) {
+        for (const auto &shipment : order.shipments) {
+            shipment_type = shipment.shipment_type;
+            agv_id = shipment.agv_id;
+            std::vector<Product> products = shipment.products;
+            std::queue<std::string> current_shipment;
 
-        ROS_INFO_STREAM("Shipment type = " << shipment_type);
-        ROS_INFO_STREAM("AGV ID = " << agv_id);
+            ROS_INFO_STREAM("Shipment type = " << shipment_type);
+            ROS_INFO_STREAM("AGV ID = " << agv_id);
 
-        ROS_INFO_STREAM("Shipment size = " << order.shipments.size());
+            ROS_INFO_STREAM("Shipment size = " << order.shipments.size());
 
-        std::queue<Product> conveyor_parts;
-        std::vector<Product> shipment_task_queue;
-        for (auto &product : products)
-        { ////////// FOR PRODUCT IN PRODUCTS
-            count++;
-            ROS_INFO_STREAM("Product type = " << product.type);
-            product.agv_id = agv_id;
-            auto color_type = cam_listener_->getColorType(product.type);
-            auto color{color_type[0]};
-            auto type{color_type[1]};
+            std::queue<Product> conveyor_parts;
+            std::vector<Product> shipment_task_queue;
+            for (auto &product : products) { ////////// FOR PRODUCT IN PRODUCTS
+                count++;
+                ROS_INFO_STREAM("Product type = " << product.type);
+                product.agv_id = agv_id;
+                auto color_type = cam_listener_->getColorType(product.type);
+                auto color{color_type[0]};
+                auto type{color_type[1]};
 
-            product.shipment_type = shipment_type;
+                product.shipment_type = shipment_type;
 
-            auto full_type = type + "_part_" + color;
-            if (!sorted_map[color][type].empty())
-            {
-                product.designated_model = sorted_map[color][type].top();
-                sorted_map[color][type].pop();
+                auto full_type = type + "_part_" + color;
+                if (!sorted_map[color][type].empty()) {
+                    product.designated_model = sorted_map[color][type].top();
+                    sorted_map[color][type].pop();
+                    shipment_task_queue.push_back(product);
+                    ROS_INFO_STREAM(" Product found on map ");
+                    ROS_INFO_STREAM(" Designated Model ID: " << product.designated_model.id);
+                } else if (full_type == conveyor_type_) {
+                    product.get_from_conveyor = true;
+                    // product.get_from_conveyor = false; // CRITICAL CHANGE FOR TESTING DELETE/COMMENT THIS LINE
+                    conveyor_parts.push(product);
+                    ROS_INFO_STREAM(" Type is conveyor type ");
+                } else {
+                    product.get_from_conveyor = true;
+                    // product.get_from_conveyor = false; // CRITICAL CHANGE FOR TESTING DELETE/COMMENT THIS LINE
+                    conveyor_type_ = full_type;
+                    conveyor_parts.push(product);
+                    ROS_INFO_STREAM(" No objects found on map! Assuming that it will show up on conveyor... ");
+                }
+                // total_products[color][type].push(product);
+            }
+            while (!conveyor_parts.empty()) {
+                auto product = conveyor_parts.front();
                 shipment_task_queue.push_back(product);
-                ROS_INFO_STREAM(" Product found on map ");
-                ROS_INFO_STREAM(" Designated Model ID: " << product.designated_model.id);
+                conveyor_parts.pop();
             }
-            
-            else if (full_type == conveyor_type_)
-            {
-                product.get_from_conveyor = true;
-                // product.get_from_conveyor = false; // CRITICAL CHANGE FOR TESTING DELETE/COMMENT THIS LINE
-                conveyor_parts.push(product);
-                ROS_INFO_STREAM(" Type is conveyor type ");
-            }
-            else
-            {
-                product.get_from_conveyor = true;
-                // product.get_from_conveyor = false; // CRITICAL CHANGE FOR TESTING DELETE/COMMENT THIS LINE
-                conveyor_type_ = full_type;
-                conveyor_parts.push(product);
-                ROS_INFO_STREAM(" No objects found on map! Assuming that it will show up on conveyor... ");
-            }
-            // total_products[color][type].push(product);
+            order_task_queue.push(shipment_task_queue);
         }
-        while (!conveyor_parts.empty())
-        {
-            auto product = conveyor_parts.front();
-            shipment_task_queue.push_back(product);
-            conveyor_parts.pop();
-        }
-        order_task_queue.push(shipment_task_queue);
     }
     /* ORDERS PRODUCTS IN PAIRS. DON'T DELETE */
     // std::queue<Product> needs_pair;
@@ -1344,7 +1337,7 @@ void RWAImplementation::checkAgvErrors()
             agv_control.sendAGV(product.shipment_type, kit_id);
             task_queue_.top().pop();
 
-            if(task_queue_.top().empty()) 
+            if(task_queue_.top().empty())
                 task_queue_.pop();
         }
         else
