@@ -31,10 +31,10 @@ The order may contain multiple shipments. The robot also replaces the parts that
 4. rwa5_group_2: Agility challenges addressed - Sensor blackout, moving obstacles.
    
 ## Team Information
-1. [Aman Virmani](https://github.com/AmanVirmani)
-2. [Dani Lerner](https://github.com/dlerner97)
-3. [Mack Tang](https://github.com/tangm7)
-4. [Siddharth Telang](https://github.com/siddharthtelang)
+1. [Siddharth Telang](https://github.com/siddharthtelang)
+2. [Aman Virmani](https://github.com/AmanVirmani)
+3. [Dani Lerner](https://github.com/dlerner97)
+4. [Mack Tang](https://github.com/tangm7)
 
 ## Dependencies
 The packages have been tested on Ubuntu 18.04 with ROS 1 melodic installed. 
