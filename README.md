@@ -3,6 +3,22 @@ This repository is for creating a ROS package to complete the NIST ARIAC 2020 Ch
 listed are part of the submission for the course ENPM663: Building a Manufacturing Robot, offered at the
 University of Maryland, College Park in Spring 2021. 
 
+<p align="center">
+<img src="data/gantry.png"/>
+</p>
+
+<p align="center">
+<img src="data/map.png"/>
+</p>
+
+<p align="center">
+<img src="data/moving_obstacles.jpg"/>
+</p>
+
+<p align="center">
+<img src="data/part_handling.png"/>
+</p>
+
 ## Package Information
 1. rwa2_group_2 : Package that places the logical cameras in the environment to get information 
 about different parts and their locations.
