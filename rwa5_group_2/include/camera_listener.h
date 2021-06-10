@@ -40,6 +40,10 @@ public:
 //       node_ = node;
 //   }
 
+  /**
+    * @brief struct to parse and store of products detected by cameras
+    *
+    */
   struct ModelInfo
   {
 
@@ -55,6 +59,12 @@ public:
   };
 
   // For priority queue sorting. I may have to swith the sign because priority queues sort by highest not lowest.
+  /**
+  * \brief: Compares the distances between two parts from origin
+  * \param: ModelInfo 1 representing 1st part
+  * \param: ModelInfo 2 representing 2nd part
+  * \result: bool , true if part 2 is closer to the origin compared to part 1
+  */
   struct CompareDists {
     bool operator()(const CameraListener::ModelInfo& lhs, const CameraListener::ModelInfo& rhs) {
         // return "true" if "p1" is ordered before "p2", for example:
@@ -128,6 +138,13 @@ public:
   * \result: returns camera part list for camera index
   */
   std::vector<ModelInfo> fetchPartsFromCamera(ros::NodeHandle &node, int cam_idx);
+
+  /**
+  * \brief: Getter for parts from specific camera
+  * \param: string that defines the full type of a part
+  * \result: returns camera part list for camera index
+  */
+  std::array<std::string, 2> getColorType(std::string full_type);
 
   ros::NodeHandle node_;
 

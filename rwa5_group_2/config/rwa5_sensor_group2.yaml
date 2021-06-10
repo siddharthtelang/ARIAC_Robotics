@@ -94,7 +94,7 @@ sensors:
   logical_camera_5: # over conveyer belt
     type: logical_camera
     pose:
-      xyz: [-0.017222, 3.202186, 1.868044]
+      xyz: [-0.017222, 3.9, 1.868044]
       rpy: [-3.112917, 1.561484, -3.109819]
 
   logical_camera_6: # over shelf

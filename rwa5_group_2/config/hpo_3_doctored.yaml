@@ -1,0 +1,162 @@
+#Number of orders: 2
+#Number of shipments: 1
+#Scenarios:
+#  -Baseline: No
+#  -Interruption: Yes
+#Challenges:
+#  -Drop parts: No
+#  -Sensor blackout: No
+#  -Part flipping: Yes
+#  -Faulty parts: Yes
+#  -Moving obstacle: No
+#2 arms advantageous: Yes
+#Time limit: No
+
+time_limit: -1
+
+options:
+  gazebo_state_logging: true
+  insert_models_over_bins: true
+  insert_models_over_shelves: true
+  belt_population_cycles: 4
+  spawn_extra_models: true
+  model_type_aliases:
+    order_part1: pulley_part_blue
+    order_part2: disk_part_green
+    order_part3: disk_part_blue
+    order_part1: pulley_part_red
+
+shelf_layout:
+  row_1: ['base',0,'base','base'] #shelves: 3, 4, 5
+  row_2: ['pipe','base',0,'base']   #shelves: 6, 7, 8
+  row_3: ['base','pipe',0,'collar'] #shelves: 9, 10, 11
+
+
+orders:
+  order_0:
+    announcement_condition: time
+    announcement_condition_value: 0.0
+    shipment_count: 1
+    destinations: [agv1]
+    products:
+      part_0:
+        type: pulley_part_blue
+        pose:
+          xyz: [0.1, 0.2, 0]
+          rpy: ['pi', 0, 0]
+      part_1:
+        type: pulley_part_blue
+        pose:
+          xyz: [0.0, -0.15, 0]
+          rpy: [0.0, 0.0, 0.0]
+      # part_2:
+      #   type: pulley_part_red
+      #   pose:
+      #     xyz: [-0.08527903193188661, 0.24650401618947632, 0.0]
+      #     rpy: [0.0, 0.0, 0.519023031751233]
+  # order_1:
+  #   announcement_condition: time
+  #   announcement_condition_value: 10.0
+  #   shipment_count: 1
+  #   destinations: [agv2]
+  #   products:
+  #     part_0:
+  #       type: disk_part_blue
+  #       pose:
+  #         xyz: [0.1108846351123259, 0.005466378855429943, 0.0]
+  #         rpy: ['pi', 0.0, -2.2305646396214693]
+  #     part_1:
+  #       type: disk_part_green
+  #       pose:
+  #         xyz: [-0.09086755057577971, -0.1977951983990695, 0.0]
+  #         rpy: [0, 0.0, -0.47165352201541166]
+  #     part_2:
+  #       type: disk_part_green
+  #       pose:
+  #         xyz: [-0.08527903193188661, 0.24650401618947632, 0.0]
+  #         rpy: [0.0, 0.0, 0.519023031751233]
+
+models_over_bins:
+  bin5:
+    models:
+      disk_part_green:
+        xyz_start: [0.2, 0.1, 0.0]
+        xyz_end: [0.4, 0.4, 0.0]
+        rpy: [0, 0, '-pi/4']
+        num_models_x: 2
+        num_models_y: 2
+  bin1:
+    models:
+      disk_part_green:
+        xyz_start: [0.2, 0.1, 0.0]
+        xyz_end: [0.4, 0.4, 0.0]
+        rpy: [0, 0, '-pi/4']
+        num_models_x: 2
+        num_models_y: 2
+  bin9:
+    models:
+      disk_part_blue:
+        xyz_start: [0.28, 0.2, 0.0]
+        xyz_end: [0.28, 0.4, 0.0]
+        rpy: [0, 0, 0.28]
+        num_models_x: 1
+        num_models_y: 2
+  bin13:
+    models:
+      disk_part_blue:
+        xyz_start: [0.28, 0.2, 0.0]
+        xyz_end: [0.28, 0.4, 0.0]
+        rpy: [0, 0, 0.28]
+        num_models_x: 1
+        num_models_y: 2
+
+
+belt_models:
+  # pulley_part_blue:
+  #   0.0:
+  #     pose:
+  #       xyz: [0.0, 4.3, 0.92]
+  #       rpy: [0, 0, 'pi/2']
+  # pulley_part_red:
+  #   5.0:
+  #     pose:
+  #       xyz: [0.0, 4.3, 0.92]
+  #       rpy: [0, 0, 'pi/2']
+  pulley_part_blue:
+    20.0:
+      pose:
+        xyz: [0.0, 4.3, 0.92]
+        rpy: [0, 0, 'pi/2']
+  # pulley_part_red:
+  #   15.0:
+  #     pose:
+  #       xyz: [0.0, 4.3, 0.92]
+  #       rpy: [0, 0, 'pi/2']
+
+#2 arms advantageous
+# models_over_shelves:
+#   shelf8:
+#     models:
+#       disk_part_blue:
+#         xyz_start: [0.7, -0.5, 0.0]
+#         xyz_end: [0., -0.4, 0.0]
+#         rpy: [0, 0, 0]
+#         num_models_x: 5
+#         num_models_y: 2
+#       piston_rod_part_red:
+#         xyz_start: [0.8, 0.3, 0.0]
+#         xyz_end: [0., 0.4, 0.0]
+#         rpy: [0, 0, 0]
+#         num_models_x: 6
+#         num_models_y: 1
+
+
+
+#Faulty products
+# faulty_products:
+#   - pulley_part_red_1
+#   - pulley_part_blue_1
+#   - disk_part_blue_1
+#   - disk_part_blue_2
+#   - disk_part_green_2
+#   - disk_part_green_4

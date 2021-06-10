@@ -43,6 +43,7 @@ private:
     ros::Subscriber breakbeam_sub_;
 
     /* ===================== Preset Locations ===================== */
+    std::queue<PresetLocation> empty_bins_;
     PresetLocation conveyor_belt;
     PresetLocation start_a;
 
@@ -117,15 +118,32 @@ private:
 
     PresetLocation agv2_a;
 
+    ///////////// Miscellaneous (all rows)
+    PresetLocation waitpoint_best_south_fromSouth_near;
+    PresetLocation mid_8_11_intersection_fromSouth_near;
+
+    PresetLocation waitpoint_best_north_fromNorth_near;
+    PresetLocation mid_5_8_intersection_fromNorth_near;
+
+    //////////// Shelves 1 and 2
+    // shelf1_fromSouth_far, shelf1_fromSouth_near, shelf2_fromNorth_near, shelf2_fromNorth_far
+    PresetLocation shelf1_fromSouth_far;
+    PresetLocation shelf1_fromSouth_near;
+    PresetLocation shelf2_fromNorth_near;
+    PresetLocation shelf2_fromNorth_far;
+
+
     //////////// End Shelf Preset Locations
 
     std::vector<PresetLocation> preset_locations_list_; // lookup list to compare distances with
     std::vector<PresetLocation> preset_locations_list_simple_; // lookup list to compare distances with
     std::vector<std::string> wait_preset_locations_list_;
+    std::vector<PresetLocation> inner_fast_preset_locations_list_;
+    std::vector<PresetLocation> shelf_1_or_2_preset_locations_list_;
 
     /* ===================== Conveyor Variables ===================== */
-    const float dx_ = 6.6;
-    const int buffer_parts_{1};
+    const float dx_ = 6.6-0.01;
+    const int buffer_parts_{2};
     int buffer_parts_collected{0};
     bool waiting_for_part_{false};
     std::string conveyor_type_{""};
@@ -142,6 +160,7 @@ private:
     std::map<std::string, int> agv_to_camera;
     bool competition_started_{false};
     bool region_dict_defined_{false};
+    
 
 public:
     /**
@@ -156,7 +175,7 @@ public:
 
         breakbeam_sub_ = node_->subscribe<nist_gear::Proximity>("/ariac/breakbeam_0_change", 10, &CameraListener::breakbeam_callback, cam_listener_);
         
-        ros::Duration(1).sleep();
+        ros::Duration(5).sleep();
         cam_listener_->fetchParts(*node_);
         cam_listener_->sort_camera_parts_list();
         sorted_map = cam_listener_->sortPartsByDist();
@@ -228,6 +247,7 @@ public:
    // regionDictionary, key is string indicating shelf and upper/lower, value is vector of strings, ie. ["shelf5_fromsouth_near", "nowait"]
     std::unordered_map<std::string, std::vector<std::string> > regionDictionary;
 
+    void pickPartsFromAGV(std::string agv_id);
 
     struct distance_and_PresetLocation_struct
     {
@@ -249,13 +269,18 @@ public:
 
     double calcDistanceInXYPlane(geometry_msgs::Pose a, geometry_msgs::Pose b);
     double calcDistanceInXYTorso(PresetLocation pLocation, std::vector<double> joint_positions);
+    double calcDistanceInXYTorso_Accurate(PresetLocation pLocation, std::vector<double> joint_positions);
     PresetLocation getNearesetPresetLocation();
     PresetLocation getNearesetPresetLocation_Simple();
+    PresetLocation getNearesetPresetLocation_Specific(std::vector<PresetLocation> preset_vector_to_lookup_in);
     std::vector<PresetLocation> getPresetLocationVector(PresetLocation target_preset_location);
     std::vector<PresetLocation> getPresetLocationVector_Simple(PresetLocation target_preset_location);
     std::vector<PresetLocation> getPresetLocationVectorWithWait(PresetLocation target_preset_location);
     std::vector<PresetLocation> getPresetLocationVectorUsingString(std::string target_preset_location_string, std::string wait_string);
+    std::vector<PresetLocation> getPresetLocationVectorUsingStringNoWait(std::string target_preset_location_string, std::string wait_string);
+    std::vector<PresetLocation> getPresetLocationVectorUsingString_Specific(std::string target_preset_location_string, std::string wait_string, std::vector<PresetLocation> pset_location_vector_to_use);
     bool executeVectorOfPresetLocations( std::vector<PresetLocation> path_to_execute );
+    bool executeVectorOfPresetLocations_Fast( std::vector<PresetLocation> path_to_execute );
     bool executeVectorOfPresetLocationsWithWait( std::vector<PresetLocation> path_to_execute );
     geometry_msgs::Pose gantryXY2worldposeXY(PresetLocation preset_location_2_convert);
     // preset locations from start to safe location for three shelf rows starting from agv1 side
@@ -263,6 +288,8 @@ public:
     std::array<std::string, 3> gaps; //either "gap_conveyor" or "gap_end"
 
     PresetLocation getNearestBinPresetLocation();
+
+    void rankEmptyBins();
 
     /**
      * \brief: simple drop functionlity
@@ -281,6 +308,8 @@ public:
      */
     std::string isPartInUpperOrLowerRegionOfWhichShelf(part my_part, int discovered_cam_idx) {
         std::string shelf_string = cam_to_shelf_string[discovered_cam_idx]; // ie. "shelf5"
+
+        ROS_INFO_STREAM("shelf_string is: " << shelf_string);
 
         double product_y_coord = my_part.pose.position.y;
         double camera_y_coord = cam_to_y_coordinate[discovered_cam_idx];

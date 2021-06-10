@@ -53,12 +53,10 @@ void CameraListener::logical_camera_callback(
       temp_model.model_pose = msg->models[i].pose;
       temp_model.transformStamped = transformStamped;
 
-      std::string color = msg->models[i].type;
-      std::string delimiter = "_";
+      auto color_type = getColorType(msg->models[i].type);
+      temp_model.color = color_type[0];
+      temp_model.type = color_type[1];
 
-      temp_model.type = color.substr(0, color.find(delimiter));
-      if (temp_model.type == "piston")
-          temp_model.type = "piston_rod";
 
       if (part_count.find(msg->models[i].type) == part_count.end())
       {
@@ -69,14 +67,6 @@ void CameraListener::logical_camera_callback(
         part_count[msg->models[i].type]++;
       }
       int frame_number_to_append{part_count[msg->models[i].type]};
-
-      int pos{};
-
-      while ((pos = color.find(delimiter)) != std::string::npos)
-      {
-        color.erase(0, pos + delimiter.length());
-      }
-      temp_model.color = color;
 
       //perform TF
       performTransform(&temp_model);
@@ -182,6 +172,7 @@ std::array<std::vector<CameraListener::ModelInfo>, 17> CameraListener::fetchPart
   std::array<ros::Subscriber, num_cams> logical_camera_subscriber{};
   for (int i = 0; i < num_cams; i++)
   {
+    if(i == 5) continue;
     logical_camera_subscriber[i] = node.subscribe<nist_gear::LogicalCameraImage>(
         "/ariac/logical_camera_" + std::to_string(i), 10,
         boost::bind(&CameraListener::logical_camera_callback, this, _1, i));
@@ -279,6 +270,7 @@ void CameraListener::breakbeam_callback(const nist_gear::Proximity::ConstPtr &ms
     ros::Time t_hit_breakbeam = ros::Time::now();
     load_time_on_conveyor_.push(t_hit_breakbeam);
     auto cam_parts = fetchPartsFromCamera(node_, 5);
+    camera_parts_list_[5].clear();
     if (!cam_parts.empty())
         parts_on_conveyor_.push_back(cam_parts[0]);
 
@@ -298,7 +290,22 @@ std::vector<CameraListener::ModelInfo> CameraListener::fetchPartsFromCamera(ros:
       "/ariac/logical_camera_" + std::to_string(cam_idx), 10,
       boost::bind(&CameraListener::logical_camera_callback, this, _1, cam_idx));
 
-  ros::Duration(0.2).sleep();
+  ros::Duration(0.4).sleep();
 
   return camera_parts_list_[cam_idx];
+}
+
+std::array<std::string, 2> CameraListener::getColorType(std::string full_type) {
+  std::string delimiter = "_";
+  std::string color = full_type;
+  std::string type = color.substr(0, color.find(delimiter));
+  if (type == "piston")
+      type = "piston_rod";
+  int pos{};
+
+  while ((pos = color.find(delimiter)) != std::string::npos)
+  {
+      color.erase(0, pos + delimiter.length());
+  }
+  return std::array<std::string, 2>{color, type};
 }

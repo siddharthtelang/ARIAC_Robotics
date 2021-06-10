@@ -55,7 +55,7 @@ std::array<bool, 5> AllLanesHandler::clearLanes() {
                         count++;
                 }
         }
-        if (count == 2) clear_lanes[4] = true;
+        if (count == 2 || ros::Time::now().toSec() > wait_time) clear_lanes[4] = true;
         return clear_lanes;
 }
 

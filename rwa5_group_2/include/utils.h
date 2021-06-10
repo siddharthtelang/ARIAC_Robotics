@@ -201,6 +201,7 @@ public:
 
 private:
     std::array<LaneBreakbeamPair, 4> lanes_{};
+    const double wait_time{30};
     
 };
 

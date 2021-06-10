@@ -74,6 +74,9 @@ public:
      * @return double 
      */
     double getStartTime();
+
+//    void pop_order_list_back() {
+
     /**
      * @brief Get the Competition State object
      * 
