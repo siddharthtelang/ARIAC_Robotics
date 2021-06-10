@@ -9,6 +9,10 @@ about different parts and their locations.
    
 2. rwa3_group_2 : Package that completes the orders to build kits consisting of different parts.
 The order may contain multiple shipments. The robot also replaces the parts that are faulty.
+
+3. rwa4_group_2: Agility challenges addressed - High priority order, Flip part, Faulty gripper, and Faulty parts
+
+4. rwa5_group_2: Agility challenges addressed - Sensor blackout, moving obstacles.
    
 ## Team Information
 1. [Aman Virmani](https://github.com/AmanVirmani)
