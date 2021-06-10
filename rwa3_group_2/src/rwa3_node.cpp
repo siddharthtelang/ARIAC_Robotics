@@ -39,12 +39,7 @@
 
 #include <tf2/LinearMath/Quaternion.h>
 
-/**
- * \brief: Main for rwa3 node
- * \param: argc
- * \param: argv
- * \result: Applies control of gantry robot
- */
+// Note this is NOT x, y, z, it is x, y, Torso twist!
 PresetLocation Bump(PresetLocation location_to_modify, double small_rail, double large_rail, double torso ) {
     location_to_modify.gantry.at(0) = location_to_modify.gantry.at(0) + small_rail;
     location_to_modify.gantry.at(1) = location_to_modify.gantry.at(1) - large_rail; // Minus now, does simulation switch?
@@ -156,281 +151,235 @@ int main(int argc, char ** argv) {
         {12, shelf5_a}
     };
 
-    // THIS SECTION WILL EVENTUALLY BE IT'S OWN FUNCTION. JUST HERE FOR TESTING.
-    PresetLocation conveyor_belt;
-    conveyor_belt.gantry = {0, 3, PI/2};
-    // conveyor_belt.left_arm = {0.0, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    // conveyor_belt.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    conveyor_belt.left_arm = {-0.2, -PI / 4, PI / 2, -PI / 4, PI / 2 - 0.2, 0};
-    conveyor_belt.right_arm = {PI, -PI / 4, PI / 2, -PI / 4, PI / 2, 0};
-    
-    ros::Subscriber breakbeam_sub = node.subscribe<nist_gear::Proximity>("/ariac/breakbeam_0_change", 10, &CameraListener::breakbeam_callback, &cam_listener);
-    ros::Time current_part_load_time;
-    CameraListener::ModelInfo current_part_on_conveyor;
-    std::deque<CameraListener::ModelInfo> parts_on_conveyor; 
-    float dx = 3+4.492549-1;
-    bool waiting_for_part{false};
-    while(ros::ok()) {
-        if (!waiting_for_part && !cam_listener.load_time_on_conveyor_.empty()) {
-            auto cam_parts = cam_listener.fetchParts(node)[5];
-            for (auto& found_part : cam_parts) {
-                bool part_in_queue{false};
-                for (auto& part: parts_on_conveyor) {
-                    if (part.id == found_part.id) {
-                        part_in_queue = true;
-                        break;
+
+
+    do{
+    //comp.processOrder();
+    orders = comp.get_orders_list();
+        //total_products = comp.get_product_list();
+    } while (orders.size() == 0);
+
+    // iterate through each order
+    for (int i = 0; i < orders.size(); i++) {////////// FOR ORDER IN ORDERS
+        shipments = orders[i].shipments;
+        // iterate through each shipment
+        for (int j = 0; j < shipments.size(); j++) { ////////// FOR SHIPMENT IN SHIPMENTS
+        // for (int j = 1; j < 2; j++) { ////////// Testing: FOR FIRST SHIPMENT ONLY (FOR NOW)
+            shipment_type = shipments[j].shipment_type;
+            agv_id = shipments[j].agv_id;
+            products = shipments[j].products;
+
+            ROS_INFO_STREAM("Shipment type = " << shipment_type);
+            ROS_INFO_STREAM("AGV ID = " << agv_id);
+
+            ROS_INFO_STREAM("Shipment size = " << shipments.size());
+
+            // iterate through each product
+            for (int k = 0; k < products.size(); k++) { ////////// FOR PRODUCT IN PRODUCTS
+            // for (int k = 0; k < 2; k++) { ////////// Testing: FOR FIRST 2 PRODUCTS ONLY (FOR NOW)
+                product = products[k];
+                partFound = false;
+                isPartFaulty = true;
+                ROS_INFO_STREAM("Product type = " << product.type);
+
+                while (isPartFaulty == true) // break if part is good (nonfaulty) or if part not found (assume not found == there are no more parts available)
+                {
+                    // get the parts from camera sensor
+                    int discovered_cam_idx = 0; // the camera we found it on.
+                    auto list = cam_listener.fetchParts(node);
+
+                    for (auto cam : list) {
+                        if (cam.empty() == true) // check if cam is empty, prevent segfault when doing cam[0] in the else if
+                        {
+                            ROS_INFO("No parts found under this camera. Skip this.");
+                            continue;
+                        }
+                        else if (cam[0].cam_index == 3 || cam[0].cam_index == 4)
+                        {
+                            ROS_INFO("Part found on camera over AGV. Skip this.");
+                            continue;
+                        }
+                        // else if (cam[0].cam_index == 9 || cam[0].cam_index == 12) /////////// TODO: REMOVE
+                        // {
+                        //     ROS_INFO("Skipping cam 9 and 12 for now for testing_________________________________________________________.");
+                        //     continue;
+                        // }
+
+                        for (auto model : cam) {
+                            if (product.type == (model.type + "_part_" + model.color)) {
+                                ROS_INFO("Part found. Perform the pickup action");
+                                pickPart = model;
+                                partFound = true;
+                                discovered_cam_idx = cam[0].cam_index;
+                                break;
+                            }
+                        }
+                        if (partFound)
+                            break;
                     }
-                } 
-                if (!part_in_queue) parts_on_conveyor.push_back(found_part);
+
+                    if (partFound) {
+                        if (discovered_cam_idx == 0 || discovered_cam_idx == 7) { // 0 and 7 are bin cameras
+                            ROS_INFO_STREAM("Pose --- " << pickPart.world_pose);
+                            ROS_INFO_STREAM("Found part on camera 0 or camera 7, the bins");
+
+                            // part to pick
+                            part my_part;
+                            my_part.type = product.type;
+                            my_part.pose = pickPart.world_pose;
+                            // tray location
+                            part part_in_tray;
+                            part_in_tray.type = product.type;
+                            part_in_tray.pose = product.pose;
+
+                            //TODO: deduce the position based on camera and go to location
+                            // gantry.goToPresetLocation(gantry.bin3_);
+                            double add_to_x = my_part.pose.position.x - 4.365789 - 0.1; // constant is perfect bin red pulley x
+                            double add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
+                            // double add_to_x = my_part.pose.position.x - 4.665789; // constant is perfect bin red pulley x
+                            // double add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
+
+                            ROS_INFO_STREAM(" x " << add_to_x << " y " << add_to_y);
+                            gantry.goToPresetLocation(Bump(cam_to_presetlocation[discovered_cam_idx], add_to_x, add_to_y, 0));
+
+                            //--Go pick the part
+                            if (!gantry.pickPart(my_part, "left_arm")){
+                                // gantry.goToPresetLocation(gantry.start_);
+                                // spinner.stop();
+                                // ros::shutdown();
+                                ;//pass
+                            }
+
+                            // go back to start
+                            gantry.goToPresetLocation(start_a);
+                            ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
+                            // gantry.goToPresetLocation(start_a);
+
+                            //place the part
+                            gantry.placePart(part_in_tray, agv_id, "left_arm");
+                            cam_listener.checkFaulty(node, agv_id);
+                            ros::Duration(5.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
+
+                            if (cam_listener.faulty_parts) {
+                                ROS_INFO("Detected Faulty Part");
+                                for(int f_p = 0; f_p < cam_listener.faulty_parts_list.size(); ++f_p) {
+                                    CameraListener::ModelInfo faulty = cam_listener.faulty_parts_list.at(2);
+                                    Part faulty_part;
+                                    faulty_part.pose = faulty.model_pose;
+                                    ROS_INFO_STREAM("Faulty product pose:" <<faulty_part.pose);
+                                    for(auto product:products) {
+                                        if (product.pose == faulty_part.pose)
+                                            faulty_part.type = product.type;
+                                        ROS_INFO_STREAM("shipment product pose:" << product.pose);
+
+                                    }
+                                    faulty_part.type = part_in_tray.type;
+                                    faulty_part.pose = part_in_tray.pose;
+                                    ROS_INFO_STREAM("Faulty Part:"<< faulty_part.type);
+                                    cam_listener.faulty_parts_list.clear();
+                                    bool success = gantry.replaceFaultyPart(faulty_part, agv_id, "left_arm");
+                                    if (success) {
+                                        cam_listener.faulty_parts_list.clear();
+                                        isPartFaulty = false;
+                                        k -= 1;
+                                    }
+                                }
+                                // tray location
+                                // todo: poll quality sensor (eg camera 3 and 4), pick part, gantry go to start, drop part
+//                                gantry.pickPart(part_in_tray);
+//                                gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
+//                                gantry.deactivateGripper("left_arm");
+//                                gantry.deactivateGripper("right_arm");
+                            }
+                            else {
+                                isPartFaulty = false;
+                                gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
+                            }
+                            gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
+
+                        }
+                        else if (discovered_cam_idx == 9 || discovered_cam_idx == 12) { // 9 and 12 are shelf cameras
+                            // part to pick
+                            part my_part;
+                            my_part.type = product.type;
+                            my_part.pose = pickPart.world_pose;
+                            // tray location
+                            part part_in_tray;
+                            part_in_tray.type = product.type;
+                            part_in_tray.pose = product.pose;
+
+                            gantry.goToPresetLocation(agv1_staging_a);
+                            gantry.goToPresetLocation(bottom_left_staging_a);
+                            double add_to_x_shelf = my_part.pose.position.x - -13.522081;
+                            gantry.goToPresetLocation( Bump(shelf5_a, add_to_x_shelf, 0, 0) ); // offset gantry from pulley by some units in x direction
+
+                            //--Go pick the part
+                            if (!gantry.pickPart(my_part, "left_arm")){
+                                // gantry.goToPresetLocation(gantry.start_);
+                                // spinner.stop();
+                                // ros::shutdown();
+                                ;//pass
+                            }
+
+                            gantry.goToPresetLocation(shelf5_a); // keep part from sliding across table
+                            gantry.goToPresetLocation(bottom_left_staging_a);
+                            gantry.goToPresetLocation(agv1_staging_a);
+                            gantry.goToPresetLocation(start_a);
+                            //place the part
+                            gantry.placePart(part_in_tray, agv_id, "left_arm");
+                            cam_listener.checkFaulty(node, agv_id);
+                            ros::Duration(5.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
+
+                            if (cam_listener.faulty_parts_list.size()) {
+                                ROS_INFO("Detected Faulty Part");
+                                for(int f_p = 0; f_p < cam_listener.faulty_parts_list.size(); ++f_p) {
+                                    CameraListener::ModelInfo faulty = cam_listener.faulty_parts_list.at(2);
+                                    Part faulty_part;
+                                    faulty_part.pose = faulty.model_pose;
+                                    ROS_INFO_STREAM("Faulty product pose:" <<faulty_part.pose);
+                                    for(auto product:products) {
+                                        if (product.pose == faulty_part.pose)
+                                            faulty_part.type = product.type;
+                                        ROS_INFO_STREAM("shipment product pose:" << product.pose);
+                                    }
+                                    faulty_part.type = part_in_tray.type;
+                                    faulty_part.pose = part_in_tray.pose;
+                                    ROS_INFO_STREAM("Faulty Part:"<< faulty_part.type);
+                                    cam_listener.faulty_parts_list.clear();
+                                    bool success = gantry.replaceFaultyPart(faulty_part, agv_id, "left_arm");
+                                    if (success) {
+                                        cam_listener.faulty_parts_list.clear();
+                                        isPartFaulty = false;
+                                        k -= 1;
+                                    }
+                                }
+
+                            }
+                            else {
+                                isPartFaulty = false;
+                                gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
+                            }
+                            gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
+                        }
+
+                    }
+                    else { // else part NOT found, or otherwise,
+                        gantry.goToPresetLocation(start_a);
+                        break; // break out of while loop, (assume not found == there are no more parts available, conveyor might mess with this)
+                    }
+
+
+                }//end while loop
             }
-            waiting_for_part = true;
-            current_part_load_time = cam_listener.load_time_on_conveyor_.front();
-            current_part_on_conveyor = parts_on_conveyor.front();
-            cam_listener.load_time_on_conveyor_.pop();
-            parts_on_conveyor.pop_front();
-            gantry.goToPresetLocation(conveyor_belt);
-        } else if (waiting_for_part && (ros::Time::now()-current_part_load_time).toSec() > dx/cam_listener.conveyor_spd_) {
-            ROS_INFO_STREAM("Pick up part now!");
-            part temp_part;
-            temp_part.type = current_part_on_conveyor.type;
-            temp_part.pose = current_part_on_conveyor.world_pose;
-            temp_part.pose.position.y = -2.5;
-            ROS_INFO_STREAM("x: " << temp_part.pose.position.x << ", y: " << temp_part.pose.position.y << ", z: " << temp_part.pose.position.z);
-            // current_part_on_conveyor.world_pose
-            waiting_for_part = false;
-            gantry.pickPart(temp_part, "left_arm");
+            ROS_INFO("\n\n");
+
+            // one shipment completed. Send to AGV
+            AGVControl agv_control(node);
+            kit_id = (agv_id == "agv1" ? "kit_tray_1" : "kit_tray_2");
+            agv_control.sendAGV(shipment_type, kit_id);
+
         }
-        ros::Duration(0.5).sleep();
     }
-
-
-//     do{
-//     //comp.processOrder();
-//     orders = comp.get_orders_list();
-//         //total_products = comp.get_product_list();
-//     } while (orders.size() == 0);
-
-//     // iterate through each order
-//     for (int i = 0; i < orders.size(); i++) {////////// FOR ORDER IN ORDERS
-//         shipments = orders[i].shipments;
-//         // iterate through each shipment
-//         for (int j = 0; j < shipments.size(); j++) { ////////// FOR SHIPMENT IN SHIPMENTS
-//         // for (int j = 1; j < 2; j++) { ////////// Testing: FOR FIRST SHIPMENT ONLY (FOR NOW)
-//             shipment_type = shipments[j].shipment_type;
-//             agv_id = shipments[j].agv_id;
-//             products = shipments[j].products;
-
-//             ROS_INFO_STREAM("Shipment type = " << shipment_type);
-//             ROS_INFO_STREAM("AGV ID = " << agv_id);
-
-//             ROS_INFO_STREAM("Shipment size = " << shipments.size());
-
-//             // iterate through each product
-//             for (int k = 0; k < products.size(); k++) { ////////// FOR PRODUCT IN PRODUCTS
-//             // for (int k = 0; k < 2; k++) { ////////// Testing: FOR FIRST 2 PRODUCTS ONLY (FOR NOW)
-//                 product = products[k];
-//                 partFound = false;
-//                 isPartFaulty = true;
-//                 ROS_INFO_STREAM("Product type = " << product.type);
-
-//                 while (isPartFaulty == true) // break if part is good (nonfaulty) or if part not found (assume not found == there are no more parts available)
-//                 {
-//                     // get the parts from camera sensor
-//                     int discovered_cam_idx = 0; // the camera we found it on.
-//                     auto list = cam_listener.fetchParts(node);
-
-//                     for (auto cam : list) {
-//                         if (cam.empty() == true) // check if cam is empty, prevent segfault when doing cam[0] in the else if
-//                         {
-//                             ROS_INFO("No parts found under this camera. Skip this.");
-//                             continue;
-//                         }
-//                         else if (cam[0].cam_index == 3 || cam[0].cam_index == 4)
-//                         {
-//                             ROS_INFO("Part found on camera over AGV. Skip this.");
-//                             continue;
-//                         }
-//                         // else if (cam[0].cam_index == 9 || cam[0].cam_index == 12) /////////// TODO: REMOVE
-//                         // {
-//                         //     ROS_INFO("Skipping cam 9 and 12 for now for testing_________________________________________________________.");
-//                         //     continue;
-//                         // }
-
-//                         for (auto model : cam) {
-//                             if (product.type == (model.type + "_part_" + model.color)) {
-//                                 ROS_INFO("Part found. Perform the pickup action");
-//                                 pickPart = model;
-//                                 partFound = true;
-//                                 discovered_cam_idx = cam[0].cam_index;
-//                                 break;
-//                             }
-//                         }
-//                         if (partFound)
-//                             break;
-//                     }
-
-//                     if (partFound) {
-//                         if (discovered_cam_idx == 0 || discovered_cam_idx == 7) { // 0 and 7 are bin cameras
-//                             ROS_INFO_STREAM("Pose --- " << pickPart.world_pose);
-//                             ROS_INFO_STREAM("Found part on camera 0 or camera 7, the bins");
-
-//                             // part to pick
-//                             part my_part;
-//                             my_part.type = product.type;
-//                             my_part.pose = pickPart.world_pose;
-//                             // tray location
-//                             part part_in_tray;
-//                             part_in_tray.type = product.type;
-//                             part_in_tray.pose = product.pose;
-
-//                             //TODO: deduce the position based on camera and go to location
-//                             // gantry.goToPresetLocation(gantry.bin3_);
-//                             double add_to_x = my_part.pose.position.x - 4.365789 - 0.1; // constant is perfect bin red pulley x
-//                             double add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
-//                             // double add_to_x = my_part.pose.position.x - 4.665789; // constant is perfect bin red pulley x
-//                             // double add_to_y = my_part.pose.position.y - 1.173381; // constant is perfect bin red pulley y
-
-//                             ROS_INFO_STREAM(" x " << add_to_x << " y " << add_to_y);
-//                             gantry.goToPresetLocation(Bump(cam_to_presetlocation[discovered_cam_idx], add_to_x, add_to_y, 0));
-
-//                             //--Go pick the part
-//                             if (!gantry.pickPart(my_part, "left_arm")){
-//                                 // gantry.goToPresetLocation(gantry.start_);
-//                                 // spinner.stop();
-//                                 // ros::shutdown();
-//                                 ;//pass
-//                             }
-
-//                             // go back to start
-//                             gantry.goToPresetLocation(start_a);
-//                             ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
-//                             // gantry.goToPresetLocation(start_a);
-
-//                             //place the part
-//                             gantry.placePart(part_in_tray, agv_id, "left_arm");
-//                             cam_listener.checkFaulty(node, agv_id);
-//                             ros::Duration(5.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
-
-//                             if (cam_listener.faulty_parts) {
-//                                 ROS_INFO("Detected Faulty Part");
-//                                 for(int f_p = 0; f_p < cam_listener.faulty_parts_list.size(); ++f_p) {
-//                                     CameraListener::ModelInfo faulty = cam_listener.faulty_parts_list.at(2);
-//                                     Part faulty_part;
-//                                     faulty_part.pose = faulty.model_pose;
-//                                     ROS_INFO_STREAM("Faulty product pose:" <<faulty_part.pose);
-//                                     for(auto product:products) {
-//                                         if (product.pose == faulty_part.pose)
-//                                             faulty_part.type = product.type;
-//                                         ROS_INFO_STREAM("shipment product pose:" << product.pose);
-
-//                                     }
-//                                     faulty_part.type = part_in_tray.type;
-//                                     faulty_part.pose = part_in_tray.pose;
-//                                     ROS_INFO_STREAM("Faulty Part:"<< faulty_part.type);
-//                                     cam_listener.faulty_parts_list.clear();
-//                                     bool success = gantry.replaceFaultyPart(faulty_part, agv_id, "left_arm");
-//                                     if (success) {
-//                                         cam_listener.faulty_parts_list.clear();
-//                                         isPartFaulty = false;
-//                                         k -= 1;
-//                                     }
-//                                 }
-//                                 // tray location
-//                                 // todo: poll quality sensor (eg camera 3 and 4), pick part, gantry go to start, drop part
-// //                                gantry.pickPart(part_in_tray);
-// //                                gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
-// //                                gantry.deactivateGripper("left_arm");
-// //                                gantry.deactivateGripper("right_arm");
-//                             }
-//                             else {
-//                                 isPartFaulty = false;
-//                                 gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
-//                             }
-//                             gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
-
-//                         }
-//                         else if (discovered_cam_idx == 9 || discovered_cam_idx == 12) { // 9 and 12 are shelf cameras
-//                             // part to pick
-//                             part my_part;
-//                             my_part.type = product.type;
-//                             my_part.pose = pickPart.world_pose;
-//                             // tray location
-//                             part part_in_tray;
-//                             part_in_tray.type = product.type;
-//                             part_in_tray.pose = product.pose;
-
-//                             gantry.goToPresetLocation(agv1_staging_a);
-//                             gantry.goToPresetLocation(bottom_left_staging_a);
-//                             double add_to_x_shelf = my_part.pose.position.x - -13.522081;
-//                             gantry.goToPresetLocation( Bump(shelf5_a, add_to_x_shelf, 0, 0) ); // offset gantry from pulley by some units in x direction
-
-//                             //--Go pick the part
-//                             if (!gantry.pickPart(my_part, "left_arm")){
-//                                 // gantry.goToPresetLocation(gantry.start_);
-//                                 // spinner.stop();
-//                                 // ros::shutdown();
-//                                 ;//pass
-//                             }
-
-//                             gantry.goToPresetLocation(shelf5_a); // keep part from sliding across table
-//                             gantry.goToPresetLocation(bottom_left_staging_a);
-//                             gantry.goToPresetLocation(agv1_staging_a);
-//                             gantry.goToPresetLocation(start_a);
-//                             //place the part
-//                             gantry.placePart(part_in_tray, agv_id, "left_arm");
-//                             cam_listener.checkFaulty(node, agv_id);
-//                             ros::Duration(5.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
-
-//                             if (cam_listener.faulty_parts_list.size()) {
-//                                 ROS_INFO("Detected Faulty Part");
-//                                 for(int f_p = 0; f_p < cam_listener.faulty_parts_list.size(); ++f_p) {
-//                                     CameraListener::ModelInfo faulty = cam_listener.faulty_parts_list.at(2);
-//                                     Part faulty_part;
-//                                     faulty_part.pose = faulty.model_pose;
-//                                     ROS_INFO_STREAM("Faulty product pose:" <<faulty_part.pose);
-//                                     for(auto product:products) {
-//                                         if (product.pose == faulty_part.pose)
-//                                             faulty_part.type = product.type;
-//                                         ROS_INFO_STREAM("shipment product pose:" << product.pose);
-//                                     }
-//                                     faulty_part.type = part_in_tray.type;
-//                                     faulty_part.pose = part_in_tray.pose;
-//                                     ROS_INFO_STREAM("Faulty Part:"<< faulty_part.type);
-//                                     cam_listener.faulty_parts_list.clear();
-//                                     bool success = gantry.replaceFaultyPart(faulty_part, agv_id, "left_arm");
-//                                     if (success) {
-//                                         cam_listener.faulty_parts_list.clear();
-//                                         isPartFaulty = false;
-//                                         k -= 1;
-//                                     }
-//                                 }
-
-//                             }
-//                             else {
-//                                 isPartFaulty = false;
-//                                 gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
-//                             }
-//                             gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
-//                         }
-
-//                     }
-//                     else { // else part NOT found, or otherwise,
-//                         gantry.goToPresetLocation(start_a);
-//                         break; // break out of while loop, (assume not found == there are no more parts available, conveyor might mess with this)
-//                     }
-
-
-//                 }//end while loop
-//             }
-//             ROS_INFO("\n\n");
-
-//             // one shipment completed. Send to AGV
-//             AGVControl agv_control(node);
-//             kit_id = (agv_id == "agv1" ? "kit_tray_1" : "kit_tray_2");
-//             agv_control.sendAGV(shipment_type, kit_id);
-
-//         }
-//     }
     //--2-Look for parts in this order
     //--We go to this bin because a camera above
     //--this bin found one of the parts in the order
