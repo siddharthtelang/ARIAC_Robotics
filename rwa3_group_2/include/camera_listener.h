@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <array>
+#include <queue>
 #include <unordered_map>
 
 #include <ros/ros.h>
@@ -87,6 +88,13 @@ struct ModelInfo
   void quality_control_callback(const nist_gear::LogicalCameraImage::ConstPtr &msg, int q_sensor);
 
   /**
+   * @brief: Callback function for breakbeam sensor
+   * @param: pointer to ROS msg
+   * @result:
+   */
+  void breakbeam_callback(const nist_gear::Proximity::ConstPtr &msg);
+  
+  /**
   * \brief: Getter for camera part list after querying all cams
   * \param: reference to ROS node handle
   * \result: returns camera part list
@@ -104,7 +112,8 @@ struct ModelInfo
   tf2_ros::Buffer tfBuffer; // keep this in scope, buffer holds last 10 seconds of tf frames
   tf2_ros::TransformListener tfListener; // keep this in scope, and only create it once
   std::unordered_map<std::string, std::unordered_map<std::string, std::vector<ModelInfo>>> ordered_color_type;
-
+  const float conveyor_spd_{0.2}; // m/s
+  std::queue<ros::Time> load_time_on_conveyor_;
   //ros::Subscriber logical_camera_subscriber;
 
 };

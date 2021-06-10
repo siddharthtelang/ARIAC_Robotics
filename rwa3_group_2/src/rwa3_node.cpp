@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <deque>
 
 #include <ros/ros.h>
 
@@ -151,6 +152,7 @@ int main(int argc, char ** argv) {
     };
 
 
+
     do{
     //comp.processOrder();
     orders = comp.get_orders_list();
@@ -241,7 +243,7 @@ int main(int argc, char ** argv) {
                             gantry.goToPresetLocation(Bump(cam_to_presetlocation[discovered_cam_idx], add_to_x, add_to_y, 0));
 
                             //--Go pick the part
-                            if (!gantry.pickPart(my_part)){
+                            if (!gantry.pickPart(my_part, "left_arm")){
                                 // gantry.goToPresetLocation(gantry.start_);
                                 // spinner.stop();
                                 // ros::shutdown();
@@ -254,7 +256,7 @@ int main(int argc, char ** argv) {
                             // gantry.goToPresetLocation(start_a);
 
                             //place the part
-                            gantry.placePart(part_in_tray, agv_id);
+                            gantry.placePart(part_in_tray, agv_id, "left_arm");
                             cam_listener.checkFaulty(node, agv_id);
                             ros::Duration(5.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
 
@@ -275,7 +277,7 @@ int main(int argc, char ** argv) {
                                     faulty_part.pose = part_in_tray.pose;
                                     ROS_INFO_STREAM("Faulty Part:"<< faulty_part.type);
                                     cam_listener.faulty_parts_list.clear();
-                                    bool success = gantry.replaceFaultyPart(faulty_part, agv_id);
+                                    bool success = gantry.replaceFaultyPart(faulty_part, agv_id, "left_arm");
                                     if (success) {
                                         cam_listener.faulty_parts_list.clear();
                                         isPartFaulty = false;
@@ -312,7 +314,7 @@ int main(int argc, char ** argv) {
                             gantry.goToPresetLocation( Bump(shelf5_a, add_to_x_shelf, 0, 0) ); // offset gantry from pulley by some units in x direction
 
                             //--Go pick the part
-                            if (!gantry.pickPart(my_part)){
+                            if (!gantry.pickPart(my_part, "left_arm")){
                                 // gantry.goToPresetLocation(gantry.start_);
                                 // spinner.stop();
                                 // ros::shutdown();
@@ -324,7 +326,7 @@ int main(int argc, char ** argv) {
                             gantry.goToPresetLocation(agv1_staging_a);
                             gantry.goToPresetLocation(start_a);
                             //place the part
-                            gantry.placePart(part_in_tray, agv_id);
+                            gantry.placePart(part_in_tray, agv_id, "left_arm");
                             cam_listener.checkFaulty(node, agv_id);
                             ros::Duration(5.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
 
@@ -344,7 +346,7 @@ int main(int argc, char ** argv) {
                                     faulty_part.pose = part_in_tray.pose;
                                     ROS_INFO_STREAM("Faulty Part:"<< faulty_part.type);
                                     cam_listener.faulty_parts_list.clear();
-                                    bool success = gantry.replaceFaultyPart(faulty_part, agv_id);
+                                    bool success = gantry.replaceFaultyPart(faulty_part, agv_id, "left_arm");
                                     if (success) {
                                         cam_listener.faulty_parts_list.clear();
                                         isPartFaulty = false;
@@ -355,19 +357,13 @@ int main(int argc, char ** argv) {
                             }
                             else {
                                 isPartFaulty = false;
-                                ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
-
                                 gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
                             }
-                            ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
-
                             gantry.goToPresetLocation(start_a); // part placed, not faulty, so just go back to start
                         }
 
                     }
                     else { // else part NOT found, or otherwise,
-                        ros::Duration(1.0).sleep(); // make sure it actually goes back to start, instead of running into shelves
-
                         gantry.goToPresetLocation(start_a);
                         break; // break out of while loop, (assume not found == there are no more parts available, conveyor might mess with this)
                     }
