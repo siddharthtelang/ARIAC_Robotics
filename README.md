@@ -19,6 +19,10 @@ University of Maryland, College Park in Spring 2021.
 <img src="data/part_handling.png"/>
 </p>
 
+<p align="center">
+<img src="data/flip-part"/>
+</p>
+
 ## Package Information
 1. rwa2_group_2 : Package that places the logical cameras in the environment to get information 
 about different parts and their locations.
