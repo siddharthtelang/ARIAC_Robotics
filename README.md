@@ -20,7 +20,7 @@ University of Maryland, College Park in Spring 2021.
 </p>
 
 <p align="center">
-<img src="data/flip-part"/>
+<img src="data/flip-part.gif"/>
 </p>
 
 ## Package Information
